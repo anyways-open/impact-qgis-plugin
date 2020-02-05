@@ -1,2 +1,3 @@
 # Qgis-Plugins
- Qgis plugins
+
+This is the code for the ANYWAYS QGIS plugins.
