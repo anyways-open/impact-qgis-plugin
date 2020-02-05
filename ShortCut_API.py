@@ -274,4 +274,3 @@ class APIRequest:
                     filename = QgsVectorLayer(fileroute, file[:-5], "ogr")
                     QgsProject.instance().addMapLayer(filename, False)
                     shapeGroup.insertChildNode(1, QgsLayerTreeLayer(filename))
-
