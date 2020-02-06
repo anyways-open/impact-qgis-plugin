@@ -262,7 +262,7 @@ class APIRequest:
                         obj['features'][n]['properties']['From->To'] = "%s -> %s" % (OD.Origins[i], OD.Destinations[i])
                 else:
                     obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
-                                        'properties': {'name': 'N/A', 'highway': 'N/A', 'profile': 'bicycle.balanced'}}]
+                                        'properties': {'name': 'N/A', 'highway': 'N/A', 'profile': PROFILE}}]
                     obj['features'][0]['properties']['From->To'] = "%s -> %s" % (OD.Origins[i], OD.Destinations[i])
                 for feats in obj['features']:
                     featuresList.append(feats)
