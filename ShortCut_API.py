@@ -248,6 +248,9 @@ class APIRequest:
                 shutil.rmtree(path)
             os.makedirs(path)
 
+            JsonMerged = {'type': 'FeatureCollection'}
+            featuresList = []
+
             for i in range(0, len(my_list)):
                 api = "https://api.anyways.eu/publish/opa/INSTANCE/routing?profile=PROFILE&loc=FROM&loc=TO"
                 for key in my_list[i].keys():
@@ -255,14 +258,16 @@ class APIRequest:
                     response = requests.get(api)
                 obj = json.loads(response.text)
                 for n in range(len(obj['features'])):
-                    obj['features'][n]['properties']['From->To']="%s -> %s" % (OD.Origins[i], OD.Destinations[i])
-                    f = open(path + "/%s to %s by %s_%s %s.json" % (
-                    OD.Origins[i], OD.Destinations[i], PROFILE.upper(),
-                    INSTANCE.replace("/", "-")[:-2],
-                    INSTANCE[-1]), "w+")
-                f.write(json.dumps(obj))
-                f.close()
+                    obj['features'][n]['properties']['From->To'] = "%s -> %s" % (OD.Origins[i], OD.Destinations[i])
+                    for feats in obj['features']:
+                        featuresList.append(feats)
+                JsonMerged['features'] = featuresList
+
             i = i + 1
+            f = open(path + "/%s %s by %s.json" % (INSTANCE.replace("/", "-")[:-2], INSTANCE[-1], PROFILE.upper()),
+                     "w+")
+            f.write(json.dumps(JsonMerged))
+            f.close()
 
             GroupName = INSTANCE.replace("/", " ") + ":" + PROFILE
             root = QgsProject.instance().layerTreeRoot()
