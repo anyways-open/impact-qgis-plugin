@@ -35,6 +35,7 @@ import os.path
 import requests
 import pandas as pd
 import shutil
+import json
 
 
 class APIRequest:
@@ -252,12 +253,15 @@ class APIRequest:
                 for key in my_list[i].keys():
                     api = api.replace(key, my_list[i][key])
                     response = requests.get(api)
+                obj = json.loads(response.text)
+                for n in range(len(obj['features'])):
+                    obj['features'][n]['properties']['From->To']="%s -> %s" % (OD.Origins[i], OD.Destinations[i])
                     f = open(path + "/%s to %s by %s_%s %s.json" % (
-                        OD.Origins[i], OD.Destinations[i], PROFILE.upper(),
-                        INSTANCE.replace("/", "-")[:-2],
-                        INSTANCE[-1]), "w+")
-                    f.write(response.text)
-                    f.close()
+                    OD.Origins[i], OD.Destinations[i], PROFILE.upper(),
+                    INSTANCE.replace("/", "-")[:-2],
+                    INSTANCE[-1]), "w+")
+                f.write(json.dumps(obj))
+                f.close()
             i = i + 1
 
             GroupName = INSTANCE.replace("/", " ") + ":" + PROFILE
