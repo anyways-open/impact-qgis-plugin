@@ -275,17 +275,8 @@ class APIRequest:
             f.write(json.dumps(JsonMerged))
             f.close()
 
-            GroupName = INSTANCE.replace("/", " ") + ":" + PROFILE
-            root = QgsProject.instance().layerTreeRoot()
-            shapeGroup = root.addGroup(GroupName)  # Ater or Before (basically any name can be given to the group
-
-            os.chdir(path)
-            wholelist = os.listdir(os.getcwd())
-
-            for file in wholelist:
-                if ".json" in file:
-                    fileroute = path + '/' + file
-                    filename = QgsVectorLayer(fileroute, file[:-5], "ogr")
-                    QgsProject.instance().addMapLayer(filename, False)
-                    shapeGroup.insertChildNode(1, QgsLayerTreeLayer(filename))
-
+            #os.chdir(path)
+            Fname = "%s %s by %s" % (INSTANCE.replace("/", "-")[:-2], INSTANCE[-1], PROFILE.upper())
+            fileroute = path +"/"+Fname+".json"
+            filename = QgsVectorLayer(fileroute, Fname, "ogr")
+            QgsProject.instance().addMapLayer(filename, True)
