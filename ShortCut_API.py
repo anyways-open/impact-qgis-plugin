@@ -257,11 +257,17 @@ class APIRequest:
                     api = api.replace(key, my_list[i][key])
                     response = requests.get(api)
                 obj = json.loads(response.text)
-                for n in range(len(obj['features'])):
-                    obj['features'][n]['properties']['From->To'] = "%s -> %s" % (OD.Origins[i], OD.Destinations[i])
-                    for feats in obj['features']:
-                        featuresList.append(feats)
-                JsonMerged['features'] = featuresList
+                if obj.get("features") != None:
+                    for n in range(len(obj['features'])):
+                        obj['features'][n]['properties']['From->To'] = "%s -> %s" % (OD.Origins[i], OD.Destinations[i])
+                else:
+                    obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
+                                        'properties': {'name': 'N/A', 'highway': 'N/A', 'profile': 'bicycle.balanced'}}]
+                    obj['features'][0]['properties']['From->To'] = "%s -> %s" % (OD.Origins[i], OD.Destinations[i])
+                for feats in obj['features']:
+                    featuresList.append(feats)
+
+            JsonMerged['features'] = featuresList
 
             i = i + 1
             f = open(path + "/%s %s by %s.json" % (INSTANCE.replace("/", "-")[:-2], INSTANCE[-1], PROFILE.upper()),
@@ -282,3 +288,4 @@ class APIRequest:
                     filename = QgsVectorLayer(fileroute, file[:-5], "ogr")
                     QgsProject.instance().addMapLayer(filename, False)
                     shapeGroup.insertChildNode(1, QgsLayerTreeLayer(filename))
+
