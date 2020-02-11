@@ -244,10 +244,6 @@ class APIRequest:
             OD2.dropna(inplace=True)
             my_list = OD2.to_dict(orient='records')
 
-            if os.path.exists(path):
-                shutil.rmtree(path)
-            os.makedirs(path)
-
             JsonMerged = {'type': 'FeatureCollection'}
             featuresList = []
 
@@ -280,3 +276,5 @@ class APIRequest:
             fileroute = path +"/"+Fname+".json"
             filename = QgsVectorLayer(fileroute, Fname, "ogr")
             QgsProject.instance().addMapLayer(filename, True)
+
+
