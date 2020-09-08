@@ -3,18 +3,21 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=ShortCut API
+name=ImPact toolbox
 qgisMinimumVersion=3.0
-description=This plugin automizes ShortCut API
-version= 2
-author=Hamed Eftekhar
-email=eftekhar.hamed@gmail.com
+description=This plugin is a suite of tools for the ImPact Analysis
+version=1.52
+author=Hamed Eftekhar @ ANYWAYS
+email=hamed@anyways.eu
 
-about=This plugin automates ShortCut API routing requests by taking a point layer that includes points of interest (POIs) and 
-	1- Sending routing reuests between the POIs based on a given routing Profile and Instance in ShortCut, receiveing API responses and saving them as JSON files
-	2- Importing these routings as layers in QGIS
-	3- Grouping imported layers (as they are all calculated based on a given routing profile and instance)
+about=This plugin is a suite of tools for the ImPact Analysis including: 
+	-Automation of ANYWAYS Routing API 
+	-Automation of ANYWAYS ShortCut API 
+	-Automation of ANYWAYS Origin-Destination data API
+	-Creating movements (Tij) file based on a local Origin-Destination database
 
+tracker=http://bugs
+repository=http://repo
 # End of mandatory metadata
 
 # Recommended items:
@@ -26,7 +29,7 @@ hasProcessingProvider=no
 # Tags are comma separated with spaces allowed
 tags=python
 
-homepage=https://be.linkedin.com/in/hamedeftekhar
+homepage=https://www.anyways.eu/
 category=Plugins
 icon=icon.png
 # experimental flag
