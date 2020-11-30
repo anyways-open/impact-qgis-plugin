@@ -29,7 +29,7 @@ from qgis.utils import iface
 from qgis.gui import QgsMessageBar
 
 # Initialize Qt resources from file resources.py
-from .resources import *
+from .resources_rc import *
 # Import the code for the dialog
 from .ImPact_toolbox_dialog import ToolBoxDialog
 import os.path

@@ -26,13 +26,14 @@ import os
 
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
+from .ImPact_toolbox_dialog_base import Ui_APIRequestDialogBase
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
-FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'ImPact_toolbox_dialog_base.ui'))
+# FORM_CLASS, _ = uic.loadUiType(os.path.join(
+#     os.path.dirname(__file__), 'ImPact_toolbox_dialog_base.ui'))
 
 
-class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
+class ToolBoxDialog(QtWidgets.QDialog, Ui_APIRequestDialogBase):
     def __init__(self, parent=None):
         """Constructor."""
         super(ToolBoxDialog, self).__init__(parent)
