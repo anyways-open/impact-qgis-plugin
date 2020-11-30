@@ -23,23 +23,56 @@
 """
 
 import os
-
+from qgis.PyQt.QtWidgets import QDialog, QFileDialog
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 from .ImPact_toolbox_dialog_base import Ui_APIRequestDialogBase
 
-# This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
-# FORM_CLASS, _ = uic.loadUiType(os.path.join(
-#     os.path.dirname(__file__), 'ImPact_toolbox_dialog_base.ui'))
+class ToolBoxDialog(QDialog, Ui_APIRequestDialogBase):
 
-
-class ToolBoxDialog(QtWidgets.QDialog, Ui_APIRequestDialogBase):
     def __init__(self, parent=None):
         """Constructor."""
         super(ToolBoxDialog, self).__init__(parent)
-        # Set up the user interface from Designer through FORM_CLASS.
-        # After self.setupUi() you can access any designer object by doing
-        # self.<objectname>, and you can use autoconnect slots - see
-        # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
-        # #widgets-and-dialogs-with-auto-connect
+
+        #load UI
         self.setupUi(self)
+
+        #connect eventhandlers
+        self.routingOutDirBtn1.clicked.connect( self.dir1clicked )
+        self.routingOutDirBtn2.clicked.connect( self.dir2clicked )
+        self.routingOutDirBtn3.clicked.connect( self.dir3clicked )
+        self.routingOutDirBtn4.clicked.connect( self.dir4clicked )
+        self.routingOutDirBtn4.clicked.connect( self.dir5clicked )
+        self.routingOutDirBtn6.clicked.connect( self.dir6clicked )
+        self.routingOutDirBtn7.clicked.connect( self.dir7clicked )
+        self.routingOutDirBtn8.clicked.connect( self.dir8clicked )
+        self.routingOutDirBtn9.clicked.connect( self.dir9clicked )
+        self.loadXlsBtn.clicked.connect(self.xlsFile1clicked)
+        self.loadTijFileBtn1.clicked.connect(self.tijFile1clicked)
+        self.loadTijFileBtn2.clicked.connect(self.tijFile2clicked)
+
+    #eventhandlers 
+    dir1clicked = lambda self: self.routingOutDirTxt1.setText(
+         QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )
+    dir2clicked = lambda self: self.routingOutDirTxt2.setText(
+         QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )
+    dir3clicked = lambda self: self.routingOutDirTxt3.setText(
+         QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )
+    dir4clicked = lambda self: self.routingOutDirTxt4.setText(
+         QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )
+    dir5clicked = lambda self: self.routingOutDirTxt5.setText(
+         QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )
+    dir6clicked = lambda self: self.routingOutDirTxt6.setText(
+         QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )
+    dir7clicked = lambda self: self.routingOutDirTxt7.setText(
+         QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )
+    dir8clicked = lambda self: self.routingOutDirTxt8.setText(
+         QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )
+    dir9clicked = lambda self: self.routingOutDirTxt9.setText(
+         QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )
+    xlsFile1clicked = lambda self: self.loadXlsTxt.setText(  
+        QFileDialog.getOpenFileName( self, "Select the Database", "", '*.xlsx')[0] )
+    tijFile1clicked = lambda self: self.loadTijFileTxt1.setText(  
+        QFileDialog.getOpenFileName( self, "Select the Tij-file", "", '(*.json *.geojson)')[0] )
+    tijFile2clicked = lambda self: self.loadTijFileTxt2.setText(  
+        QFileDialog.getOpenFileName( self, "Select the Tij-file", "", '(*.json *.geojson)')[0] )

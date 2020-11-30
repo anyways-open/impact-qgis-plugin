@@ -189,75 +189,13 @@ class ToolBox:
                 action)
             self.iface.removeToolBarIcon(action)
 
-    def input(self):
-        xlfile, _filter = QFileDialog.getOpenFileName(self.dlg, "Select the Database", "", '*.xlsx')
-        self.dlg.lineEdit_27.setText(xlfile)
-
-    def input2(self):
-        Tij, _filter = QFileDialog.getOpenFileName(self.dlg, "Select the Tij file", "",'(*.json *.geojson)')
-        self.dlg.lineEdit_29.setText(Tij)
-
-    def input3(self):
-        Tij2, _filter = QFileDialog.getOpenFileName(self.dlg, "Select the Tij file", "", '(*.json *.geojson)')
-        self.dlg.lineEdit_31.setText(Tij2)
-
-    def output(self):
-        foldername = QFileDialog.getExistingDirectory(self.dlg, "Select a directory to save routings", "")
-        self.dlg.lineEdit_8.setText(foldername)
-
-    def output2(self):
-        foldername2 = QFileDialog.getExistingDirectory(self.dlg, "Select a directory to save routings", "")
-        self.dlg.lineEdit_10.setText(foldername2)
-
-    def output3(self):
-        foldername3 = QFileDialog.getExistingDirectory(self.dlg, "Select a directory to save routings", "")
-        self.dlg.lineEdit_4.setText(foldername3)
-
-    def output4(self):
-        foldername4 = QFileDialog.getExistingDirectory(self.dlg, "Select a directory to save routings", "")
-        self.dlg.lineEdit_6.setText(foldername4)
-
-    def output5(self):
-        foldername5 = QFileDialog.getExistingDirectory(self.dlg, "Select a directory to save routings", "")
-        self.dlg.lineEdit_24.setText(foldername5)
-
-    def output6(self):
-        foldername6 = QFileDialog.getExistingDirectory(self.dlg, "Select a directory to save routings", "")
-        self.dlg.lineEdit_17.setText(foldername6)
-
-    def output7(self):
-        foldername7 = QFileDialog.getExistingDirectory(self.dlg, "Select a directory to save the Tij file", "")
-        self.dlg.lineEdit_26.setText(foldername7)
-
-    def output8(self):
-        foldername8 = QFileDialog.getExistingDirectory(self.dlg, "Select a directory to save routings", "")
-        self.dlg.lineEdit_15.setText(foldername8)
-
-    def output9(self):
-        foldername9 = QFileDialog.getExistingDirectory(self.dlg, "Select a directory to save routings", "")
-        self.dlg.lineEdit_20.setText(foldername9)		
-
     def run(self):
         """Run method that performs all the real work"""
 
         # Create the dialog with elements (after translation) and keep reference
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
         if self.first_start == True:
-            self.first_start = False
             self.dlg = ToolBoxDialog()
-
-            self.dlg.pushButton_1.clicked.connect(self.output)
-            self.dlg.pushButton_2.clicked.connect(self.output2)
-            self.dlg.pushButton_3.clicked.connect(self.output3)
-            self.dlg.pushButton_4.clicked.connect(self.output4)
-            self.dlg.pushButton_5.clicked.connect(self.output5)
-            self.dlg.pushButton_6.clicked.connect(self.output6)
-            self.dlg.pushButton_7.clicked.connect(self.input)
-            self.dlg.pushButton_8.clicked.connect(self.output8)
-            self.dlg.pushButton_9.clicked.connect(self.output7)
-            self.dlg.pushButton_10.clicked.connect(self.output9)
-            self.dlg.pushButton_11.clicked.connect(self.input2)
-            self.dlg.pushButton_12.clicked.connect(self.input3)
 
         # show the dialog
         self.dlg.show()

@@ -79,18 +79,18 @@
       <number>10</number>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <property name="tabSpacing">
       <number>10</number>
      </property>
-     <widget class="QWidget" name="page_1">
+     <widget class="QWidget" name="routingTab">
       <property name="geometry">
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>381</width>
-        <height>279</height>
+        <width>657</width>
+        <height>512</height>
        </rect>
       </property>
       <attribute name="label">
@@ -139,7 +139,7 @@
             </widget>
            </item>
            <item row="2" column="2">
-            <widget class="QLineEdit" name="lineEdit_8">
+            <widget class="QLineEdit" name="routingOutDirTxt1">
              <property name="text">
               <string/>
              </property>
@@ -239,25 +239,6 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="1">
-            <widget class="QPushButton" name="pushButton_1">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>20</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>...</string>
-             </property>
-            </widget>
-           </item>
            <item row="2" column="0">
             <widget class="QLabel" name="label_21">
              <property name="text">
@@ -282,6 +263,25 @@
             <widget class="QgsColorButton" name="mColorButton_3">
              <property name="mouseTracking">
               <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QPushButton" name="routingOutDirBtn1">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>30</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>...</string>
              </property>
             </widget>
            </item>
@@ -324,7 +324,7 @@
             </widget>
            </item>
            <item row="3" column="1">
-            <widget class="QPushButton" name="pushButton_2">
+            <widget class="QPushButton" name="routingOutDirBtn2">
              <property name="maximumSize">
               <size>
                <width>30</width>
@@ -434,7 +434,7 @@
             </widget>
            </item>
            <item row="3" column="2" colspan="3">
-            <widget class="QLineEdit" name="lineEdit_10">
+            <widget class="QLineEdit" name="routingOutDirTxt2">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -459,13 +459,13 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="page_2">
+     <widget class="QWidget" name="shortcutTab">
       <property name="geometry">
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>367</width>
-        <height>308</height>
+        <width>657</width>
+        <height>512</height>
        </rect>
       </property>
       <attribute name="label">
@@ -491,7 +491,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tab_3">
           <attribute name="title">
@@ -527,7 +527,7 @@
             </widget>
            </item>
            <item row="3" column="3" colspan="2">
-            <widget class="QPushButton" name="pushButton_3">
+            <widget class="QPushButton" name="routingOutDirBtn3">
              <property name="maximumSize">
               <size>
                <width>30</width>
@@ -540,7 +540,7 @@
             </widget>
            </item>
            <item row="3" column="5">
-            <widget class="QLineEdit" name="lineEdit_4">
+            <widget class="QLineEdit" name="routingOutDirTxt3">
              <property name="text">
               <string/>
              </property>
@@ -810,7 +810,7 @@
             </widget>
            </item>
            <item row="4" column="5">
-            <widget class="QLineEdit" name="lineEdit_6">
+            <widget class="QLineEdit" name="routingOutDirTxt4">
              <property name="text">
               <string/>
              </property>
@@ -865,7 +865,7 @@
             </widget>
            </item>
            <item row="4" column="4">
-            <widget class="QPushButton" name="pushButton_4">
+            <widget class="QPushButton" name="routingOutDirBtn4">
              <property name="maximumSize">
               <size>
                <width>30</width>
@@ -883,13 +883,13 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="page_3">
+     <widget class="QWidget" name="ODpairsTab">
       <property name="geometry">
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>490</width>
-        <height>364</height>
+        <width>657</width>
+        <height>512</height>
        </rect>
       </property>
       <attribute name="label">
@@ -909,7 +909,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tab_5">
           <attribute name="title">
@@ -1028,10 +1028,10 @@
             </widget>
            </item>
            <item row="6" column="2">
-            <widget class="QPushButton" name="pushButton_5">
+            <widget class="QPushButton" name="routingOutDirBtn5">
              <property name="maximumSize">
               <size>
-               <width>93</width>
+               <width>30</width>
                <height>16777215</height>
               </size>
              </property>
@@ -1340,7 +1340,7 @@
             </widget>
            </item>
            <item row="7" column="1">
-            <widget class="QPushButton" name="pushButton_6">
+            <widget class="QPushButton" name="routingOutDirBtn6">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1349,7 +1349,7 @@
              </property>
              <property name="maximumSize">
               <size>
-               <width>93</width>
+               <width>30</width>
                <height>28</height>
               </size>
              </property>
@@ -1362,7 +1362,7 @@
             </widget>
            </item>
            <item row="7" column="2" colspan="3">
-            <widget class="QLineEdit" name="lineEdit_17">
+            <widget class="QLineEdit" name="routingOutDirTxt6">
              <property name="text">
               <string/>
              </property>
@@ -1422,7 +1422,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="page_4">
+     <widget class="QWidget" name="ODpairsLocalTab">
       <property name="geometry">
        <rect>
         <x>0</x>
@@ -1463,14 +1463,20 @@
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QPushButton" name="pushButton_7">
+            <widget class="QPushButton" name="loadXlsBtn">
+             <property name="maximumSize">
+              <size>
+               <width>30</width>
+               <height>16777215</height>
+              </size>
+             </property>
              <property name="text">
               <string>...</string>
              </property>
             </widget>
            </item>
            <item row="0" column="2" colspan="4">
-            <widget class="QLineEdit" name="lineEdit_27">
+            <widget class="QLineEdit" name="loadXlsTxt">
              <property name="text">
               <string/>
              </property>
@@ -1505,14 +1511,20 @@
             </widget>
            </item>
            <item row="3" column="1">
-            <widget class="QPushButton" name="pushButton_9">
+            <widget class="QPushButton" name="routingOutDirBtn7">
+             <property name="maximumSize">
+              <size>
+               <width>30</width>
+               <height>16777215</height>
+              </size>
+             </property>
              <property name="text">
               <string>...</string>
              </property>
             </widget>
            </item>
            <item row="3" column="2" colspan="4">
-            <widget class="QLineEdit" name="lineEdit_26">
+            <widget class="QLineEdit" name="routingOutDirTxt7">
              <property name="text">
               <string/>
              </property>
@@ -1573,21 +1585,41 @@
            <string>Existing Routings</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout_10">
-           <item row="6" column="4">
-            <widget class="QLineEdit" name="lineEdit_14">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_7">
              <property name="text">
-              <string/>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tij file &lt;span style=&quot; color:#ff0000;&quot;&gt;*&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
             </widget>
            </item>
-           <item row="5" column="1">
-            <widget class="QPushButton" name="pushButton_8">
+           <item row="0" column="1">
+            <widget class="QPushButton" name="loadTijFileBtn1">
+             <property name="maximumSize">
+              <size>
+               <width>30</width>
+               <height>16777215</height>
+              </size>
+             </property>
              <property name="text">
               <string>...</string>
              </property>
             </widget>
            </item>
-           <item row="3" column="2" colspan="3">
+           <item row="0" column="2" colspan="3">
+            <widget class="QLineEdit" name="loadTijFileTxt1">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_34">
+             <property name="text">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Profile &lt;span style=&quot; color:#ff0000;&quot;&gt;*&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2" colspan="3">
             <widget class="QComboBox" name="RoutingProfiles_5">
              <property name="toolTip">
               <string>Mode of travel</string>
@@ -1637,77 +1669,76 @@
              </item>
             </widget>
            </item>
-           <item row="1" column="2" rowspan="2" colspan="3">
-            <widget class="QLineEdit" name="lineEdit_29">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0" colspan="2">
-            <widget class="QLabel" name="label_7">
-             <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tij file &lt;span style=&quot; color:#ff0000;&quot;&gt;*&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QPushButton" name="pushButton_11">
-             <property name="text">
-              <string>...</string>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="0">
-            <widget class="QLabel" name="label_36">
-             <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Output folder &lt;span style=&quot; color:#ff0000;&quot;&gt;*&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="2" colspan="3">
-            <widget class="QLineEdit" name="lineEdit_15">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="6" column="3">
-            <widget class="QLabel" name="label_33">
-             <property name="text">
-              <string>Width</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="2" colspan="3">
-            <widget class="QLineEdit" name="lineEdit_16">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0">
+           <item row="2" column="0">
             <widget class="QLabel" name="label_37">
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tij,m &lt;span style=&quot; color:#ff0000;&quot;&gt;*&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
             </widget>
            </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="label_34">
+           <item row="2" column="2" colspan="3">
+            <widget class="QLineEdit" name="lineEdit_16">
              <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Profile &lt;span style=&quot; color:#ff0000;&quot;&gt;*&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string/>
              </property>
             </widget>
            </item>
-           <item row="7" column="4">
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_36">
+             <property name="text">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Output folder &lt;span style=&quot; color:#ff0000;&quot;&gt;*&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QPushButton" name="routingOutDirBtn8">
+             <property name="maximumSize">
+              <size>
+               <width>30</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>...</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="2" colspan="3">
+            <widget class="QLineEdit" name="routingOutDirTxt8">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="3">
+            <widget class="QLabel" name="label_33">
+             <property name="text">
+              <string>Width</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="4">
+            <widget class="QLineEdit" name="lineEdit_14">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="3">
+            <widget class="QLabel" name="label_35">
+             <property name="text">
+              <string>Color</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="4">
             <widget class="QgsColorButton" name="mColorButton_5">
              <property name="mouseTracking">
               <bool>false</bool>
              </property>
             </widget>
            </item>
-           <item row="8" column="2">
+           <item row="6" column="2">
             <spacer name="verticalSpacer_10">
              <property name="orientation">
               <enum>Qt::Vertical</enum>
@@ -1719,13 +1750,6 @@
               </size>
              </property>
             </spacer>
-           </item>
-           <item row="7" column="3">
-            <widget class="QLabel" name="label_35">
-             <property name="text">
-              <string>Color</string>
-             </property>
-            </widget>
            </item>
           </layout>
          </widget>
@@ -1745,14 +1769,20 @@
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QPushButton" name="pushButton_12">
+            <widget class="QPushButton" name="loadTijFileBtn2">
+             <property name="maximumSize">
+              <size>
+               <width>30</width>
+               <height>16777215</height>
+              </size>
+             </property>
              <property name="text">
               <string>...</string>
              </property>
             </widget>
            </item>
            <item row="0" column="2" colspan="3">
-            <widget class="QLineEdit" name="lineEdit_31">
+            <widget class="QLineEdit" name="loadTijFileTxt2">
              <property name="text">
               <string/>
              </property>
@@ -1871,14 +1901,20 @@
             </widget>
            </item>
            <item row="4" column="1">
-            <widget class="QPushButton" name="pushButton_10">
+            <widget class="QPushButton" name="routingOutDirBtn9">
+             <property name="maximumSize">
+              <size>
+               <width>30</width>
+               <height>16777215</height>
+              </size>
+             </property>
              <property name="text">
               <string>...</string>
              </property>
             </widget>
            </item>
            <item row="4" column="2" colspan="3">
-            <widget class="QLineEdit" name="lineEdit_20">
+            <widget class="QLineEdit" name="routingOutDirTxt9">
              <property name="text">
               <string/>
              </property>
