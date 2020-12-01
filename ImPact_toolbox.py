@@ -1292,7 +1292,8 @@ class ToolBox:
                     if self.dlg.shortCut_OD_SepRoutes_Cbx.isChecked():    # OD shortcut WITH separate routings
                         OLayer = self.dlg.mMapLayerComboBox_2.currentLayer()
                         if OLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the Origins Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
+                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', 
+                                u'The CRS of the Origins Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
                         dfO = []
                         check = False
                         for feature in OLayer.getFeatures():

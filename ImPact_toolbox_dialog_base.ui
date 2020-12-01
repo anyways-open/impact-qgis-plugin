@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>681</width>
+    <width>671</width>
     <height>767</height>
    </rect>
   </property>
@@ -89,7 +89,7 @@
       <number>10</number>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <property name="tabSpacing">
       <number>10</number>
@@ -99,7 +99,7 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>657</width>
+        <width>647</width>
         <height>512</height>
        </rect>
       </property>
@@ -501,7 +501,7 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="shortcutTab1">
           <attribute name="title">
