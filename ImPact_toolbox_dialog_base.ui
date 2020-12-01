@@ -39,7 +39,17 @@
    <bool>false</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout_6">
-   <item row="0" column="0">
+   <item row="5" column="0">
+    <widget class="QDialogButtonBox" name="button_box">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
     <widget class="QToolBox" name="toolBox">
      <property name="enabled">
       <bool>true</bool>
@@ -79,7 +89,7 @@
       <number>10</number>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <property name="tabSpacing">
       <number>10</number>
@@ -98,7 +108,7 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QTabWidget" name="tabWidget_1">
+        <widget class="QTabWidget" name="routingWgt">
          <property name="font">
           <font>
            <pointsize>8</pointsize>
@@ -119,13 +129,13 @@
          <property name="currentIndex">
           <number>0</number>
          </property>
-         <widget class="QWidget" name="tab_1">
+         <widget class="QWidget" name="routingTab1">
           <attribute name="title">
            <string>All POIs</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout_2">
            <item row="4" column="0">
-            <widget class="QCheckBox" name="checkBox_3">
+            <widget class="QCheckBox" name="routing_all_SepRoutes_Cbx">
              <property name="text">
               <string>Seperate Routings</string>
              </property>
@@ -287,7 +297,7 @@
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="tab_2">
+         <widget class="QWidget" name="routingTab2">
           <property name="toolTip">
            <string>Connecting all Origins to all Destinations</string>
           </property>
@@ -344,7 +354,7 @@
             </widget>
            </item>
            <item row="5" column="0" colspan="3">
-            <widget class="QCheckBox" name="checkBox_4">
+            <widget class="QCheckBox" name="routing_OD_SepRoutes_Cbx">
              <property name="text">
               <string>Seperate Routings</string>
              </property>
@@ -473,7 +483,7 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
-        <widget class="QTabWidget" name="tabWidget_2">
+        <widget class="QTabWidget" name="shortcutWgt">
          <property name="font">
           <font>
            <pointsize>8</pointsize>
@@ -493,7 +503,7 @@
          <property name="currentIndex">
           <number>0</number>
          </property>
-         <widget class="QWidget" name="tab_3">
+         <widget class="QWidget" name="shortcutTab1">
           <attribute name="title">
            <string>All POIs</string>
           </attribute>
@@ -554,7 +564,7 @@
             </widget>
            </item>
            <item row="5" column="0" colspan="3">
-            <widget class="QCheckBox" name="checkBox">
+            <widget class="QCheckBox" name="shortCut_All_SepRoutes_Cbx">
              <property name="text">
               <string>Seperate Routings</string>
              </property>
@@ -683,7 +693,7 @@
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="tab_4">
+         <widget class="QWidget" name="shortcutTab2">
           <property name="toolTip">
            <string>Connecting all Origins to all Destinations</string>
           </property>
@@ -824,7 +834,7 @@
             </widget>
            </item>
            <item row="6" column="0" colspan="4">
-            <widget class="QCheckBox" name="checkBox_2">
+            <widget class="QCheckBox" name="shortCut_OD_SepRoutes_Cbx">
              <property name="text">
               <string>Seperate Routings</string>
              </property>
@@ -897,7 +907,7 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <widget class="QTabWidget" name="tabWidget_3">
+        <widget class="QTabWidget" name="ODpairsWgt">
          <property name="font">
           <font>
            <pointsize>8</pointsize>
@@ -909,9 +919,9 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
-         <widget class="QWidget" name="tab_5">
+         <widget class="QWidget" name="ODpairsTab1">
           <attribute name="title">
            <string>Existing Routings</string>
           </attribute>
@@ -1148,7 +1158,7 @@
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="tab_6">
+         <widget class="QWidget" name="ODpairsTab2">
           <property name="focusPolicy">
            <enum>Qt::NoFocus</enum>
           </property>
@@ -1436,7 +1446,7 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
-        <widget class="QTabWidget" name="tabWidget_4">
+        <widget class="QTabWidget" name="ODpairsLocalWgt">
          <property name="font">
           <font>
            <pointsize>8</pointsize>
@@ -1448,9 +1458,9 @@
           <enum>QTabWidget::Triangular</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
-         <widget class="QWidget" name="tab_7">
+         <widget class="QWidget" name="ODpairsLocalTab1">
           <attribute name="title">
            <string>Creating Tij</string>
           </attribute>
@@ -1580,7 +1590,7 @@
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="tab">
+         <widget class="QWidget" name="ODpairsLocalTab2">
           <attribute name="title">
            <string>Existing Routings</string>
           </attribute>
@@ -1753,7 +1763,7 @@
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="tab_8">
+         <widget class="QWidget" name="ODpairsLocalTab3">
           <property name="focusPolicy">
            <enum>Qt::NoFocus</enum>
           </property>
@@ -1969,7 +1979,7 @@
      </widget>
     </widget>
    </item>
-   <item row="1" column="0">
+   <item row="0" column="0">
     <widget class="QLabel" name="label">
      <property name="font">
       <font>
@@ -1983,20 +1993,10 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="0">
+   <item row="1" column="0">
     <widget class="QLabel" name="label_4">
      <property name="text">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;*&lt;/span&gt; Indicates required field&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0">
-    <widget class="QDialogButtonBox" name="button_box">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>

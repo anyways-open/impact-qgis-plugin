@@ -32,16 +32,12 @@ from qgis.gui import QgsMessageBar
 from .resources_rc import *
 # Import the code for the dialog
 from .ImPact_toolbox_dialog import ToolBoxDialog
-import os.path
+import sys, os.path, json, shutil, time, asyncio
 import requests
 import pandas as pd
-import shutil
-import json
-import time
-import asyncio
 import aiohttp
 import backoff
-import sys
+
 
 
 class ToolBox:
@@ -195,19 +191,18 @@ class ToolBox:
         # Create the dialog with elements (after translation) and keep reference
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
         if self.first_start == True:
+            self.first_start = False
             self.dlg = ToolBoxDialog()
 
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
         result = self.dlg.exec_()
-        # See if OK was pressed
+        # if OK was pressed
         if result:
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
-            if self.dlg.toolBox.currentIndex() == 0:
-                if self.dlg.tabWidget_1.currentIndex() == 0:
-                    if self.dlg.checkBox_3.isChecked():
+            if self.dlg.toolBox.currentIndex() == 0:            # ROUTING
+                if self.dlg.routingWgt.currentIndex() == 0:        # ALL POI's 
+                    if self.dlg.routing_all_SepRoutes_Cbx.isChecked():   
                         ODLayer = self.dlg.mMapLayerComboBox_4.currentLayer()
                         if ODLayer.crs().authid() != 'EPSG:4326':
                             return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the POIs Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
@@ -378,7 +373,7 @@ class ToolBox:
                                 filename.triggerRepaint()
                                 shapeGroup.insertChildNode(1, QgsLayerTreeLayer(filename))
 
-                    else:
+                    else:                                      
                         ODLayer = self.dlg.mMapLayerComboBox_4.currentLayer()
                         if ODLayer.crs().authid() != 'EPSG:4326':
                             return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the POIs Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
@@ -545,11 +540,13 @@ class ToolBox:
                         sym.setWidth(float(self.dlg.lineEdit_9.text()))
                         lyr.triggerRepaint()
 
-                elif self.dlg.tabWidget_1.currentIndex() == 1:
-                    if self.dlg.checkBox_4.isChecked():
+                elif self.dlg.routingWgt.currentIndex() == 1:      # Origins to Destinations
+                    if self.dlg.routing_OD_SepRoutes_Cbx.isChecked():  # Origins to Destinations WITH separated routes
                         OLayer = self.dlg.mMapLayerComboBox_5.currentLayer()
                         if OLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the Origins Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
+                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', 
+                                    u'The CRS of the Origins Layer must be EPSG:4326 !', 
+                                                                level = Qgis.Critical, duration=5)
                         dfO = []
                         check = False
                         for feature in OLayer.getFeatures():
@@ -738,8 +735,8 @@ class ToolBox:
                                 sym.setWidth(float(self.dlg.lineEdit_11.text()))
                                 filename.triggerRepaint()
                                 shapeGroup.insertChildNode(1, QgsLayerTreeLayer(filename))
-
-                    else:
+ 
+                    else:                                             # Origins to Destinations NO separated routes                          
                         OLayer = self.dlg.mMapLayerComboBox_5.currentLayer()
                         if OLayer.crs().authid() != 'EPSG:4326':
                             return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the Origins Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
@@ -928,9 +925,9 @@ class ToolBox:
                         sym.setWidth(float(self.dlg.lineEdit_11.text()))
                         lyr.triggerRepaint()
 
-            elif self.dlg.toolBox.currentIndex() == 1:
-                if self.dlg.tabWidget_2.currentIndex() == 0:
-                    if self.dlg.checkBox.isChecked():
+            elif self.dlg.toolBox.currentIndex() == 1:           # SHORTCUT
+                if self.dlg.shortcutWgt.currentIndex() == 0:        # ALL POI's 
+                    if self.dlg.shortCut_All_SepRoutes_Cbx.isChecked():   # All POI shortcut WITH separate routings
                         ODLayer = self.dlg.mMapLayerComboBox.currentLayer()
                         if ODLayer.crs().authid() != 'EPSG:4326':
                             return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the POIs Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
@@ -1116,7 +1113,7 @@ class ToolBox:
                                 filename.triggerRepaint()
                                 shapeGroup.insertChildNode(1, QgsLayerTreeLayer(filename))
 
-                    else:
+                    else:                                                #  All POI shortcut NO separate routings
                         ODLayer = self.dlg.mMapLayerComboBox.currentLayer()
                         if ODLayer.crs().authid() != 'EPSG:4326':
                             return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the POIs Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
@@ -1291,8 +1288,8 @@ class ToolBox:
                         sym.setWidth(float(self.dlg.lineEdit_5.text()))
                         lyr.triggerRepaint()
 
-                elif self.dlg.tabWidget_2.currentIndex() == 1:
-                    if self.dlg.checkBox_2.isChecked():
+                elif self.dlg.shortcutWgt.currentIndex() == 1:      # Origins to Destinations
+                    if self.dlg.shortCut_OD_SepRoutes_Cbx.isChecked():    # OD shortcut WITH separate routings
                         OLayer = self.dlg.mMapLayerComboBox_2.currentLayer()
                         if OLayer.crs().authid() != 'EPSG:4326':
                             return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the Origins Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
@@ -1498,7 +1495,7 @@ class ToolBox:
                                 filename.triggerRepaint()
                                 shapeGroup.insertChildNode(1, QgsLayerTreeLayer(filename))
 
-                    else:
+                    else:                                                 # OD shortcut NO separate routings
                         OLayer = self.dlg.mMapLayerComboBox_2.currentLayer()
                         if OLayer.crs().authid() != 'EPSG:4326':
                             return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the Origins Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
@@ -1689,8 +1686,8 @@ class ToolBox:
                         sym.setWidth(float(self.dlg.lineEdit_7.text()))
                         lyr.triggerRepaint()
                 
-            elif self.dlg.toolBox.currentIndex() == 2:
-                if self.dlg.tabWidget_3.currentIndex() == 0:
+            elif self.dlg.toolBox.currentIndex() == 2:           #  Origin-Destination Pairs: Open Data API
+                if self.dlg.ODpairsWgt.currentIndex() == 0:           #  Existing Routings
                     From_layer = self.dlg.mMapLayerComboBox_13.currentLayer()
                     if From_layer.crs().authid() != 'EPSG:4326':
                         return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of From-Area polygon must be EPSG:4326 !', level = Qgis.Critical, duration=0)
@@ -1935,7 +1932,7 @@ class ToolBox:
                         sym.setWidth(float(self.dlg.lineEdit_23.text()))
                         lyr.triggerRepaint()						
                         
-                elif self.dlg.tabWidget_3.currentIndex() == 1:
+                elif self.dlg.ODpairsWgt.currentIndex() == 1:         #  Scenario-based Routings (ShortCut)
                     From_layer = self.dlg.mMapLayerComboBox_8.currentLayer()
                     if From_layer.crs().authid() != 'EPSG:4326':
                         return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of From-Area polygon must be EPSG:4326 !', level = Qgis.Critical, duration=0)
@@ -2181,8 +2178,8 @@ class ToolBox:
                         sym.setWidth(float(self.dlg.lineEdit_18.text()))
                         lyr.triggerRepaint()
 
-            if self.dlg.toolBox.currentIndex() == 3:
-                if self.dlg.tabWidget_4.currentIndex() == 0:
+            elif self.dlg.toolBox.currentIndex() == 3:           #  Origin-Destination Pairs: Open Data API
+                if self.dlg.ODpairsLocalWgt.currentIndex() == 0:      # Creating Tij
                     xlfile = self.dlg.lineEdit_27.text()
                     path = self.dlg.lineEdit_26.text()
                     SheetName= self.dlg.lineEdit_28.text()
@@ -2250,7 +2247,7 @@ class ToolBox:
                     else:
                         pass
 
-                elif self.dlg.tabWidget_4.currentIndex() == 1:
+                elif self.dlg.ODpairsLocalWgt.currentIndex() == 1:    # Existing Routings
                     Tij = self.dlg.lineEdit_29.text()
                     d = json.loads(open(Tij).read())
                     path= self.dlg.lineEdit_15.text()
@@ -2378,7 +2375,7 @@ class ToolBox:
                     sym.setWidth(float(self.dlg.lineEdit_14.text()))
                     lyr.triggerRepaint()
 
-                elif self.dlg.tabWidget_4.currentIndex() == 2:
+                elif self.dlg.ODpairsLocalWgt.currentIndex() == 2:    # Scenario-based Routings (ShortCut)
                     Tij2 = self.dlg.lineEdit_31.text()
                     d = json.loads(open(Tij2).read())
                     path= self.dlg.lineEdit_20.text()
