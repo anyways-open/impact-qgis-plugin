@@ -23,7 +23,7 @@
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, qVersion
 from qgis.PyQt.QtGui import *
-from qgis.PyQt.QtWidgets import QAction, QFileDialog
+from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox 
 from qgis.core import *
 from qgis.utils import iface
 from qgis.gui import QgsMessageBar
@@ -34,10 +34,14 @@ from .resources_rc import *
 from .ImPact_toolbox_dialog import ToolBoxDialog
 import sys, os.path, json, shutil, time, asyncio
 import requests
+
+#module for this tool
+from .impact import routing, addGeojsonsToMap, checkForNullGeometry, qgsError, write2File, time_now
+
+#TODO: refactor 
 import pandas as pd
 import aiohttp
 import backoff
-
 
 
 class ToolBox:
@@ -57,10 +61,7 @@ class ToolBox:
         self.plugin_dir = os.path.dirname(__file__)
         # initialize locale
         locale = QSettings().value('locale/userLocale')[0:2]
-        locale_path = os.path.join(
-            self.plugin_dir,
-            'i18n',
-            'ToolBox_{}.qm'.format(locale))
+        locale_path = os.path.join(self.plugin_dir, 'i18n', 'ToolBox_{}.qm'.format(locale))
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -193,6 +194,7 @@ class ToolBox:
         if self.first_start == True:
             self.first_start = False
             self.dlg = ToolBoxDialog()
+            self._r = routing.routing()
 
         # show the dialog
         self.dlg.show()
@@ -201,732 +203,152 @@ class ToolBox:
         # if OK was pressed
         if result:
             if self.dlg.toolBox.currentIndex() == 0:            # ROUTING
-                if self.dlg.routingWgt.currentIndex() == 0:        # ALL POI's 
-                    if self.dlg.routing_all_SepRoutes_Cbx.isChecked():   
-                        ODLayer = self.dlg.mMapLayerComboBox_4.currentLayer()
-                        if ODLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the POIs Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
-                        df = []
-                        check = False
-                        for feature in ODLayer.getFeatures():
-                            if feature.geometry().isNull() == False:
-                                Id = feature[0]
-                                point = feature.geometry().asPoint()
-                                X = point.x()
-                                Y = point.y()
-                                XY = str(X) + ',' + str(Y)
-                                df.append([Id, XY])
+                if self.dlg.routingWgt.currentIndex() == 0:        # ROUTING ALL POI's 
+
+                    # get vars from UI
+                    ODLayer = self.dlg.routingTab1_mLayers.currentLayer()
+                    path = self.dlg.routingTab1_outDirTxt.text()
+                    PROFILE = self.dlg.routingTab1_profileCbx.currentText().lower()
+                    size = self.dlg.routingTab1_widthNum.value()
+                    color =  self.dlg.routingTab1_mColorBtn.color()
+                    sepRoutes = self.dlg.routingtab1_SepRoutes_Cbx.isChecked()
+
+                    #other variabels 
+                    gjsList = []
+                    fileList = []
+                    POIs = [ { 'id': f[0], 'xy': [f.geometry().asPoint().x(),  f.geometry().asPoint().y()] }
+                               for f in ODLayer.getFeatures() if f.geometry().isNull() == False ]
+
+                    #ERROR if srs is not EPSG:4326 --> TODO reproject xy instead of error
+                    errMsg = self.tr('The CRS of the Origins Layer must be EPSG:4326 !')
+                    if qgsError(self.iface, errMsg, ODLayer.crs().authid() != 'EPSG:4326'): return
+
+                    #WARN if file has null-geometries
+                    checkForNullGeometry(self.iface, ODLayer, self.tr('The POIs Layer has Null geometries!') )
+
+                    #loop trought all poi's. 
+                    for from_poi in POIs: 
+                        for to_poi in POIs: 
+                            if from_poi == to_poi: continue
+                            
+                            #make http request, response is in geojson format
+                            response = self._r.fromto(from_poi['xy'] , to_poi['xy'] , PROFILE)  
+
+                            from_id  = str( from_poi['id'] )
+                            to_id    = str(  to_poi['id']  )
+                            O_D      = "{0}_{1}".format( from_poi['id'], to_poi['id'] )
+                            if ('features' in response) == False or len(response['features']) == 0:
+                                response = { "type": 'FeatureCollection',
+                                        "features":[{'type': 'Feature', 'name': 'ShapeMeta',
+                                               'properties': {'name': 'N/A', 'highway': 'N/A', 'profile': PROFILE, 
+                                               'From': from_id, 'To':  to_id, 'O_D': O_D } 
+                                            }] }
                             else:
-                                while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The POIs Layer has Null geometries!', level = Qgis.Warning, duration=0)
-                                    check = True
+                                for n in range(len(response['features'])):
+                                    response['features'][n]['properties']['From'] = from_id
+                                    response['features'][n]['properties']['To']   = to_id
+                                    response['features'][n]['properties']['O_D']  = O_D
+                            gjsList.append(response)
+                    #TODO handle http errors
 
-                        poi = pd.DataFrame(df)
-                        path = self.dlg.lineEdit_8.text()
-                        PROFILE = self.dlg.RoutingProfiles_3.currentText().lower()
+                    if sepRoutes:    # routing All POI's WITH separated routes
+                        for gjs in gjsList:
+                            from_poi_id = gjs['features'][0]['properties']['From']
+                            to_poi_id = gjs['features'][0]['properties']['To'] 
+                            outName = path + "/{0}_to_{1}_by_{2}.json".format(from_poi_id, to_poi_id, PROFILE ) 
+                            write2File(outName, gjs)
+                            fileList.append(outName)
+                    else:                                                 # routing All POI's NO separated routes     
+                        #map responses into one geojson
+                        gjs = { "type": 'FeatureCollection',  "features": []}
+                        for item in  gjsList: 
+                            gjs['features'] += item['features']
 
-                        POIs = poi.rename(columns={poi.columns[0]: "Points", poi.columns[1]: "coordinates"})
+                        #Write output
+                        outName =  path + "/Routings_{0}_{1}.json".format(PROFILE.upper(), time_now() ) 
+                        write2File(outName, gjs)
+                        fileList = [outName]
 
-                        # create new dataframe
-                        OD = pd.DataFrame(columns=['Origins', 'FROM', 'Destinations', 'TO'])
-                        # iterate through the POIs
-                        new_index = 0
-                        for o_POIs in POIs.index:
-                            for d_POIs in POIs.index:
-                                ls = [POIs.Points.loc[o_POIs], POIs.coordinates.loc[o_POIs],
-                                      POIs.Points.loc[d_POIs], POIs.coordinates.loc[d_POIs]]
-                                OD.loc[new_index] = ls
-                                new_index += 1
-                        # remove double POIs
-                        OD = OD[OD.Origins != OD.Destinations]
-                        # dropping duplicate row (rows with everything the same)
-                        OD.drop_duplicates(keep="first", inplace=True)
-                        # Resetting the index of the dataframe
-                        OD = OD.reset_index(drop=True)
+                    # add to map
+                    groupName = PROFILE.upper() + "_Routings"
+                    addGeojsonsToMap(self.iface, fileList, groupName, size, color )
 
-                        OD2 = OD[['FROM', 'TO']]
-                        OD2.insert(loc=0, column='PROFILE', value=PROFILE)
-                        OD2.dropna(inplace=True)
-                        my_list = OD2.to_dict(orient='records')
+                elif self.dlg.routingWgt.currentIndex() == 1:      # ROUTING Origins to Destinations
+                
+                    # get vars from UI
+                    OLayer =  self.dlg.routingTab2_O_mLayers.currentLayer()
+                    DLayer =  self.dlg.routingTab2_D_mLayers.currentLayer()
+                    path =    self.dlg.routingTab2_outDirTxt.text()
+                    PROFILE = self.dlg.routingTab2_profileCbx.currentText().lower()
+                    size =    self.dlg.routingTab2_widthNum.value()
+                    color =   self.dlg.routingTab2_mColorBtn.color()
+                    sepRoutes = self.dlg.routingtab2_SepRoutes_Cbx.isChecked()
 
-                        fnameList = []
-                        timestr = time.strftime("%Y%m%d_%H%M%S")
-                        failedReqs = []
-                        failedReqs2 = []
-                        ApiReqList = []
-                        api_dic = {}
+                    #other variabels                   
+                    gjsList = []
+                    fileList = []
+                    O_POIs = [ { 'id': f[0], 'xy': [f.geometry().asPoint().x(),  f.geometry().asPoint().y()] }
+                               for f in OLayer.getFeatures() if f.geometry().isNull() == False ]
+                    D_POIs = [ { 'id': f[0], 'xy': [f.geometry().asPoint().x(),  f.geometry().asPoint().y()] }
+                               for f in DLayer.getFeatures() if f.geometry().isNull() == False ]
 
-                        for i in range(0, len(my_list)):
-                            api = "https://routing.anyways.eu/api/route?loc=FROM&loc=TO&profile=PROFILE"
-                            for key in my_list[i].keys():
-                                api = api.replace(key, my_list[i][key])
-                                if key == 'TO':
-                                    ApiReqList.append(api)
-                                    api_dic.update({api: i})
+                    #ERROR if srs is not EPSG:4326 --> TODO reproject xy instead of error
+                    errMsg = self.tr('The CRS of the Origins Layer must be EPSG:4326 !')
+                    if qgsError(self.iface, errMsg, OLayer.crs().authid() != 'EPSG:4326'): return
+                    errMsg = self.tr('The CRS of the Destinations Layer must be EPSG:4326 !')
+                    if qgsError(self.iface, errMsg, DLayer.crs().authid() != 'EPSG:4326'): return
 
-                                else:
-                                    pass
+                    #WARN if file has null-geometries
+                    checkForNullGeometry(self.iface, OLayer, self.tr("The origin POI's Layer has Null geometries!") )
+                    checkForNullGeometry(self.iface, DLayer, self.tr("The destination POI's Layer has Null geometries!") )
 
-                        @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
-                        async def get(url, session):
-                            try:
-                                async with session.get(url=url) as response:
-                                    obj = await response.json()
-                                    i = api_dic[url]
-                                    if obj.get("features") != None:
-                                        for n in range(len(obj['features'])):
-                                            obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
-                                            obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
-                                    else:
-                                        obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
-                                                            'properties': {'name': 'N/A', 'highway': 'N/A',
-                                                                           'profile': PROFILE}}]
-                                        obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
-                                        obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                    #loop trought all poi's. 
+                    for from_poi in O_POIs: 
+                        for to_poi in D_POIs: 
+                            response = self._r.fromto(from_poi['xy'] , to_poi['xy'] , PROFILE)  # http request, response is in geojson format
 
-                                    f = open(path + "/%s to %s by %s" % (
-                                        OD.Origins[i], OD.Destinations[i], PROFILE.upper()) + ".json", "w+")
-                                    f.write(json.dumps(obj))
-                                    f.close()
-                                    fnameList.append("%s to %s by %s" % (
-                                        OD.Origins[i], OD.Destinations[i], PROFILE.upper()) + ".json")
-
-                            except Exception as e:
-                                failedReqs.append(url)
-
-                        async def main(urls):
-                            connector = aiohttp.TCPConnector()
-                            session = aiohttp.ClientSession(connector=connector)
-
-                            ret = await asyncio.gather(*[get(url, session) for url in urls])
-                            await session.close()
-
-                        urls = ApiReqList
-                        asyncio.run(main(urls))
-
-                        #2nd round of reuqests (if there're failed requests in the 1st round)
-                        if len(failedReqs) > 0:						
-
-                            @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
-                            async def get(url, session):
-                                try:
-                                    async with session.get(url=url) as response:
-                                        obj = await response.json()
-                                        i = api_dic[url]
-                                        if obj.get("features") != None:
-                                            for n in range(len(obj['features'])):
-                                                obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
-                                                obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
-                                        else:
-                                            obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
-                                                                'properties': {'name': 'N/A', 'highway': 'N/A',
-                                                                               'profile': PROFILE}}]
-                                            obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
-                                            obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
-
-                                        f = open(path + "/%s to %s by %s" % (
-                                            OD.Origins[i], OD.Destinations[i], PROFILE.upper()) + ".json", "w+")
-                                        f.write(json.dumps(obj))
-                                        f.close()
-                                        fnameList.append("%s to %s by %s" % (
-                                            OD.Origins[i], OD.Destinations[i], PROFILE.upper()) + ".json")
-
-                                except Exception as e:
-                                    failedReqs2.append(url)
-
-                            async def main(urls):
-                                connector = aiohttp.TCPConnector()
-                                session = aiohttp.ClientSession(connector=connector)
-
-                                ret = await asyncio.gather(*[get(url, session) for url in urls])
-                                await session.close()
-
-                            urls = failedReqs
-                            asyncio.run(main(urls))
-
-                        else:
-                            pass
-
-                        QgsMessageLog.logMessage('\n'.join(map(str, failedReqs2)), 'ImPact Toolbox', level=Qgis.Info)
-
-                        GroupName = PROFILE.upper() + " Routings"
-                        root = QgsProject.instance().layerTreeRoot()
-                        shapeGroup = root.addGroup(GroupName)  # Ater or Before (basically any name can be given to the group
-
-                        os.chdir(path)
-                        wholelist = os.listdir(os.getcwd())
-
-                        for file in wholelist:
-                            if file in fnameList:
-                                fileroute = path + '/' + file
-                                filename = QgsVectorLayer(fileroute, file[:-5], "ogr")
-                                QgsProject.instance().addMapLayer(filename, False)
-                                symbols = filename.renderer().symbols(QgsRenderContext())
-                                sym = symbols[0]
-                                c = self.dlg.mColorButton_3.color()
-                                sym.setColor(QColor(c))
-                                sym.setWidth(float(self.dlg.lineEdit_9.text()))
-                                filename.triggerRepaint()
-                                shapeGroup.insertChildNode(1, QgsLayerTreeLayer(filename))
-
-                    else:                                      
-                        ODLayer = self.dlg.mMapLayerComboBox_4.currentLayer()
-                        if ODLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the POIs Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
-                        df = []
-                        check = False
-                        for feature in ODLayer.getFeatures():
-                            if feature.geometry().isNull() == False:
-                                Id = feature[0]
-                                point = feature.geometry().asPoint()
-                                X = point.x()
-                                Y = point.y()
-                                XY = str(X) + ',' + str(Y)
-                                df.append([Id, XY])
+                            from_id  = str( from_poi['id'] )
+                            to_id    = str(  to_poi['id']  )
+                            O_D      = "{0}_{1}".format( from_poi['id'], to_poi['id'] )
+                            if ('features' in response) == False or len(response['features']) == 0:
+                                response = { "type": 'FeatureCollection',
+                                        "features":[{'type': 'Feature', 'name': 'ShapeMeta',
+                                               'properties': {'name': 'N/A', 'highway': 'N/A', 'profile': PROFILE, 
+                                               'From': from_id, 'To':  to_id, 'O_D': O_D } 
+                                            }] }
                             else:
-                                while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The POIs Layer has Null geometries!', level = Qgis.Warning, duration=0)
-                                    check = True
+                                for n in range(len(response['features'])):
+                                    response['features'][n]['properties']['From'] = from_id
+                                    response['features'][n]['properties']['To']   = to_id
+                                    response['features'][n]['properties']['O_D']  = O_D
+                            gjsList.append(response)
+                    #TODO handle http errors
+
+                    if sepRoutes:  # Origins to Destinations WITH separated routes
+                        for gjs in gjsList:
+                            from_poi_id = gjs['features'][0]['properties']['From']
+                            to_poi_id = gjs['features'][0]['properties']['To'] 
+                            outName = path + "/{0}_to_{1}_by_{2}.json".format(from_poi_id, to_poi_id, PROFILE ) 
+                            write2File(outName, gjs)
+                            fileList.append(outName)
+                    else:                                                 # Origins to Destinations NO separated routes     
+                        #map responses into one geojson
+                        gjs = { "type": 'FeatureCollection',  "features": []}
+                        for item in  gjsList: 
+                            gjs['features'] += item['features']
+
+                        #Write output
+                        outName =  path + "/Routings_{0}_{1}.json".format(PROFILE.upper(), time_now() ) 
+                        write2File(outName , gjs )
+                        fileList = [outName]
+
+                    # add to map
+                    groupName = PROFILE.upper() + "_Routings"
+                    addGeojsonsToMap(self.iface, fileList, groupName, size, color )
 
-                        poi = pd.DataFrame(df)
-                        path = self.dlg.lineEdit_8.text()
-                        PROFILE = self.dlg.RoutingProfiles_3.currentText().lower()
-
-                        POIs = poi.rename(columns={poi.columns[0]: "Points", poi.columns[1]: "coordinates"})
-
-                        # create new dataframe
-                        OD = pd.DataFrame(columns=['Origins', 'FROM', 'Destinations', 'TO'])
-                        # iterate through the POIs
-                        new_index = 0
-                        for o_POIs in POIs.index:
-                            for d_POIs in POIs.index:
-                                ls = [POIs.Points.loc[o_POIs], POIs.coordinates.loc[o_POIs],
-                                      POIs.Points.loc[d_POIs], POIs.coordinates.loc[d_POIs]]
-                                OD.loc[new_index] = ls
-                                new_index += 1
-                        # remove double POIs
-                        OD = OD[OD.Origins != OD.Destinations]
-                        # dropping duplicate row (rows with everything the same)
-                        OD.drop_duplicates(keep="first", inplace=True)
-                        # Resetting the index of the dataframe
-                        OD = OD.reset_index(drop=True)
-
-                        OD2 = OD[['FROM', 'TO']]
-                        OD2.insert(loc=0, column='PROFILE', value=PROFILE)
-                        OD2.dropna(inplace=True)
-                        my_list = OD2.to_dict(orient='records')
-
-
-                        JsonMerged = {'type': 'FeatureCollection'}
-                        featuresList = []
-                        fnameList = []
-                        timestr = time.strftime("%Y%m%d_%H%M%S")
-                        failedReqs = []
-                        failedReqs2 = []
-                        ApiReqList = []
-                        api_dic = {}
-
-                        for i in range(0, len(my_list)):
-                            api = "https://routing.anyways.eu/api/route?loc=FROM&loc=TO&profile=PROFILE"
-                            for key in my_list[i].keys():
-                                api = api.replace(key, my_list[i][key])
-                                if key == 'TO':
-                                    ApiReqList.append(api)
-                                    api_dic.update({api: i})
-
-                                else:
-                                    pass
-
-                        @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
-
-                        async def get(url, session):
-                            try:
-                                async with session.get(url=url) as response:
-                                    obj = await response.json()
-                                    i = api_dic[url]
-                                    if obj.get("features") != None:
-                                        for n in range(len(obj['features'])):
-                                            obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
-                                            obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
-                                    else:
-                                        obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
-                                                            'properties': {'name': 'N/A', 'highway': 'N/A',
-                                                                           'profile': PROFILE}}]
-                                        obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
-                                        obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
-
-                                    for feats in obj['features']:
-                                        featuresList.append(feats)
-
-                            except Exception as e:
-                                failedReqs.append(url)
-
-                        async def main(urls):
-                            connector = aiohttp.TCPConnector()
-                            session = aiohttp.ClientSession(connector=connector)
-
-                            ret = await asyncio.gather(*[get(url, session) for url in urls])
-                            await session.close()
-
-                        urls = ApiReqList
-                        asyncio.run(main(urls))
-
-                        #2nd round of reuqests (if there're failed requests in the 1st round)
-                        if len(failedReqs) > 0:						
-
-                            @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
-                            async def get(url, session):
-                                try:
-                                    async with session.get(url=url) as response:
-                                        obj = await response.json()
-                                        i = api_dic[url]
-                                        if obj.get("features") != None:
-                                            for n in range(len(obj['features'])):
-                                                obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
-                                                obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
-                                        else:
-                                            obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
-                                                                'properties': {'name': 'N/A', 'highway': 'N/A',
-                                                                               'profile': PROFILE}}]
-                                            obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
-                                            obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
-
-                                        for feats in obj['features']:
-                                            featuresList.append(feats)
-
-                                except Exception as e:
-                                    failedReqs2.append(url)
-
-
-                            async def main(urls):
-                                connector = aiohttp.TCPConnector()
-                                session = aiohttp.ClientSession(connector=connector)
-
-                                ret = await asyncio.gather(*[get(url, session) for url in urls])
-                                await session.close()
-
-                            urls = failedReqs
-                            asyncio.run(main(urls))
-
-                        else:
-                            pass
-
-                        QgsMessageLog.logMessage('\n'.join(map(str, failedReqs2)), 'ImPact Toolbox', level=Qgis.Info)
-
-                        JsonMerged['features'] = featuresList
-
-                        f = open(path + "/Routings_%s_" % (PROFILE.upper()) + timestr + ".json", "w+")
-                        f.write(json.dumps(JsonMerged))
-                        f.close()
-
-                        Fname = "Routings_%s_" % (PROFILE.upper()) + timestr
-                        fileroute = path + "/" + Fname + ".json"
-                        filename = QgsVectorLayer(fileroute, Fname, "ogr")
-                        QgsProject.instance().addMapLayer(filename, True)
-
-                        lyr = iface.activeLayer()
-                        symbols = lyr.renderer().symbols(QgsRenderContext())
-                        sym = symbols[0]
-                        c = self.dlg.mColorButton_3.color()
-                        sym.setColor(QColor(c))
-                        sym.setWidth(float(self.dlg.lineEdit_9.text()))
-                        lyr.triggerRepaint()
-
-                elif self.dlg.routingWgt.currentIndex() == 1:      # Origins to Destinations
-                    if self.dlg.routing_OD_SepRoutes_Cbx.isChecked():  # Origins to Destinations WITH separated routes
-                        OLayer = self.dlg.mMapLayerComboBox_5.currentLayer()
-                        if OLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', 
-                                    u'The CRS of the Origins Layer must be EPSG:4326 !', 
-                                                                level = Qgis.Critical, duration=5)
-                        dfO = []
-                        check = False
-                        for feature in OLayer.getFeatures():
-                            if feature.geometry().isNull() == False:
-                                Id = feature[0]
-                                point = feature.geometry().asPoint()
-                                X = point.x()
-                                Y = point.y()
-                                XY = str(X) + ',' + str(Y)
-                                dfO.append([Id, XY])
-                            else:
-                                while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The Origins Layer has Null geometries!', level = Qgis.Warning, duration=0)
-                                    check = True
-
-                        O1 = pd.DataFrame(dfO)
-
-                        DLayer = self.dlg.mMapLayerComboBox_6.currentLayer()
-                        if DLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the Destinations Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
-                        dfD = []
-                        check = False
-                        for feature in DLayer.getFeatures():
-                            if feature.geometry().isNull() == False:
-                                Id = feature[0]
-                                point = feature.geometry().asPoint()
-                                X = point.x()
-                                Y = point.y()
-                                XY = str(X) + ',' + str(Y)
-                                dfD.append([Id, XY])
-                            else:
-                                while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The Destinations Layer has Null geometries!', level = Qgis.Warning, duration=0)
-                                    check = True
-
-                        D1 = pd.DataFrame(dfD)
-
-                        path = self.dlg.lineEdit_10.text()
-                        PROFILE = self.dlg.RoutingProfiles_4.currentText().lower()
-
-                        Origins = O1.rename(columns={O1.columns[0]: "O_Points", O1.columns[1]: "O_coordinates"})
-                        Destinations = D1.rename(columns={O1.columns[0]: "D_Points", O1.columns[1]: "D_coordinates"})
-
-                        # create new dataframe
-                        OD = pd.DataFrame(columns=['Origins', 'FROM', 'Destinations', 'TO'])
-
-                        new_index = 0
-                        for origins in Origins.index:
-                            for destinations in Destinations.index:
-                                ls = [Origins.O_Points.loc[origins], Origins.O_coordinates.loc[origins],
-                                      Destinations.D_Points.loc[destinations], Destinations.D_coordinates.loc[destinations]]
-                                OD.loc[new_index] = ls
-                                new_index += 1
-                        # remove double POIs
-                        OD = OD[OD.Origins != OD.Destinations]
-                        # dropping duplicate row (rows with everything the same)
-                        OD.drop_duplicates(keep="first", inplace=True)
-                        # Resetting the index of the dataframe
-                        OD = OD.reset_index(drop=True)
-
-                        OD2 = OD[['FROM', 'TO']]
-                        OD2.insert(loc=0, column='PROFILE', value=PROFILE)
-                        OD2.dropna(inplace=True)
-                        my_list = OD2.to_dict(orient='records')
-                        
-                        fnameList = []
-                        timestr = time.strftime("%Y%m%d_%H%M%S")
-                        failedReqs = []
-                        failedReqs2 = []
-                        ApiReqList = []
-                        api_dic = {}
-
-                        for i in range(0, len(my_list)):
-                            api = "https://routing.anyways.eu/api/route?loc=FROM&loc=TO&profile=PROFILE"
-                            for key in my_list[i].keys():
-                                api = api.replace(key, my_list[i][key])
-                                if key == 'TO':
-                                    ApiReqList.append(api)
-                                    api_dic.update({api: i})
-
-                                else:
-                                    pass
-
-                        @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
-                        async def get(url, session):
-                            try:
-                                async with session.get(url=url) as response:
-                                    obj = await response.json()
-                                    i = api_dic[url]
-                                    if obj.get("features") != None:
-                                        for n in range(len(obj['features'])):
-                                            obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
-                                            obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
-                                    else:
-                                        obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
-                                                            'properties': {'name': 'N/A', 'highway': 'N/A',
-                                                                           'profile': PROFILE}}]
-                                        obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
-                                        obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
-
-                                    f = open(path + "/%s to %s by %s" % (
-                                        OD.Origins[i], OD.Destinations[i], PROFILE.upper()) + ".json", "w+")
-                                    f.write(json.dumps(obj))
-                                    f.close()
-                                    fnameList.append("%s to %s by %s" % (
-                                        OD.Origins[i], OD.Destinations[i], PROFILE.upper()) + ".json")
-
-                            except Exception as e:
-                                failedReqs.append(url)
-
-                        async def main(urls):
-                            connector = aiohttp.TCPConnector()
-                            session = aiohttp.ClientSession(connector=connector)
-
-                            ret = await asyncio.gather(*[get(url, session) for url in urls])
-                            await session.close()
-
-                        urls = ApiReqList
-                        asyncio.run(main(urls))
-
-                        #2nd round of reuqests (if there're failed requests in the 1st round)
-                        if len(failedReqs) > 0:
-
-                            @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
-                            async def get(url, session):
-                                try:
-                                    async with session.get(url=url) as response:
-                                        obj = await response.json()
-                                        i = api_dic[url]
-                                        if obj.get("features") != None:
-                                            for n in range(len(obj['features'])):
-                                                obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
-                                                obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
-                                        else:
-                                            obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
-                                                                'properties': {'name': 'N/A', 'highway': 'N/A',
-                                                                               'profile': PROFILE}}]
-                                            obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
-                                            obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
-
-                                        f = open(path + "/%s to %s by %s" % (
-                                            OD.Origins[i], OD.Destinations[i], PROFILE.upper()) + ".json", "w+")
-                                        f.write(json.dumps(obj))
-                                        f.close()
-                                        fnameList.append("%s to %s by %s" % (
-                                            OD.Origins[i], OD.Destinations[i], PROFILE.upper()) + ".json")
-
-                                except Exception as e:
-                                    failedReqs2.append(url)
-
-                            async def main(urls):
-                                connector = aiohttp.TCPConnector()
-                                session = aiohttp.ClientSession(connector=connector)
-
-                                ret = await asyncio.gather(*[get(url, session) for url in urls])
-                                await session.close()
-
-                            urls = failedReqs
-                            asyncio.run(main(urls))
-
-                        else:
-                            pass
-
-                        QgsMessageLog.logMessage('\n'.join(map(str, failedReqs2)), 'ImPact Toolbox', level=Qgis.Info)
-
-                        GroupName = PROFILE.upper() + " Routings"
-                        root = QgsProject.instance().layerTreeRoot()
-                        shapeGroup = root.addGroup(GroupName)  # Ater or Before (basically any name can be given to the group
-
-                        os.chdir(path)
-                        wholelist = os.listdir(os.getcwd())
-
-                        for file in wholelist:
-                            if file in fnameList:
-                                fileroute = path + '/' + file
-                                filename = QgsVectorLayer(fileroute, file[:-5], "ogr")
-                                QgsProject.instance().addMapLayer(filename, False)
-                                symbols = filename.renderer().symbols(QgsRenderContext())
-                                sym = symbols[0]
-                                c = self.dlg.mColorButton_4.color()
-                                sym.setColor(QColor(c))
-                                sym.setWidth(float(self.dlg.lineEdit_11.text()))
-                                filename.triggerRepaint()
-                                shapeGroup.insertChildNode(1, QgsLayerTreeLayer(filename))
- 
-                    else:                                             # Origins to Destinations NO separated routes                          
-                        OLayer = self.dlg.mMapLayerComboBox_5.currentLayer()
-                        if OLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the Origins Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
-                        dfO = []
-                        check = False
-                        for feature in OLayer.getFeatures():
-                            if feature.geometry().isNull() == False:
-                                Id = feature[0]
-                                point = feature.geometry().asPoint()
-                                X = point.x()
-                                Y = point.y()
-                                XY = str(X) + ',' + str(Y)
-                                dfO.append([Id, XY])
-                            else:
-                                while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The Origins Layer has Null geometries!', level = Qgis.Warning, duration=0)
-                                    check = True
-
-                        O1 = pd.DataFrame(dfO)
-
-                        DLayer = self.dlg.mMapLayerComboBox_6.currentLayer()
-                        if DLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the Destinations Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
-                        dfD = []
-                        check = False
-                        for feature in DLayer.getFeatures():
-                            if feature.geometry().isNull() == False:
-                                Id = feature[0]
-                                point = feature.geometry().asPoint()
-                                X = point.x()
-                                Y = point.y()
-                                XY = str(X) + ',' + str(Y)
-                                dfD.append([Id, XY])
-                            else:
-                                while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The Destinations Layer has Null geometries!', level = Qgis.Warning, duration=0)
-                                    check = True
-
-                        D1 = pd.DataFrame(dfD)
-
-                        path = self.dlg.lineEdit_10.text()
-                        PROFILE = self.dlg.RoutingProfiles_4.currentText().lower()
-
-                        Origins = O1.rename(columns={O1.columns[0]: "O_Points", O1.columns[1]: "O_coordinates"})
-                        Destinations = D1.rename(columns={O1.columns[0]: "D_Points", O1.columns[1]: "D_coordinates"})
-
-                        # create new dataframe
-                        OD = pd.DataFrame(columns=['Origins', 'FROM', 'Destinations', 'TO'])
-
-                        new_index = 0
-                        for origins in Origins.index:
-                            for destinations in Destinations.index:
-                                ls = [Origins.O_Points.loc[origins], Origins.O_coordinates.loc[origins],
-                                      Destinations.D_Points.loc[destinations], Destinations.D_coordinates.loc[destinations]]
-                                OD.loc[new_index] = ls
-                                new_index += 1
-                        # remove double POIs
-                        OD = OD[OD.Origins != OD.Destinations]
-                        # dropping duplicate row (rows with everything the same)
-                        OD.drop_duplicates(keep="first", inplace=True)
-                        # Resetting the index of the dataframe
-                        OD = OD.reset_index(drop=True)
-
-                        OD2 = OD[['FROM', 'TO']]
-                        OD2.insert(loc=0, column='PROFILE', value=PROFILE)
-                        OD2.dropna(inplace=True)
-                        my_list = OD2.to_dict(orient='records')
-                        
-                        JsonMerged = {'type': 'FeatureCollection'}
-                        featuresList = []
-                        fnameList = []
-                        timestr = time.strftime("%Y%m%d_%H%M%S")
-                        failedReqs = []
-                        failedReqs2 = []
-                        ApiReqList = []
-                        api_dic = {}
-
-                        for i in range(0, len(my_list)):
-                            api = "https://routing.anyways.eu/api/route?loc=FROM&loc=TO&profile=PROFILE"
-                            for key in my_list[i].keys():
-                                api = api.replace(key, my_list[i][key])
-                                if key == 'TO':
-                                    ApiReqList.append(api)
-                                    api_dic.update({api: i})
-
-                                else:
-                                    pass
-
-                        @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
-
-                        async def get(url, session):
-                            try:
-                                async with session.get(url=url) as response:
-                                    obj = await response.json()
-                                    i = api_dic[url]
-                                    if obj.get("features") != None:
-                                        for n in range(len(obj['features'])):
-                                            obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
-                                            obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
-                                    else:
-                                        obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
-                                                            'properties': {'name': 'N/A', 'highway': 'N/A',
-                                                                           'profile': PROFILE}}]
-                                        obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
-                                        obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
-
-                                    for feats in obj['features']:
-                                        featuresList.append(feats)
-
-                            except Exception as e:
-                                failedReqs.append(url)
-
-                        async def main(urls):
-                            connector = aiohttp.TCPConnector()
-                            session = aiohttp.ClientSession(connector=connector)
-
-                            ret = await asyncio.gather(*[get(url, session) for url in urls])
-                            await session.close()
-
-                        urls = ApiReqList
-                        asyncio.run(main(urls))
-
-                        #2nd round of reuqests (if there're failed requests in the 1st round)
-                        if len(failedReqs) > 0:
-
-                            @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
-                            async def get(url, session):
-                                try:
-                                    async with session.get(url=url) as response:
-                                        obj = await response.json()
-                                        i = api_dic[url]
-                                        if obj.get("features") != None:
-                                            for n in range(len(obj['features'])):
-                                                obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
-                                                obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
-                                        else:
-                                            obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
-                                                                'properties': {'name': 'N/A', 'highway': 'N/A',
-                                                                               'profile': PROFILE}}]
-                                            obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
-                                            obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
-
-                                        for feats in obj['features']:
-                                            featuresList.append(feats)
-
-                                except Exception as e:
-                                    failedReqs2.append(url)
-
-
-                            async def main(urls):
-                                connector = aiohttp.TCPConnector()
-                                session = aiohttp.ClientSession(connector=connector)
-
-                                ret = await asyncio.gather(*[get(url, session) for url in urls])
-                                await session.close()
-
-
-                            urls = failedReqs
-                            asyncio.run(main(urls))
-
-                        else:
-                            pass
-
-                        QgsMessageLog.logMessage('\n'.join(map(str, failedReqs2)), 'ImPact Toolbox', level=Qgis.Info)
-
-                        JsonMerged['features'] = featuresList
-
-                        f = open(path + "/Routings_%s_" % (PROFILE.upper()) + timestr + ".json", "w+")
-                        f.write(json.dumps(JsonMerged))
-                        f.close()
-
-                        Fname = "Routings_%s_" % (PROFILE.upper()) + timestr
-                        fileroute = path + "/" + Fname + ".json"
-                        filename = QgsVectorLayer(fileroute, Fname, "ogr")
-                        QgsProject.instance().addMapLayer(filename, True)
-
-                        lyr = iface.activeLayer()
-                        symbols = lyr.renderer().symbols(QgsRenderContext())
-                        sym = symbols[0]
-                        c = self.dlg.mColorButton_4.color()
-                        sym.setColor(QColor(c))
-                        sym.setWidth(float(self.dlg.lineEdit_11.text()))
-                        lyr.triggerRepaint()
 
             elif self.dlg.toolBox.currentIndex() == 1:           # SHORTCUT
-                if self.dlg.shortcutWgt.currentIndex() == 0:        # ALL POI's 
+                if self.dlg.shortcutWgt.currentIndex() == 0:        # SHORTCUT ALL POI's 
                     if self.dlg.shortCut_All_SepRoutes_Cbx.isChecked():   # All POI shortcut WITH separate routings
                         ODLayer = self.dlg.mMapLayerComboBox.currentLayer()
                         if ODLayer.crs().authid() != 'EPSG:4326':
@@ -943,7 +365,8 @@ class ToolBox:
                                 df.append([Id, YX])
                             else:
                                 while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The POIs Layer has Null geometries!', level = Qgis.Warning, duration=0)
+                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', 
+                                                u'The POIs Layer has Null geometries!', level = Qgis.Warning)
                                     check = True
 
                         poi = pd.DataFrame(df)
@@ -991,9 +414,6 @@ class ToolBox:
                                 if key == 'TO':
                                     ApiReqList.append(api)
                                     api_dic.update({api: i})
-
-                                else:
-                                    pass
 
                         @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
                         async def get(url, session):
@@ -1088,8 +508,6 @@ class ToolBox:
                             urls = failedReqs
                             asyncio.run(main(urls))
 
-                        else:
-                            pass
 
                         QgsMessageLog.logMessage('\n'.join(map(str, failedReqs2)), 'ImPact Toolbox', level=Qgis.Info)
 
@@ -1288,7 +706,7 @@ class ToolBox:
                         sym.setWidth(float(self.dlg.lineEdit_5.text()))
                         lyr.triggerRepaint()
 
-                elif self.dlg.shortcutWgt.currentIndex() == 1:      # Origins to Destinations
+                elif self.dlg.shortcutWgt.currentIndex() == 1:      # SHORTCUT Origins to Destinations
                     if self.dlg.shortCut_OD_SepRoutes_Cbx.isChecked():    # OD shortcut WITH separate routings
                         OLayer = self.dlg.mMapLayerComboBox_2.currentLayer()
                         if OLayer.crs().authid() != 'EPSG:4326':
@@ -2179,7 +1597,7 @@ class ToolBox:
                         sym.setWidth(float(self.dlg.lineEdit_18.text()))
                         lyr.triggerRepaint()
 
-            elif self.dlg.toolBox.currentIndex() == 3:           #  Origin-Destination Pairs: Open Data API
+            elif self.dlg.toolBox.currentIndex() == 3:           #  Origin-Destination Pairs: Local data
                 if self.dlg.ODpairsLocalWgt.currentIndex() == 0:      # Creating Tij
                     xlfile = self.dlg.lineEdit_27.text()
                     path = self.dlg.lineEdit_26.text()
@@ -2506,3 +1924,7 @@ class ToolBox:
                     sym.setColor(QColor(c))
                     sym.setWidth(float(self.dlg.lineEdit_21.text()))
                     lyr.triggerRepaint()						
+    
+    
+
+

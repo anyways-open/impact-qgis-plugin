@@ -37,9 +37,10 @@ class ToolBoxDialog(QDialog, Ui_APIRequestDialogBase):
         #load UI
         self.setupUi(self)
 
+
         #connect eventhandlers
-        self.routingOutDirBtn1.clicked.connect( self.dir1clicked )
-        self.routingOutDirBtn2.clicked.connect( self.dir2clicked )
+        self.routingTab1_OutDirBtn.clicked.connect( self.dir1clicked )
+        self.routingTab2_OutDirBtn.clicked.connect( self.dir2clicked )
         self.routingOutDirBtn3.clicked.connect( self.dir3clicked )
         self.routingOutDirBtn4.clicked.connect( self.dir4clicked )
         self.routingOutDirBtn4.clicked.connect( self.dir5clicked )
@@ -52,9 +53,9 @@ class ToolBoxDialog(QDialog, Ui_APIRequestDialogBase):
         self.loadTijFileBtn2.clicked.connect(self.tijFile2clicked)
 
     #eventhandlers 
-    dir1clicked = lambda self: self.routingOutDirTxt1.setText(
+    dir1clicked = lambda self: self.routingTab1_outDirTxt.setText(
          QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )
-    dir2clicked = lambda self: self.routingOutDirTxt2.setText(
+    dir2clicked = lambda self: self.routingTab2_outDirTxt.setText(
          QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )
     dir3clicked = lambda self: self.routingOutDirTxt3.setText(
          QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )

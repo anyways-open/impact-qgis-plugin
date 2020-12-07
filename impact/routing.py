@@ -41,7 +41,7 @@ class routing(object):
         """
         params = {}
         if profile and not profile in self.profiles(): 
-            raise Exception( "Profile most be from list: "+ ", ".join(self.p2 rofiles) )
+            raise Exception( "Profile most be from list: "+ ", ".join(self.profiles() ) )
         else:
             params["profile"] = profile
 
