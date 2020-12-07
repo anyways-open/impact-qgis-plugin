@@ -194,7 +194,7 @@ class ToolBox:
         self.dlg.lineEdit_27.setText(xlfile)
 
     def input2(self):
-        Tij, _filter = QFileDialog.getOpenFileName(self.dlg, "Select the Tij file", "",'(*.json *.geojson)')
+        Tij, _filter = QFileDialog.getOpenFileName(self.dlg, "Select the Tij file", "", '(*.json *.geojson)')
         self.dlg.lineEdit_29.setText(Tij)
 
     def input3(self):
@@ -235,7 +235,7 @@ class ToolBox:
 
     def output9(self):
         foldername9 = QFileDialog.getExistingDirectory(self.dlg, "Select a directory to save routings", "")
-        self.dlg.lineEdit_20.setText(foldername9)		
+        self.dlg.lineEdit_20.setText(foldername9)
 
     def run(self):
         """Run method that performs all the real work"""
@@ -271,11 +271,23 @@ class ToolBox:
                 if self.dlg.tabWidget_1.currentIndex() == 0:
                     if self.dlg.checkBox_3.isChecked():
                         ODLayer = self.dlg.mMapLayerComboBox_4.currentLayer()
-                        if ODLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the POIs Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
+                        if ODLayer.crs() == 4326:
+                            features = ODLayer.getFeatures()
+                        else:
+                            crsSrc = QgsCoordinateReferenceSystem(ODLayer.crs())
+                            crsDest = QgsCoordinateReferenceSystem(4326)
+                            xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
+
+                            features = []
+                            for f in ODLayer.getFeatures():
+                                g = f.geometry()
+                                g.transform(xform)
+                                f.setGeometry(g)
+                                features.append(f)
+
                         df = []
                         check = False
-                        for feature in ODLayer.getFeatures():
+                        for feature in features:
                             if feature.geometry().isNull() == False:
                                 Id = feature[0]
                                 point = feature.geometry().asPoint()
@@ -285,7 +297,9 @@ class ToolBox:
                                 df.append([Id, XY])
                             else:
                                 while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The POIs Layer has Null geometries!', level = Qgis.Warning, duration=0)
+                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning',
+                                                                        u'The POIs Layer has Null geometries!',
+                                                                        level=Qgis.Warning, duration=0)
                                     check = True
 
                         poi = pd.DataFrame(df)
@@ -344,14 +358,16 @@ class ToolBox:
                                         for n in range(len(obj['features'])):
                                             obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
                                             obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (
+                                            OD.Origins[i], OD.Destinations[i])
                                     else:
                                         obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
                                                             'properties': {'name': 'N/A', 'highway': 'N/A',
                                                                            'profile': PROFILE}}]
                                         obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
                                         obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (
+                                        OD.Origins[i], OD.Destinations[i])
 
                                     f = open(path + "/%s to %s by %s" % (
                                         OD.Origins[i], OD.Destinations[i], PROFILE.upper()) + ".json", "w+")
@@ -373,8 +389,8 @@ class ToolBox:
                         urls = ApiReqList
                         asyncio.run(main(urls))
 
-                        #2nd round of reuqests (if there're failed requests in the 1st round)
-                        if len(failedReqs) > 0:						
+                        # 2nd round of reuqests (if there're failed requests in the 1st round)
+                        if len(failedReqs) > 0:
 
                             @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
                             async def get(url, session):
@@ -386,14 +402,16 @@ class ToolBox:
                                             for n in range(len(obj['features'])):
                                                 obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
                                                 obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (
+                                                OD.Origins[i], OD.Destinations[i])
                                         else:
                                             obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
                                                                 'properties': {'name': 'N/A', 'highway': 'N/A',
                                                                                'profile': PROFILE}}]
                                             obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
                                             obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (
+                                            OD.Origins[i], OD.Destinations[i])
 
                                         f = open(path + "/%s to %s by %s" % (
                                             OD.Origins[i], OD.Destinations[i], PROFILE.upper()) + ".json", "w+")
@@ -422,7 +440,8 @@ class ToolBox:
 
                         GroupName = PROFILE.upper() + " Routings"
                         root = QgsProject.instance().layerTreeRoot()
-                        shapeGroup = root.addGroup(GroupName)  # Ater or Before (basically any name can be given to the group
+                        shapeGroup = root.addGroup(
+                            GroupName)  # Ater or Before (basically any name can be given to the group
 
                         os.chdir(path)
                         wholelist = os.listdir(os.getcwd())
@@ -442,11 +461,23 @@ class ToolBox:
 
                     else:
                         ODLayer = self.dlg.mMapLayerComboBox_4.currentLayer()
-                        if ODLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the POIs Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
+                        if ODLayer.crs() == 4326:
+                            features = ODLayer.getFeatures()
+                        else:
+                            crsSrc = QgsCoordinateReferenceSystem(ODLayer.crs())
+                            crsDest = QgsCoordinateReferenceSystem(4326)
+                            xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
+
+                            features = []
+                            for f in ODLayer.getFeatures():
+                                g = f.geometry()
+                                g.transform(xform)
+                                f.setGeometry(g)
+                                features.append(f)
+
                         df = []
                         check = False
-                        for feature in ODLayer.getFeatures():
+                        for feature in features:
                             if feature.geometry().isNull() == False:
                                 Id = feature[0]
                                 point = feature.geometry().asPoint()
@@ -456,7 +487,9 @@ class ToolBox:
                                 df.append([Id, XY])
                             else:
                                 while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The POIs Layer has Null geometries!', level = Qgis.Warning, duration=0)
+                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning',
+                                                                        u'The POIs Layer has Null geometries!',
+                                                                        level=Qgis.Warning, duration=0)
                                     check = True
 
                         poi = pd.DataFrame(df)
@@ -487,7 +520,6 @@ class ToolBox:
                         OD2.dropna(inplace=True)
                         my_list = OD2.to_dict(orient='records')
 
-
                         JsonMerged = {'type': 'FeatureCollection'}
                         featuresList = []
                         fnameList = []
@@ -509,7 +541,6 @@ class ToolBox:
                                     pass
 
                         @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
-
                         async def get(url, session):
                             try:
                                 async with session.get(url=url) as response:
@@ -519,14 +550,16 @@ class ToolBox:
                                         for n in range(len(obj['features'])):
                                             obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
                                             obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (
+                                            OD.Origins[i], OD.Destinations[i])
                                     else:
                                         obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
                                                             'properties': {'name': 'N/A', 'highway': 'N/A',
                                                                            'profile': PROFILE}}]
                                         obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
                                         obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (
+                                        OD.Origins[i], OD.Destinations[i])
 
                                     for feats in obj['features']:
                                         featuresList.append(feats)
@@ -544,8 +577,8 @@ class ToolBox:
                         urls = ApiReqList
                         asyncio.run(main(urls))
 
-                        #2nd round of reuqests (if there're failed requests in the 1st round)
-                        if len(failedReqs) > 0:						
+                        # 2nd round of reuqests (if there're failed requests in the 1st round)
+                        if len(failedReqs) > 0:
 
                             @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
                             async def get(url, session):
@@ -557,21 +590,22 @@ class ToolBox:
                                             for n in range(len(obj['features'])):
                                                 obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
                                                 obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (
+                                                OD.Origins[i], OD.Destinations[i])
                                         else:
                                             obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
                                                                 'properties': {'name': 'N/A', 'highway': 'N/A',
                                                                                'profile': PROFILE}}]
                                             obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
                                             obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (
+                                            OD.Origins[i], OD.Destinations[i])
 
                                         for feats in obj['features']:
                                             featuresList.append(feats)
 
                                 except Exception as e:
                                     failedReqs2.append(url)
-
 
                             async def main(urls):
                                 connector = aiohttp.TCPConnector()
@@ -610,11 +644,23 @@ class ToolBox:
                 elif self.dlg.tabWidget_1.currentIndex() == 1:
                     if self.dlg.checkBox_4.isChecked():
                         OLayer = self.dlg.mMapLayerComboBox_5.currentLayer()
-                        if OLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the Origins Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
+                        if OLayer.crs() == 4326:
+                            features = OLayer.getFeatures()
+                        else:
+                            crsSrc = QgsCoordinateReferenceSystem(OLayer.crs())
+                            crsDest = QgsCoordinateReferenceSystem(4326)
+                            xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
+
+                            features = []
+                            for f in OLayer.getFeatures():
+                                g = f.geometry()
+                                g.transform(xform)
+                                f.setGeometry(g)
+                                features.append(f)
+
                         dfO = []
                         check = False
-                        for feature in OLayer.getFeatures():
+                        for feature in features:
                             if feature.geometry().isNull() == False:
                                 Id = feature[0]
                                 point = feature.geometry().asPoint()
@@ -624,17 +670,31 @@ class ToolBox:
                                 dfO.append([Id, XY])
                             else:
                                 while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The Origins Layer has Null geometries!', level = Qgis.Warning, duration=0)
+                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning',
+                                                                        u'The Origins Layer has Null geometries!',
+                                                                        level=Qgis.Warning, duration=0)
                                     check = True
 
                         O1 = pd.DataFrame(dfO)
 
                         DLayer = self.dlg.mMapLayerComboBox_6.currentLayer()
-                        if DLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the Destinations Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
+                        if DLayer.crs() == 4326:
+                            features = DLayer.getFeatures()
+                        else:
+                            crsSrc = QgsCoordinateReferenceSystem(DLayer.crs())
+                            crsDest = QgsCoordinateReferenceSystem(4326)
+                            xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
+
+                            features = []
+                            for f in DLayer.getFeatures():
+                                g = f.geometry()
+                                g.transform(xform)
+                                f.setGeometry(g)
+                                features.append(f)
+
                         dfD = []
                         check = False
-                        for feature in DLayer.getFeatures():
+                        for feature in features:
                             if feature.geometry().isNull() == False:
                                 Id = feature[0]
                                 point = feature.geometry().asPoint()
@@ -644,7 +704,9 @@ class ToolBox:
                                 dfD.append([Id, XY])
                             else:
                                 while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The Destinations Layer has Null geometries!', level = Qgis.Warning, duration=0)
+                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning',
+                                                                        u'The Destinations Layer has Null geometries!',
+                                                                        level=Qgis.Warning, duration=0)
                                     check = True
 
                         D1 = pd.DataFrame(dfD)
@@ -662,7 +724,8 @@ class ToolBox:
                         for origins in Origins.index:
                             for destinations in Destinations.index:
                                 ls = [Origins.O_Points.loc[origins], Origins.O_coordinates.loc[origins],
-                                      Destinations.D_Points.loc[destinations], Destinations.D_coordinates.loc[destinations]]
+                                      Destinations.D_Points.loc[destinations],
+                                      Destinations.D_coordinates.loc[destinations]]
                                 OD.loc[new_index] = ls
                                 new_index += 1
                         # remove double POIs
@@ -676,7 +739,7 @@ class ToolBox:
                         OD2.insert(loc=0, column='PROFILE', value=PROFILE)
                         OD2.dropna(inplace=True)
                         my_list = OD2.to_dict(orient='records')
-                        
+
                         fnameList = []
                         timestr = time.strftime("%Y%m%d_%H%M%S")
                         failedReqs = []
@@ -705,14 +768,16 @@ class ToolBox:
                                         for n in range(len(obj['features'])):
                                             obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
                                             obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (
+                                            OD.Origins[i], OD.Destinations[i])
                                     else:
                                         obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
                                                             'properties': {'name': 'N/A', 'highway': 'N/A',
                                                                            'profile': PROFILE}}]
                                         obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
                                         obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (
+                                        OD.Origins[i], OD.Destinations[i])
 
                                     f = open(path + "/%s to %s by %s" % (
                                         OD.Origins[i], OD.Destinations[i], PROFILE.upper()) + ".json", "w+")
@@ -734,7 +799,7 @@ class ToolBox:
                         urls = ApiReqList
                         asyncio.run(main(urls))
 
-                        #2nd round of reuqests (if there're failed requests in the 1st round)
+                        # 2nd round of reuqests (if there're failed requests in the 1st round)
                         if len(failedReqs) > 0:
 
                             @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
@@ -747,14 +812,16 @@ class ToolBox:
                                             for n in range(len(obj['features'])):
                                                 obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
                                                 obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (
+                                                OD.Origins[i], OD.Destinations[i])
                                         else:
                                             obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
                                                                 'properties': {'name': 'N/A', 'highway': 'N/A',
                                                                                'profile': PROFILE}}]
                                             obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
                                             obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (
+                                            OD.Origins[i], OD.Destinations[i])
 
                                         f = open(path + "/%s to %s by %s" % (
                                             OD.Origins[i], OD.Destinations[i], PROFILE.upper()) + ".json", "w+")
@@ -783,7 +850,8 @@ class ToolBox:
 
                         GroupName = PROFILE.upper() + " Routings"
                         root = QgsProject.instance().layerTreeRoot()
-                        shapeGroup = root.addGroup(GroupName)  # Ater or Before (basically any name can be given to the group
+                        shapeGroup = root.addGroup(
+                            GroupName)  # Ater or Before (basically any name can be given to the group
 
                         os.chdir(path)
                         wholelist = os.listdir(os.getcwd())
@@ -803,11 +871,23 @@ class ToolBox:
 
                     else:
                         OLayer = self.dlg.mMapLayerComboBox_5.currentLayer()
-                        if OLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the Origins Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
+                        if OLayer.crs() == 4326:
+                            features = OLayer.getFeatures()
+                        else:
+                            crsSrc = QgsCoordinateReferenceSystem(OLayer.crs())
+                            crsDest = QgsCoordinateReferenceSystem(4326)
+                            xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
+
+                            features = []
+                            for f in OLayer.getFeatures():
+                                g = f.geometry()
+                                g.transform(xform)
+                                f.setGeometry(g)
+                                features.append(f)
+
                         dfO = []
                         check = False
-                        for feature in OLayer.getFeatures():
+                        for feature in features:
                             if feature.geometry().isNull() == False:
                                 Id = feature[0]
                                 point = feature.geometry().asPoint()
@@ -817,17 +897,31 @@ class ToolBox:
                                 dfO.append([Id, XY])
                             else:
                                 while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The Origins Layer has Null geometries!', level = Qgis.Warning, duration=0)
+                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning',
+                                                                        u'The Origins Layer has Null geometries!',
+                                                                        level=Qgis.Warning, duration=0)
                                     check = True
 
                         O1 = pd.DataFrame(dfO)
 
                         DLayer = self.dlg.mMapLayerComboBox_6.currentLayer()
-                        if DLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the Destinations Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
+                        if DLayer.crs() == 4326:
+                            features = DLayer.getFeatures()
+                        else:
+                            crsSrc = QgsCoordinateReferenceSystem(DLayer.crs())
+                            crsDest = QgsCoordinateReferenceSystem(4326)
+                            xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
+
+                            features = []
+                            for f in DLayer.getFeatures():
+                                g = f.geometry()
+                                g.transform(xform)
+                                f.setGeometry(g)
+                                features.append(f)
+
                         dfD = []
                         check = False
-                        for feature in DLayer.getFeatures():
+                        for feature in features:
                             if feature.geometry().isNull() == False:
                                 Id = feature[0]
                                 point = feature.geometry().asPoint()
@@ -837,7 +931,9 @@ class ToolBox:
                                 dfD.append([Id, XY])
                             else:
                                 while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The Destinations Layer has Null geometries!', level = Qgis.Warning, duration=0)
+                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning',
+                                                                        u'The Destinations Layer has Null geometries!',
+                                                                        level=Qgis.Warning, duration=0)
                                     check = True
 
                         D1 = pd.DataFrame(dfD)
@@ -855,7 +951,8 @@ class ToolBox:
                         for origins in Origins.index:
                             for destinations in Destinations.index:
                                 ls = [Origins.O_Points.loc[origins], Origins.O_coordinates.loc[origins],
-                                      Destinations.D_Points.loc[destinations], Destinations.D_coordinates.loc[destinations]]
+                                      Destinations.D_Points.loc[destinations],
+                                      Destinations.D_coordinates.loc[destinations]]
                                 OD.loc[new_index] = ls
                                 new_index += 1
                         # remove double POIs
@@ -869,7 +966,7 @@ class ToolBox:
                         OD2.insert(loc=0, column='PROFILE', value=PROFILE)
                         OD2.dropna(inplace=True)
                         my_list = OD2.to_dict(orient='records')
-                        
+
                         JsonMerged = {'type': 'FeatureCollection'}
                         featuresList = []
                         fnameList = []
@@ -891,7 +988,6 @@ class ToolBox:
                                     pass
 
                         @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
-
                         async def get(url, session):
                             try:
                                 async with session.get(url=url) as response:
@@ -901,14 +997,16 @@ class ToolBox:
                                         for n in range(len(obj['features'])):
                                             obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
                                             obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (
+                                            OD.Origins[i], OD.Destinations[i])
                                     else:
                                         obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
                                                             'properties': {'name': 'N/A', 'highway': 'N/A',
                                                                            'profile': PROFILE}}]
                                         obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
                                         obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (
+                                        OD.Origins[i], OD.Destinations[i])
 
                                     for feats in obj['features']:
                                         featuresList.append(feats)
@@ -926,7 +1024,7 @@ class ToolBox:
                         urls = ApiReqList
                         asyncio.run(main(urls))
 
-                        #2nd round of reuqests (if there're failed requests in the 1st round)
+                        # 2nd round of reuqests (if there're failed requests in the 1st round)
                         if len(failedReqs) > 0:
 
                             @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
@@ -939,14 +1037,16 @@ class ToolBox:
                                             for n in range(len(obj['features'])):
                                                 obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
                                                 obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (
+                                                OD.Origins[i], OD.Destinations[i])
                                         else:
                                             obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
                                                                 'properties': {'name': 'N/A', 'highway': 'N/A',
                                                                                'profile': PROFILE}}]
                                             obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
                                             obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (
+                                            OD.Origins[i], OD.Destinations[i])
 
                                         for feats in obj['features']:
                                             featuresList.append(feats)
@@ -954,14 +1054,12 @@ class ToolBox:
                                 except Exception as e:
                                     failedReqs2.append(url)
 
-
                             async def main(urls):
                                 connector = aiohttp.TCPConnector()
                                 session = aiohttp.ClientSession(connector=connector)
 
                                 ret = await asyncio.gather(*[get(url, session) for url in urls])
                                 await session.close()
-
 
                             urls = failedReqs
                             asyncio.run(main(urls))
@@ -994,11 +1092,23 @@ class ToolBox:
                 if self.dlg.tabWidget_2.currentIndex() == 0:
                     if self.dlg.checkBox.isChecked():
                         ODLayer = self.dlg.mMapLayerComboBox.currentLayer()
-                        if ODLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the POIs Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
+                        if ODLayer.crs() == 4326:
+                            features = ODLayer.getFeatures()
+                        else:
+                            crsSrc = QgsCoordinateReferenceSystem(ODLayer.crs())
+                            crsDest = QgsCoordinateReferenceSystem(4326)
+                            xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
+
+                            features = []
+                            for f in ODLayer.getFeatures():
+                                g = f.geometry()
+                                g.transform(xform)
+                                f.setGeometry(g)
+                                features.append(f)
+
                         df = []
                         check = False
-                        for feature in ODLayer.getFeatures():
+                        for feature in features:
                             if feature.geometry().isNull() == False:
                                 Id = feature[0]
                                 point = feature.geometry().asPoint()
@@ -1008,7 +1118,9 @@ class ToolBox:
                                 df.append([Id, YX])
                             else:
                                 while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The POIs Layer has Null geometries!', level = Qgis.Warning, duration=0)
+                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning',
+                                                                        u'The POIs Layer has Null geometries!',
+                                                                        level=Qgis.Warning, duration=0)
                                     check = True
 
                         poi = pd.DataFrame(df)
@@ -1071,7 +1183,8 @@ class ToolBox:
                                             obj['features'][n]['properties']['Instance'] = INSTANCE
                                             obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
                                             obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (
+                                            OD.Origins[i], OD.Destinations[i])
                                     else:
                                         obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
                                                             'properties': {'name': 'N/A', 'highway': 'N/A',
@@ -1079,7 +1192,8 @@ class ToolBox:
                                         obj['features'][0]['properties']['Instance'] = INSTANCE
                                         obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
                                         obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (
+                                        OD.Origins[i], OD.Destinations[i])
 
                                     f = open(path + "/%s to %s by %s_%s %s.json" % (
                                         OD.Origins[i], OD.Destinations[i], PROFILE.upper(),
@@ -1105,7 +1219,7 @@ class ToolBox:
                         urls = ApiReqList
                         asyncio.run(main(urls))
 
-                        #2nd round of reuqests (if there're failed requests in the 1st round)
+                        # 2nd round of reuqests (if there're failed requests in the 1st round)
                         if len(failedReqs) > 0:
 
                             @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
@@ -1119,7 +1233,8 @@ class ToolBox:
                                                 obj['features'][n]['properties']['Instance'] = INSTANCE
                                                 obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
                                                 obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (
+                                                OD.Origins[i], OD.Destinations[i])
                                         else:
                                             obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
                                                                 'properties': {'name': 'N/A', 'highway': 'N/A',
@@ -1127,7 +1242,8 @@ class ToolBox:
                                             obj['features'][0]['properties']['Instance'] = INSTANCE
                                             obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
                                             obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (
+                                            OD.Origins[i], OD.Destinations[i])
 
                                         f = open(path + "/%s to %s by %s_%s %s.json" % (
                                             OD.Origins[i], OD.Destinations[i], PROFILE.upper(),
@@ -1160,7 +1276,8 @@ class ToolBox:
 
                         GroupName = "ShortCut " + INSTANCE.replace("/", " ") + ":" + PROFILE.upper()
                         root = QgsProject.instance().layerTreeRoot()
-                        shapeGroup = root.addGroup(GroupName)  # Ater or Before (basically any name can be given to the group
+                        shapeGroup = root.addGroup(
+                            GroupName)  # Ater or Before (basically any name can be given to the group
 
                         os.chdir(path)
                         wholelist = os.listdir(os.getcwd())
@@ -1180,11 +1297,23 @@ class ToolBox:
 
                     else:
                         ODLayer = self.dlg.mMapLayerComboBox.currentLayer()
-                        if ODLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the POIs Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
+                        if ODLayer.crs() == 4326:
+                            features = ODLayer.getFeatures()
+                        else:
+                            crsSrc = QgsCoordinateReferenceSystem(ODLayer.crs())
+                            crsDest = QgsCoordinateReferenceSystem(4326)
+                            xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
+
+                            features = []
+                            for f in ODLayer.getFeatures():
+                                g = f.geometry()
+                                g.transform(xform)
+                                f.setGeometry(g)
+                                features.append(f)
+
                         df = []
                         check = False
-                        for feature in ODLayer.getFeatures():
+                        for feature in features:
                             if feature.geometry().isNull() == False:
                                 Id = feature[0]
                                 point = feature.geometry().asPoint()
@@ -1194,7 +1323,9 @@ class ToolBox:
                                 df.append([Id, YX])
                             else:
                                 while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The POIs Layer has Null geometries!', level = Qgis.Warning, duration=0)
+                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning',
+                                                                        u'The POIs Layer has Null geometries!',
+                                                                        level=Qgis.Warning, duration=0)
                                     check = True
 
                         poi = pd.DataFrame(df)
@@ -1228,7 +1359,6 @@ class ToolBox:
                         OD2.dropna(inplace=True)
                         my_list = OD2.to_dict(orient='records')
 
-
                         JsonMerged = {'type': 'FeatureCollection'}
                         featuresList = []
                         fnameList = []
@@ -1250,7 +1380,6 @@ class ToolBox:
                                     pass
 
                         @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
-
                         async def get(url, session):
                             try:
                                 async with session.get(url=url) as response:
@@ -1261,7 +1390,8 @@ class ToolBox:
                                             obj['features'][n]['properties']['Instance'] = INSTANCE
                                             obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
                                             obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (
+                                            OD.Origins[i], OD.Destinations[i])
                                     else:
                                         obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
                                                             'properties': {'name': 'N/A', 'highway': 'N/A',
@@ -1269,7 +1399,8 @@ class ToolBox:
                                         obj['features'][0]['properties']['Instance'] = INSTANCE
                                         obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
                                         obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (
+                                        OD.Origins[i], OD.Destinations[i])
 
                                     for feats in obj['features']:
                                         featuresList.append(feats)
@@ -1287,7 +1418,7 @@ class ToolBox:
                         urls = ApiReqList
                         asyncio.run(main(urls))
 
-                        #2nd round of reuqests (if there're failed requests in the 1st round)
+                        # 2nd round of reuqests (if there're failed requests in the 1st round)
                         if len(failedReqs) > 0:
 
                             @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
@@ -1301,7 +1432,8 @@ class ToolBox:
                                                 obj['features'][n]['properties']['Instance'] = INSTANCE
                                                 obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
                                                 obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (
+                                                OD.Origins[i], OD.Destinations[i])
                                         else:
                                             obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
                                                                 'properties': {'name': 'N/A', 'highway': 'N/A',
@@ -1309,14 +1441,14 @@ class ToolBox:
                                             obj['features'][0]['properties']['Instance'] = INSTANCE
                                             obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
                                             obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (
+                                            OD.Origins[i], OD.Destinations[i])
 
                                         for feats in obj['features']:
                                             featuresList.append(feats)
 
                                 except Exception as e:
                                     failedReqs2.append(url)
-
 
                             async def main(urls):
                                 connector = aiohttp.TCPConnector()
@@ -1325,14 +1457,13 @@ class ToolBox:
                                 ret = await asyncio.gather(*[get(url, session) for url in urls])
                                 await session.close()
 
-
                             urls = failedReqs
                             asyncio.run(main(urls))
 
                         else:
                             pass
 
-                        QgsMessageLog.logMessage('\n'.join(map(str, failedReqs2)), 'ImPact Toolbox', level=Qgis.Info)							
+                        QgsMessageLog.logMessage('\n'.join(map(str, failedReqs2)), 'ImPact Toolbox', level=Qgis.Info)
 
                         JsonMerged['features'] = featuresList
 
@@ -1356,11 +1487,23 @@ class ToolBox:
                 elif self.dlg.tabWidget_2.currentIndex() == 1:
                     if self.dlg.checkBox_2.isChecked():
                         OLayer = self.dlg.mMapLayerComboBox_2.currentLayer()
-                        if OLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the Origins Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
+                        if OLayer.crs() == 4326:
+                            features = OLayer.getFeatures()
+                        else:
+                            crsSrc = QgsCoordinateReferenceSystem(OLayer.crs())
+                            crsDest = QgsCoordinateReferenceSystem(4326)
+                            xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
+
+                            features = []
+                            for f in OLayer.getFeatures():
+                                g = f.geometry()
+                                g.transform(xform)
+                                f.setGeometry(g)
+                                features.append(f)
+
                         dfO = []
                         check = False
-                        for feature in OLayer.getFeatures():
+                        for feature in features:
                             if feature.geometry().isNull() == False:
                                 Id = feature[0]
                                 point = feature.geometry().asPoint()
@@ -1370,17 +1513,31 @@ class ToolBox:
                                 dfO.append([Id, YX])
                             else:
                                 while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The Origins Layer has Null geometries!', level = Qgis.Warning, duration=0)
+                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning',
+                                                                        u'The Origins Layer has Null geometries!',
+                                                                        level=Qgis.Warning, duration=0)
                                     check = True
 
                         O1 = pd.DataFrame(dfO)
 
                         DLayer = self.dlg.mMapLayerComboBox_3.currentLayer()
-                        if DLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the Destinations Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
+                        if DLayer.crs() == 4326:
+                            features = DLayer.getFeatures()
+                        else:
+                            crsSrc = QgsCoordinateReferenceSystem(DLayer.crs())
+                            crsDest = QgsCoordinateReferenceSystem(4326)
+                            xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
+
+                            features = []
+                            for f in DLayer.getFeatures():
+                                g = f.geometry()
+                                g.transform(xform)
+                                f.setGeometry(g)
+                                features.append(f)
+
                         dfD = []
                         check = False
-                        for feature in DLayer.getFeatures():
+                        for feature in features:
                             if feature.geometry().isNull() == False:
                                 Id = feature[0]
                                 point = feature.geometry().asPoint()
@@ -1390,12 +1547,14 @@ class ToolBox:
                                 dfD.append([Id, YX])
                             else:
                                 while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The Destinations Layer has Null geometries!', level = Qgis.Warning, duration=0)
+                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning',
+                                                                        u'The Destinations Layer has Null geometries!',
+                                                                        level=Qgis.Warning, duration=0)
                                     check = True
                         D1 = pd.DataFrame(dfD)
 
                         path = self.dlg.lineEdit_6.text()
-                        INSTANCE = str.strip(self.dlg.lineEdit_13.text())					
+                        INSTANCE = str.strip(self.dlg.lineEdit_13.text())
                         PROFILE = self.dlg.RoutingProfiles_2.currentText().lower()
 
                         Origins = O1.rename(columns={O1.columns[0]: "O_Points", O1.columns[1]: "O_coordinates"})
@@ -1408,7 +1567,8 @@ class ToolBox:
                         for origins in Origins.index:
                             for destinations in Destinations.index:
                                 ls = [Origins.O_Points.loc[origins], Origins.O_coordinates.loc[origins],
-                                      Destinations.D_Points.loc[destinations], Destinations.D_coordinates.loc[destinations]]
+                                      Destinations.D_Points.loc[destinations],
+                                      Destinations.D_coordinates.loc[destinations]]
                                 OD.loc[new_index] = ls
                                 new_index += 1
                         # remove double POIs
@@ -1423,7 +1583,7 @@ class ToolBox:
                         OD2.insert(loc=1, column='PROFILE', value=PROFILE)
                         OD2.dropna(inplace=True)
                         my_list = OD2.to_dict(orient='records')
-                        
+
                         fnameList = []
                         timestr = time.strftime("%Y%m%d_%H%M%S")
                         failedReqs = []
@@ -1453,7 +1613,8 @@ class ToolBox:
                                             obj['features'][n]['properties']['Instance'] = INSTANCE
                                             obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
                                             obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (
+                                            OD.Origins[i], OD.Destinations[i])
                                     else:
                                         obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
                                                             'properties': {'name': 'N/A', 'highway': 'N/A',
@@ -1461,7 +1622,8 @@ class ToolBox:
                                         obj['features'][0]['properties']['Instance'] = INSTANCE
                                         obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
                                         obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (
+                                        OD.Origins[i], OD.Destinations[i])
 
                                     f = open(path + "/%s to %s by %s_%s %s.json" % (
                                         OD.Origins[i], OD.Destinations[i], PROFILE.upper(),
@@ -1487,7 +1649,7 @@ class ToolBox:
                         urls = ApiReqList
                         asyncio.run(main(urls))
 
-                        #2nd round of reuqests (if there're failed requests in the 1st round)
+                        # 2nd round of reuqests (if there're failed requests in the 1st round)
                         if len(failedReqs) > 0:
 
                             @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
@@ -1501,7 +1663,8 @@ class ToolBox:
                                                 obj['features'][n]['properties']['Instance'] = INSTANCE
                                                 obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
                                                 obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (
+                                                OD.Origins[i], OD.Destinations[i])
                                         else:
                                             obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
                                                                 'properties': {'name': 'N/A', 'highway': 'N/A',
@@ -1509,7 +1672,8 @@ class ToolBox:
                                             obj['features'][0]['properties']['Instance'] = INSTANCE
                                             obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
                                             obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (
+                                            OD.Origins[i], OD.Destinations[i])
 
                                         f = open(path + "/%s to %s by %s_%s %s.json" % (
                                             OD.Origins[i], OD.Destinations[i], PROFILE.upper(),
@@ -1542,7 +1706,8 @@ class ToolBox:
 
                         GroupName = "ShortCut " + INSTANCE.replace("/", " ") + ":" + PROFILE.upper()
                         root = QgsProject.instance().layerTreeRoot()
-                        shapeGroup = root.addGroup(GroupName)  # Ater or Before (basically any name can be given to the group
+                        shapeGroup = root.addGroup(
+                            GroupName)  # Ater or Before (basically any name can be given to the group
 
                         os.chdir(path)
                         wholelist = os.listdir(os.getcwd())
@@ -1562,11 +1727,23 @@ class ToolBox:
 
                     else:
                         OLayer = self.dlg.mMapLayerComboBox_2.currentLayer()
-                        if OLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the Origins Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
+                        if OLayer.crs() == 4326:
+                            features = OLayer.getFeatures()
+                        else:
+                            crsSrc = QgsCoordinateReferenceSystem(OLayer.crs())
+                            crsDest = QgsCoordinateReferenceSystem(4326)
+                            xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
+
+                            features = []
+                            for f in OLayer.getFeatures():
+                                g = f.geometry()
+                                g.transform(xform)
+                                f.setGeometry(g)
+                                features.append(f)
+
                         dfO = []
                         check = False
-                        for feature in OLayer.getFeatures():
+                        for feature in features:
                             if feature.geometry().isNull() == False:
                                 Id = feature[0]
                                 point = feature.geometry().asPoint()
@@ -1576,16 +1753,30 @@ class ToolBox:
                                 dfO.append([Id, YX])
                             else:
                                 while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The Origins Layer has Null geometries!', level = Qgis.Warning, duration=0)
+                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning',
+                                                                        u'The Origins Layer has Null geometries!',
+                                                                        level=Qgis.Warning, duration=0)
                                     check = True
                         O1 = pd.DataFrame(dfO)
 
                         DLayer = self.dlg.mMapLayerComboBox_3.currentLayer()
-                        if DLayer.crs().authid() != 'EPSG:4326':
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of the Destinations Layer must be EPSG:4326 !', level = Qgis.Critical, duration=0)
+                        if DLayer.crs() == 4326:
+                            features = DLayer.getFeatures()
+                        else:
+                            crsSrc = QgsCoordinateReferenceSystem(DLayer.crs())
+                            crsDest = QgsCoordinateReferenceSystem(4326)
+                            xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
+
+                            features = []
+                            for f in DLayer.getFeatures():
+                                g = f.geometry()
+                                g.transform(xform)
+                                f.setGeometry(g)
+                                features.append(f)
+
                         dfD = []
                         check = False
-                        for feature in DLayer.getFeatures():
+                        for feature in features:
                             if feature.geometry().isNull() == False:
                                 Id = feature[0]
                                 point = feature.geometry().asPoint()
@@ -1595,12 +1786,14 @@ class ToolBox:
                                 dfD.append([Id, YX])
                             else:
                                 while check == False:
-                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning', u'The Destinations Layer has Null geometries!', level = Qgis.Warning, duration=0)
+                                    self.iface.messageBar().pushMessage(u'ImPact_toolbox Warning',
+                                                                        u'The Destinations Layer has Null geometries!',
+                                                                        level=Qgis.Warning, duration=0)
                                     check = True
                         D1 = pd.DataFrame(dfD)
 
                         path = self.dlg.lineEdit_6.text()
-                        INSTANCE = str.strip(self.dlg.lineEdit_13.text())						
+                        INSTANCE = str.strip(self.dlg.lineEdit_13.text())
                         PROFILE = self.dlg.RoutingProfiles_2.currentText().lower()
 
                         Origins = O1.rename(columns={O1.columns[0]: "O_Points", O1.columns[1]: "O_coordinates"})
@@ -1613,7 +1806,8 @@ class ToolBox:
                         for origins in Origins.index:
                             for destinations in Destinations.index:
                                 ls = [Origins.O_Points.loc[origins], Origins.O_coordinates.loc[origins],
-                                      Destinations.D_Points.loc[destinations], Destinations.D_coordinates.loc[destinations]]
+                                      Destinations.D_Points.loc[destinations],
+                                      Destinations.D_coordinates.loc[destinations]]
                                 OD.loc[new_index] = ls
                                 new_index += 1
                         # remove double POIs
@@ -1628,7 +1822,7 @@ class ToolBox:
                         OD2.insert(loc=1, column='PROFILE', value=PROFILE)
                         OD2.dropna(inplace=True)
                         my_list = OD2.to_dict(orient='records')
-                        
+
                         JsonMerged = {'type': 'FeatureCollection'}
                         featuresList = []
                         fnameList = []
@@ -1650,7 +1844,6 @@ class ToolBox:
                                     pass
 
                         @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
-
                         async def get(url, session):
                             try:
                                 async with session.get(url=url) as response:
@@ -1661,7 +1854,8 @@ class ToolBox:
                                             obj['features'][n]['properties']['Instance'] = INSTANCE
                                             obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
                                             obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                            obj['features'][n]['properties']['O_D'] = "%s_%s" % (
+                                            OD.Origins[i], OD.Destinations[i])
                                     else:
                                         obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
                                                             'properties': {'name': 'N/A', 'highway': 'N/A',
@@ -1669,7 +1863,8 @@ class ToolBox:
                                         obj['features'][0]['properties']['Instance'] = INSTANCE
                                         obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
                                         obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                        obj['features'][0]['properties']['O_D'] = "%s_%s" % (
+                                        OD.Origins[i], OD.Destinations[i])
 
                                     for feats in obj['features']:
                                         featuresList.append(feats)
@@ -1687,7 +1882,7 @@ class ToolBox:
                         urls = ApiReqList
                         asyncio.run(main(urls))
 
-                        #2nd round of reuqests (if there're failed requests in the 1st round)
+                        # 2nd round of reuqests (if there're failed requests in the 1st round)
                         if len(failedReqs) > 0:
 
                             @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60, max_tries=3)
@@ -1701,7 +1896,8 @@ class ToolBox:
                                                 obj['features'][n]['properties']['Instance'] = INSTANCE
                                                 obj['features'][n]['properties']['From'] = "%s" % (OD.Origins[i])
                                                 obj['features'][n]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                                obj['features'][n]['properties']['O_D'] = "%s_%s" % (
+                                                OD.Origins[i], OD.Destinations[i])
                                         else:
                                             obj['features'] = [{'type': 'Feature', 'name': 'ShapeMeta',
                                                                 'properties': {'name': 'N/A', 'highway': 'N/A',
@@ -1709,7 +1905,8 @@ class ToolBox:
                                             obj['features'][0]['properties']['Instance'] = INSTANCE
                                             obj['features'][0]['properties']['From'] = "%s" % (OD.Origins[i])
                                             obj['features'][0]['properties']['To'] = "%s" % (OD.Destinations[i])
-                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (OD.Origins[i], OD.Destinations[i])
+                                            obj['features'][0]['properties']['O_D'] = "%s_%s" % (
+                                            OD.Origins[i], OD.Destinations[i])
 
                                         for feats in obj['features']:
                                             featuresList.append(feats)
@@ -1750,107 +1947,125 @@ class ToolBox:
                         sym.setColor(QColor(c))
                         sym.setWidth(float(self.dlg.lineEdit_7.text()))
                         lyr.triggerRepaint()
-                
+
             elif self.dlg.toolBox.currentIndex() == 2:
                 if self.dlg.tabWidget_3.currentIndex() == 0:
                     From_layer = self.dlg.mMapLayerComboBox_13.currentLayer()
-                    if From_layer.crs().authid() != 'EPSG:4326':
-                        return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of From-Area polygon must be EPSG:4326 !', level = Qgis.Critical, duration=0)
-                        #QgsMessageLog.logMessage("The CRS of From-Area polygon must be EPSG:4326 !", 'ImPact Toolbox', level=Qgis.Info)
+                    if From_layer.crs() == 4326:
+                        features = From_layer.getFeatures()
+                    else:
+                        crsSrc = QgsCoordinateReferenceSystem(From_layer.crs())
+                        crsDest = QgsCoordinateReferenceSystem(4326)
+                        xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
 
-                    feat = From_layer.getFeatures()
+                        features = []
+                        for f in From_layer.getFeatures():
+                            g = f.geometry()
+                            g.transform(xform)
+                            f.setGeometry(g)
+                            features.append(f)
 
-                    for feature in feat:
-                        vertices = feature.geometry().asMultiPolygon()
-                    
-                    for v in vertices:
-                        p=str(v)
-                        l=[p.split(')')[0] for p in p.split('(') if ')' in p]
-                    
-                    ll2=[]
-                    for i in range (0, len(l)):
-                        ll2.append([float(x) for x in l[i].split( )])
-                    
-                    To_layer= self.dlg.mMapLayerComboBox_12.currentLayer()
-                    if To_layer.crs().authid() != 'EPSG:4326':
-                        return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of To-Area polygon must be EPSG:4326 !', level = Qgis.Critical, duration=0)
-                        #QgsMessageLog.logMessage("The CRS of To-Area polygon must be EPSG:4326 !", 'ImPact Toolbox', level=Qgis.Info)
-
-                    feat = To_layer.getFeatures()
-
-                    for feature in feat:
+                    for feature in features:
                         vertices = feature.geometry().asMultiPolygon()
 
                     for v in vertices:
-                        p=str(v)
-                        l=[p.split(')')[0] for p in p.split('(') if ')' in p]
-                        
-                    ll=[]
-                    for i in range (0, len(l)):
-                        ll.append([float(x) for x in l[i].split( )])
+                        p = str(v)
+                        l = [p.split(')')[0] for p in p.split('(') if ')' in p]
+
+                    ll2 = []
+                    for i in range(0, len(l)):
+                        ll2.append([float(x) for x in l[i].split()])
+
+                    To_layer = self.dlg.mMapLayerComboBox_12.currentLayer()
+                    if To_layer.crs() == 4326:
+                        features = To_layer.getFeatures()
+                    else:
+                        crsSrc = QgsCoordinateReferenceSystem(To_layer.crs())
+                        crsDest = QgsCoordinateReferenceSystem(4326)
+                        xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
+
+                        features = []
+                        for f in To_layer.getFeatures():
+                            g = f.geometry()
+                            g.transform(xform)
+                            f.setGeometry(g)
+                            features.append(f)
+
+                    for feature in features:
+                        vertices = feature.geometry().asMultiPolygon()
+
+                    for v in vertices:
+                        p = str(v)
+                        l = [p.split(')')[0] for p in p.split('(') if ')' in p]
+
+                    ll = []
+                    for i in range(0, len(l)):
+                        ll.append([float(x) for x in l[i].split()])
 
                     DataSource = self.dlg.DataSource_1.currentText()
-                        
-                    if DataSource.lower() =='fod':
-                        x={"fromArea": {
-                          "type": "FeatureCollection",
-                          "features": [
-                            {
-                              "type": "Feature",
-                              "properties": {},
-                              "geometry": {
-                                "type": "Polygon",
-                                "coordinates": [
-                                    [
-                                      0
-                                    ]
-                                  ]
+
+                    if DataSource.lower() == 'fod':
+                        x = {"fromArea": {
+                            "type": "FeatureCollection",
+                            "features": [
+                                {
+                                    "type": "Feature",
+                                    "properties": {},
+                                    "geometry": {
+                                        "type": "Polygon",
+                                        "coordinates": [
+                                            [
+                                                0
+                                            ]
+                                        ]
+                                    }
                                 }
-                              }
                             ]
-                          },
-                          "toArea": {
-                          "type": "FeatureCollection",
-                          "features": [
-                            {
-                              "type": "Feature",
-                              "properties": {},
-                              "geometry": {
-                                "type": "Polygon",
-                                "coordinates": [
-                                    [
-                                      0
-                                    ]
-                                  ]
-                                }
-                              }
-                            ]
-                          }
+                        },
+                            "toArea": {
+                                "type": "FeatureCollection",
+                                "features": [
+                                    {
+                                        "type": "Feature",
+                                        "properties": {},
+                                        "geometry": {
+                                            "type": "Polygon",
+                                            "coordinates": [
+                                                [
+                                                    0
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
                         }
 
-                        x['fromArea']['features'][0]['geometry']['coordinates'][0]=ll2
-                        x['toArea']['features'][0]['geometry']['coordinates'][0]=ll
+                        x['fromArea']['features'][0]['geometry']['coordinates'][0] = ll2
+                        x['toArea']['features'][0]['geometry']['coordinates'][0] = ll
 
-                        data=json.dumps(x)
+                        data = json.dumps(x)
 
-                        head={'Content-type': 'application/json-patch+json', 'Accept': 'application/geo+json'}
-                        response = requests.post('https://staging.anyways.eu/api/data/od/movement/area', data=data, headers=head)
+                        head = {'Content-type': 'application/json-patch+json', 'Accept': 'application/geo+json'}
+                        response = requests.post('https://staging.anyways.eu/api/data/od/movement/area', data=data,
+                                                 headers=head)
 
-                        d=response.json()
-                        if len(d['features'])==0:
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u"There seem to be no Companies in the selected To-Area. Please verify at: <a href='https://staging.anyways.eu/mobility-data-explorer'>https://staging.anyways.eu/mobility-data-explorer</a>", level = Qgis.Critical, duration=0)
-                            #QgsMessageLog.logMessage("There seem to be no Companies in the selected To-Area. Please verify at: https://staging.anyways.eu/mobility-data-explorer", 'ImPact Toolbox', level=Qgis.Info)
-                    
+                        d = response.json()
+                        if len(d['features']) == 0:
+                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error',
+                                                                       u"There seem to be no Companies in the selected To-Area. Please verify at: <a href='https://staging.anyways.eu/mobility-data-explorer'>https://staging.anyways.eu/mobility-data-explorer</a>",
+                                                                       level=Qgis.Critical, duration=0)
+                            # QgsMessageLog.logMessage("There seem to be no Companies in the selected To-Area. Please verify at: https://staging.anyways.eu/mobility-data-explorer", 'ImPact Toolbox', level=Qgis.Info)
 
-                        path= self.dlg.lineEdit_24.text()
+                        path = self.dlg.lineEdit_24.text()
                         JsonMerged = {'type': 'FeatureCollection'}
-                        PROFILE= self.dlg.RoutingProfiles_8.currentText().lower()
+                        PROFILE = self.dlg.RoutingProfiles_8.currentText().lower()
                         timestr = time.strftime("%Y%m%d_%H%M%S")
                         ApiReqList = []
                         featuresList = []
-                        failedReqs=[]
-                        api_dic={}
-                        failed_dic={}
+                        failedReqs = []
+                        api_dic = {}
+                        failed_dic = {}
                         mode = []
 
                         if self.dlg.checkBox_13.isChecked():
@@ -1867,33 +2082,42 @@ class ToolBox:
 
                         for i in range(0, len(d['features'])):
                             if d['features'][i]['properties']['mode'] in mode:
-                                FROM = str(d['features'][i]['geometry']['coordinates'][0][0])+","+str(d['features'][i]['geometry']['coordinates'][0][1])
-                                TO = str(d['features'][i]['geometry']['coordinates'][1][0])+","+str(d['features'][i]['geometry']['coordinates'][1][1])
-                                api = "https://routing.anyways.eu/api/route?loc="+FROM+"&loc="+TO+"&profile="+PROFILE
+                                FROM = str(d['features'][i]['geometry']['coordinates'][0][0]) + "," + str(
+                                    d['features'][i]['geometry']['coordinates'][0][1])
+                                TO = str(d['features'][i]['geometry']['coordinates'][1][0]) + "," + str(
+                                    d['features'][i]['geometry']['coordinates'][1][1])
+                                api = "https://routing.anyways.eu/api/route?loc=" + FROM + "&loc=" + TO + "&profile=" + PROFILE
                                 ApiReqList.append(api)
                                 if api in api_dic.keys():
                                     api_dic[api].append(i)
 
                                 else:
-                                    api_dic.update( {api : [i]} )
+                                    api_dic.update({api: [i]})
                             else:
                                 pass
 
-                        #1st round of reuqests
-                        @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60)        #This is the retry function!!! Instead of "max_tries=3" one can use: "max_time=60"
+                        # 1st round of reuqests
+                        @backoff.on_exception(backoff.expo, aiohttp.ClientError,
+                                              max_time=60)  # This is the retry function!!! Instead of "max_tries=3" one can use: "max_time=60"
                         async def get(url, session):
                             try:
                                 for i in api_dic[url]:
                                     async with session.get(url=url) as response:
                                         obj = await response.json()
                                         for n in range(len(obj['features'])):
-                                            obj['features'][n]['properties']={}
-                                            obj['features'][n]['properties']['Profile']= PROFILE
-                                            obj['features'][n]['properties']['O_D']= "%s-%s" % (d['features'][i]['properties']['from_location'], d['features'][i]['properties']['to_location'])
-                                            obj['features'][n]['properties']['From_location']= d['features'][i]['properties']['from_location']
-                                            obj['features'][n]['properties']['To_location']= d['features'][i]['properties']['to_location']
-                                            obj['features'][n]['properties']['Movement']= d['features'][i]['properties']['mode']
-                                            obj['features'][n]['properties']['Count']= d['features'][i]['properties']['count']
+                                            obj['features'][n]['properties'] = {}
+                                            obj['features'][n]['properties']['Profile'] = PROFILE
+                                            obj['features'][n]['properties']['O_D'] = "%s-%s" % (
+                                            d['features'][i]['properties']['from_location'],
+                                            d['features'][i]['properties']['to_location'])
+                                            obj['features'][n]['properties']['From_location'] = \
+                                            d['features'][i]['properties']['from_location']
+                                            obj['features'][n]['properties']['To_location'] = \
+                                            d['features'][i]['properties']['to_location']
+                                            obj['features'][n]['properties']['Movement'] = \
+                                            d['features'][i]['properties']['mode']
+                                            obj['features'][n]['properties']['Count'] = d['features'][i]['properties'][
+                                                'count']
                                         for feats in obj['features']:
                                             featuresList.append(feats)
 
@@ -1902,8 +2126,7 @@ class ToolBox:
                                     failed_dic[url].append(i)
 
                                 else:
-                                    failed_dic.update( {url : [i]} )
-
+                                    failed_dic.update({url: [i]})
 
                         async def main(urls):
                             connector = aiohttp.TCPConnector()
@@ -1914,10 +2137,10 @@ class ToolBox:
                             await session.close()
 
                         urls = ApiReqList
-                        amount=len(urls)
+                        amount = len(urls)
                         asyncio.run(main(urls))
 
-                        #2nd round of reuqests (if there're failed requests in the 1st round)
+                        # 2nd round of reuqests (if there're failed requests in the 1st round)
                         if len(failedReqs) > 0:
 
                             @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_tries=3)
@@ -1927,19 +2150,24 @@ class ToolBox:
                                         async with session.get(url=url) as response:
                                             obj = await response.json()
                                             for n in range(len(obj['features'])):
-                                                obj['features'][n]['properties']={}
-                                                obj['features'][n]['properties']['Profile']= PROFILE
-                                                obj['features'][n]['properties']['O_D']= "%s-%s" % (d['features'][i]['properties']['from_location'], d['features'][i]['properties']['to_location'])
-                                                obj['features'][n]['properties']['From_location']= d['features'][i]['properties']['from_location']
-                                                obj['features'][n]['properties']['To_location']= d['features'][i]['properties']['to_location']
-                                                obj['features'][n]['properties']['Movement']= d['features'][i]['properties']['mode']
-                                                obj['features'][n]['properties']['Count']= d['features'][i]['properties']['count']
+                                                obj['features'][n]['properties'] = {}
+                                                obj['features'][n]['properties']['Profile'] = PROFILE
+                                                obj['features'][n]['properties']['O_D'] = "%s-%s" % (
+                                                d['features'][i]['properties']['from_location'],
+                                                d['features'][i]['properties']['to_location'])
+                                                obj['features'][n]['properties']['From_location'] = \
+                                                d['features'][i]['properties']['from_location']
+                                                obj['features'][n]['properties']['To_location'] = \
+                                                d['features'][i]['properties']['to_location']
+                                                obj['features'][n]['properties']['Movement'] = \
+                                                d['features'][i]['properties']['mode']
+                                                obj['features'][n]['properties']['Count'] = \
+                                                d['features'][i]['properties']['count']
                                             for feats in obj['features']:
                                                 featuresList.append(feats)
 
                                 except Exception as e:
                                     failedReqs.append(url)
-
 
                             async def main(urls):
                                 connector = aiohttp.TCPConnector()
@@ -1956,145 +2184,165 @@ class ToolBox:
                             pass
 
                         QgsMessageLog.logMessage('\n'.join(map(str, failedReqs)), 'ImPact Toolbox', level=Qgis.Info)
-                        
-                        #write FOD movements in a JSON file
-                        Fname= DataSource + "_Tij_" + timestr
+
+                        # write FOD movements in a JSON file
+                        Fname = DataSource + "_Tij_" + timestr
                         fileroute = path + "/" + Fname
-                        f = open(fileroute+".json", "w+")
-                        json.dump(d,f)
+                        f = open(fileroute + ".json", "w+")
+                        json.dump(d, f)
                         f.close()
 
-                        #write routings in a JSON file
+                        # write routings in a JSON file
                         JsonMerged['features'] = featuresList
                         Fname2 = DataSource + "_Routings_" + timestr
-                        fileroute2 = path + "/" +Fname2
-                        f2 = open(fileroute2+".json" , "w+")
-                        json.dump(JsonMerged,f2)
+                        fileroute2 = path + "/" + Fname2
+                        f2 = open(fileroute2 + ".json", "w+")
+                        json.dump(JsonMerged, f2)
                         f2.close()
 
                         if self.dlg.checkBox_5.isChecked():
-                            #Importing Movements JSON file
-                            layer = QgsVectorLayer(fileroute+".json",Fname, "ogr")
+                            # Importing Movements JSON file
+                            layer = QgsVectorLayer(fileroute + ".json", Fname, "ogr")
                             QgsProject.instance().addMapLayer(layer, True)
 
                             lyr = iface.activeLayer()
                             symbols = lyr.renderer().symbols(QgsRenderContext())
                             sym = symbols[0]
-                            sym.setColor(QColor(255,255,255))
+                            sym.setColor(QColor(255, 255, 255))
                             sym.setWidth(float(0.05))
                             lyr.triggerRepaint()
                         else:
                             pass
-                        #Importing Routings JSON file
-                        layer2 = QgsVectorLayer(fileroute2+".json", Fname2, "ogr")
+                        # Importing Routings JSON file
+                        layer2 = QgsVectorLayer(fileroute2 + ".json", Fname2, "ogr")
                         QgsProject.instance().addMapLayer(layer2, True)
-                        
+
                         lyr = iface.activeLayer()
                         symbols = lyr.renderer().symbols(QgsRenderContext())
                         sym = symbols[0]
                         c = self.dlg.mColorButton_8.color()
                         sym.setColor(QColor(c))
                         sym.setWidth(float(self.dlg.lineEdit_23.text()))
-                        lyr.triggerRepaint()						
-                        
+                        lyr.triggerRepaint()
+
                 elif self.dlg.tabWidget_3.currentIndex() == 1:
                     From_layer = self.dlg.mMapLayerComboBox_8.currentLayer()
-                    if From_layer.crs().authid() != 'EPSG:4326':
-                        return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of From-Area polygon must be EPSG:4326 !', level = Qgis.Critical, duration=0)
-                        #QgsMessageLog.logMessage("The CRS of To-Area polygon must be EPSG:4326 !", 'ImPact Toolbox', level=Qgis.Info)
+                    if From_layer.crs() == 4326:
+                        features = From_layer.getFeatures()
+                    else:
+                        crsSrc = QgsCoordinateReferenceSystem(From_layer.crs())
+                        crsDest = QgsCoordinateReferenceSystem(4326)
+                        xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
 
-                    feat = From_layer.getFeatures()
+                        features = []
+                        for f in From_layer.getFeatures():
+                            g = f.geometry()
+                            g.transform(xform)
+                            f.setGeometry(g)
+                            features.append(f)
 
-                    for feature in feat:
-                        vertices = feature.geometry().asMultiPolygon()
-                    
-                    for v in vertices:
-                        p=str(v)
-                        l=[p.split(')')[0] for p in p.split('(') if ')' in p]
-                    
-                    ll2=[]
-                    for i in range (0, len(l)):
-                        ll2.append([float(x) for x in l[i].split( )])
-                    
-                    To_layer= self.dlg.mMapLayerComboBox_9.currentLayer()
-                    if To_layer.crs().authid() != 'EPSG:4326':
-                        return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u'The CRS of To-Area polygon must be EPSG:4326 !', level = Qgis.Critical, duration=0)
-
-                    feat = To_layer.getFeatures()
-
-                    for feature in feat:
+                    for feature in features:
                         vertices = feature.geometry().asMultiPolygon()
 
                     for v in vertices:
-                        p=str(v)
-                        l=[p.split(')')[0] for p in p.split('(') if ')' in p]
-                        
-                    ll=[]
-                    for i in range (0, len(l)):
-                        ll.append([float(x) for x in l[i].split( )])
+                        p = str(v)
+                        l = [p.split(')')[0] for p in p.split('(') if ')' in p]
+
+                    ll2 = []
+                    for i in range(0, len(l)):
+                        ll2.append([float(x) for x in l[i].split()])
+
+                    To_layer = self.dlg.mMapLayerComboBox_9.currentLayer()
+                    if To_layer.crs() == 4326:
+                        features = To_layer.getFeatures()
+                    else:
+                        crsSrc = QgsCoordinateReferenceSystem(To_layer.crs())
+                        crsDest = QgsCoordinateReferenceSystem(4326)
+                        xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
+
+                        features = []
+                        for f in To_layer.getFeatures():
+                            g = f.geometry()
+                            g.transform(xform)
+                            f.setGeometry(g)
+                            features.append(f)
+
+                    for feature in features:
+                        vertices = feature.geometry().asMultiPolygon()
+
+                    for v in vertices:
+                        p = str(v)
+                        l = [p.split(')')[0] for p in p.split('(') if ')' in p]
+
+                    ll = []
+                    for i in range(0, len(l)):
+                        ll.append([float(x) for x in l[i].split()])
 
                     DataSource = self.dlg.DataSource_2.currentText()
-                        
-                    if DataSource.lower() =='fod':
-                        x={"fromArea": {
-                          "type": "FeatureCollection",
-                          "features": [
-                            {
-                              "type": "Feature",
-                              "properties": {},
-                              "geometry": {
-                                "type": "Polygon",
-                                "coordinates": [
-                                    [
-                                      0
-                                    ]
-                                  ]
+
+                    if DataSource.lower() == 'fod':
+                        x = {"fromArea": {
+                            "type": "FeatureCollection",
+                            "features": [
+                                {
+                                    "type": "Feature",
+                                    "properties": {},
+                                    "geometry": {
+                                        "type": "Polygon",
+                                        "coordinates": [
+                                            [
+                                                0
+                                            ]
+                                        ]
+                                    }
                                 }
-                              }
                             ]
-                          },
-                          "toArea": {
-                          "type": "FeatureCollection",
-                          "features": [
-                            {
-                              "type": "Feature",
-                              "properties": {},
-                              "geometry": {
-                                "type": "Polygon",
-                                "coordinates": [
-                                    [
-                                      0
-                                    ]
-                                  ]
-                                }
-                              }
-                            ]
-                          }
+                        },
+                            "toArea": {
+                                "type": "FeatureCollection",
+                                "features": [
+                                    {
+                                        "type": "Feature",
+                                        "properties": {},
+                                        "geometry": {
+                                            "type": "Polygon",
+                                            "coordinates": [
+                                                [
+                                                    0
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
                         }
 
-                        x['fromArea']['features'][0]['geometry']['coordinates'][0]=ll2
-                        x['toArea']['features'][0]['geometry']['coordinates'][0]=ll
+                        x['fromArea']['features'][0]['geometry']['coordinates'][0] = ll2
+                        x['toArea']['features'][0]['geometry']['coordinates'][0] = ll
 
-                        data=json.dumps(x)
+                        data = json.dumps(x)
 
-                        head={'Content-type': 'application/json-patch+json', 'Accept': 'application/geo+json'}
-                        response = requests.post('https://staging.anyways.eu/api/data/od/movement/area', data=data, headers=head)
+                        head = {'Content-type': 'application/json-patch+json', 'Accept': 'application/geo+json'}
+                        response = requests.post('https://staging.anyways.eu/api/data/od/movement/area', data=data,
+                                                 headers=head)
 
-                        d=response.json()
-                        if len(d['features'])==0:
-                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', u"There seem to be no Companies in the selected To-Area. Please verify at: <a href='https://staging.anyways.eu/mobility-data-explorer'>https://staging.anyways.eu/mobility-data-explorer</a>", level = Qgis.Critical, duration=0)
-                            #QgsMessageLog.logMessage("There seem to be no Companies in the selected To-Area. Please verify at: https://staging.anyways.eu/mobility-data-explorer", 'ImPact Toolbox', level=Qgis.Info)
+                        d = response.json()
+                        if len(d['features']) == 0:
+                            return self.iface.messageBar().pushMessage(u'ImPact_toolbox Error',
+                                                                       u"There seem to be no Companies in the selected To-Area. Please verify at: <a href='https://staging.anyways.eu/mobility-data-explorer'>https://staging.anyways.eu/mobility-data-explorer</a>",
+                                                                       level=Qgis.Critical, duration=0)
+                            # QgsMessageLog.logMessage("There seem to be no Companies in the selected To-Area. Please verify at: https://staging.anyways.eu/mobility-data-explorer", 'ImPact Toolbox', level=Qgis.Info)
 
-                        path= self.dlg.lineEdit_17.text()
+                        path = self.dlg.lineEdit_17.text()
                         JsonMerged = {'type': 'FeatureCollection'}
-                        PROFILE= self.dlg.RoutingProfiles_6.currentText().lower()
+                        PROFILE = self.dlg.RoutingProfiles_6.currentText().lower()
                         timestr = time.strftime("%Y%m%d_%H%M%S")
                         INSTANCE = str.strip(self.dlg.lineEdit_19.text())
                         ApiReqList = []
                         featuresList = []
-                        failedReqs=[]
-                        api_dic={}
-                        failed_dic={}
+                        failedReqs = []
+                        api_dic = {}
+                        failed_dic = {}
                         mode = []
 
                         if self.dlg.checkBox_7.isChecked():
@@ -2111,34 +2359,43 @@ class ToolBox:
 
                         for i in range(0, len(d['features'])):
                             if d['features'][i]['properties']['mode'] in mode:
-                                FROM = str(d['features'][i]['geometry']['coordinates'][0][1])+","+str(d['features'][i]['geometry']['coordinates'][0][0])
-                                TO = str(d['features'][i]['geometry']['coordinates'][1][1])+","+str(d['features'][i]['geometry']['coordinates'][1][0])
-                                api = "https://api.anyways.eu/publish/opa/"+INSTANCE+"/routing?profile="+PROFILE+"&loc="+FROM+"&loc="+TO
+                                FROM = str(d['features'][i]['geometry']['coordinates'][0][1]) + "," + str(
+                                    d['features'][i]['geometry']['coordinates'][0][0])
+                                TO = str(d['features'][i]['geometry']['coordinates'][1][1]) + "," + str(
+                                    d['features'][i]['geometry']['coordinates'][1][0])
+                                api = "https://api.anyways.eu/publish/opa/" + INSTANCE + "/routing?profile=" + PROFILE + "&loc=" + FROM + "&loc=" + TO
                                 ApiReqList.append(api)
                                 if api in api_dic.keys():
                                     api_dic[api].append(i)
 
                                 else:
-                                    api_dic.update( {api : [i]} )
+                                    api_dic.update({api: [i]})
                             else:
                                 pass
 
-                        #1st round of reuqests
-                        @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60)        #This is the retry function!!! Instead of "max_tries=3" one can use: "max_time=60"
+                        # 1st round of reuqests
+                        @backoff.on_exception(backoff.expo, aiohttp.ClientError,
+                                              max_time=60)  # This is the retry function!!! Instead of "max_tries=3" one can use: "max_time=60"
                         async def get(url, session):
                             try:
                                 for i in api_dic[url]:
                                     async with session.get(url=url) as response:
                                         obj = await response.json()
                                         for n in range(len(obj['features'])):
-                                            obj['features'][n]['properties']={}
-                                            obj['features'][n]['properties']['Profile']= PROFILE
-                                            obj['features'][n]['properties']['Instance']= INSTANCE
-                                            obj['features'][n]['properties']['O_D']= "%s-%s" % (d['features'][i]['properties']['from_location'], d['features'][i]['properties']['to_location'])
-                                            obj['features'][n]['properties']['From_location']= d['features'][i]['properties']['from_location']
-                                            obj['features'][n]['properties']['To_location']= d['features'][i]['properties']['to_location']
-                                            obj['features'][n]['properties']['Movement']= d['features'][i]['properties']['mode']
-                                            obj['features'][n]['properties']['Count']= d['features'][i]['properties']['count']
+                                            obj['features'][n]['properties'] = {}
+                                            obj['features'][n]['properties']['Profile'] = PROFILE
+                                            obj['features'][n]['properties']['Instance'] = INSTANCE
+                                            obj['features'][n]['properties']['O_D'] = "%s-%s" % (
+                                            d['features'][i]['properties']['from_location'],
+                                            d['features'][i]['properties']['to_location'])
+                                            obj['features'][n]['properties']['From_location'] = \
+                                            d['features'][i]['properties']['from_location']
+                                            obj['features'][n]['properties']['To_location'] = \
+                                            d['features'][i]['properties']['to_location']
+                                            obj['features'][n]['properties']['Movement'] = \
+                                            d['features'][i]['properties']['mode']
+                                            obj['features'][n]['properties']['Count'] = d['features'][i]['properties'][
+                                                'count']
                                         for feats in obj['features']:
                                             featuresList.append(feats)
 
@@ -2147,8 +2404,7 @@ class ToolBox:
                                     failed_dic[url].append(i)
 
                                 else:
-                                    failed_dic.update( {url : [i]} )
-
+                                    failed_dic.update({url: [i]})
 
                         async def main(urls):
                             connector = aiohttp.TCPConnector()
@@ -2159,10 +2415,10 @@ class ToolBox:
                             await session.close()
 
                         urls = ApiReqList
-                        amount=len(urls)
+                        amount = len(urls)
                         asyncio.run(main(urls))
 
-                        #2nd round of reuqests (if there're failed requests in the 1st round)
+                        # 2nd round of reuqests (if there're failed requests in the 1st round)
                         if len(failedReqs) > 0:
 
                             @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_tries=3)
@@ -2172,20 +2428,25 @@ class ToolBox:
                                         async with session.get(url=url) as response:
                                             obj = await response.json()
                                             for n in range(len(obj['features'])):
-                                                obj['features'][n]['properties']={}
-                                                obj['features'][n]['properties']['Profile']= PROFILE
-                                                obj['features'][n]['properties']['Instance']= INSTANCE
-                                                obj['features'][n]['properties']['O_D']= "%s-%s" % (d['features'][i]['properties']['from_location'], d['features'][i]['properties']['to_location'])
-                                                obj['features'][n]['properties']['From_location']= d['features'][i]['properties']['from_location']
-                                                obj['features'][n]['properties']['To_location']= d['features'][i]['properties']['to_location']
-                                                obj['features'][n]['properties']['Movement']= d['features'][i]['properties']['mode']
-                                                obj['features'][n]['properties']['Count']= d['features'][i]['properties']['count']
+                                                obj['features'][n]['properties'] = {}
+                                                obj['features'][n]['properties']['Profile'] = PROFILE
+                                                obj['features'][n]['properties']['Instance'] = INSTANCE
+                                                obj['features'][n]['properties']['O_D'] = "%s-%s" % (
+                                                d['features'][i]['properties']['from_location'],
+                                                d['features'][i]['properties']['to_location'])
+                                                obj['features'][n]['properties']['From_location'] = \
+                                                d['features'][i]['properties']['from_location']
+                                                obj['features'][n]['properties']['To_location'] = \
+                                                d['features'][i]['properties']['to_location']
+                                                obj['features'][n]['properties']['Movement'] = \
+                                                d['features'][i]['properties']['mode']
+                                                obj['features'][n]['properties']['Count'] = \
+                                                d['features'][i]['properties']['count']
                                             for feats in obj['features']:
                                                 featuresList.append(feats)
 
                                 except Exception as e:
                                     failedReqs.append(url)
-
 
                             async def main(urls):
                                 connector = aiohttp.TCPConnector()
@@ -2202,39 +2463,39 @@ class ToolBox:
                             pass
 
                         QgsMessageLog.logMessage('\n'.join(map(str, failedReqs)), 'ImPact Toolbox', level=Qgis.Info)
-                        
-                        #write FOD movements in a JSON file
-                        Fname= DataSource + "_Tij_" + timestr
+
+                        # write FOD movements in a JSON file
+                        Fname = DataSource + "_Tij_" + timestr
                         fileroute = path + "/" + Fname
-                        f = open(fileroute+".json", "w+")
-                        json.dump(d,f)
+                        f = open(fileroute + ".json", "w+")
+                        json.dump(d, f)
                         f.close()
 
-                        #write routings in a JSON file
+                        # write routings in a JSON file
                         JsonMerged['features'] = featuresList
                         Fname2 = DataSource + "_ShortCutRoutings_" + timestr
-                        fileroute2 = path + "/" +Fname2
-                        f2 = open(fileroute2+".json" , "w+")
-                        json.dump(JsonMerged,f2)
+                        fileroute2 = path + "/" + Fname2
+                        f2 = open(fileroute2 + ".json", "w+")
+                        json.dump(JsonMerged, f2)
                         f2.close()
 
                         if self.dlg.checkBox_6.isChecked():
-                        #Importing FOD Movements JSON file
-                            layer = QgsVectorLayer(fileroute+".json",Fname, "ogr")
+                            # Importing FOD Movements JSON file
+                            layer = QgsVectorLayer(fileroute + ".json", Fname, "ogr")
                             QgsProject.instance().addMapLayer(layer, True)
 
                             lyr = iface.activeLayer()
                             symbols = lyr.renderer().symbols(QgsRenderContext())
                             sym = symbols[0]
-                            sym.setColor(QColor(255,255,255))
+                            sym.setColor(QColor(255, 255, 255))
                             sym.setWidth(float(0.05))
                             lyr.triggerRepaint()
                         else:
                             pass
-                        #Importing Routings JSON file
-                        layer2 = QgsVectorLayer(fileroute2+".json", Fname2, "ogr")
+                        # Importing Routings JSON file
+                        layer2 = QgsVectorLayer(fileroute2 + ".json", Fname2, "ogr")
                         QgsProject.instance().addMapLayer(layer2, True)
-                        
+
                         lyr = iface.activeLayer()
                         symbols = lyr.renderer().symbols(QgsRenderContext())
                         sym = symbols[0]
@@ -2243,44 +2504,45 @@ class ToolBox:
                         sym.setWidth(float(self.dlg.lineEdit_18.text()))
                         lyr.triggerRepaint()
 
-            if self.dlg.toolBox.currentIndex() == 3:
+            elif self.dlg.toolBox.currentIndex() == 3:
                 if self.dlg.tabWidget_4.currentIndex() == 0:
                     xlfile = self.dlg.lineEdit_27.text()
                     path = self.dlg.lineEdit_26.text()
-                    SheetName= self.dlg.lineEdit_28.text()
-                    #check if the string "sheetname" is empty, read the first (default) sheet of the excel file
+                    SheetName = self.dlg.lineEdit_28.text()
+                    # check if the string "sheetname" is empty, read the first (default) sheet of the excel file
                     if not SheetName.strip():
-                        SheetName=0
+                        SheetName = 0
                     df = pd.read_excel(xlfile, sheet_name=SheetName)
-                    dicFinal={"type": "FeatureCollection","features":[]}
+                    dicFinal = {"type": "FeatureCollection", "features": []}
 
-                    col_list=list(df.columns)
-                    col_list2=['From','From-lat','From-long','To', 'To-lat','To-long']
-                    def set_approach(a,b):
-                        return list(set(a)-set(b))
+                    col_list = list(df.columns)
+                    col_list2 = ['From', 'From-lat', 'From-long', 'To', 'To-lat', 'To-long']
 
-                    mode_list= set_approach(col_list,col_list2)
+                    def set_approach(a, b):
+                        return list(set(a) - set(b))
+
+                    mode_list = set_approach(col_list, col_list2)
 
                     for m in mode_list:
                         for index, row in df.iterrows():
-                            if row[m]>0:
-                                f=[]
+                            if row[m] > 0:
+                                f = []
                                 f.append(row['From-long'])
                                 f.append(row['From-lat'])
-                                t=[]
+                                t = []
                                 t.append(row['To-long'])
                                 t.append(row['To-lat'])
 
-                                geometry={"type": "LineString","coordinates":[]}
+                                geometry = {"type": "LineString", "coordinates": []}
                                 geometry["coordinates"].append(f)
                                 geometry["coordinates"].append(t)
-                                properties={}
-                                properties["from_location"]=row['From']
-                                properties["to_location"]=row['To']
-                                properties["mode"]=m
-                                properties["count"]=row[m]
+                                properties = {}
+                                properties["from_location"] = row['From']
+                                properties["to_location"] = row['To']
+                                properties["mode"] = m
+                                properties["count"] = row[m]
 
-                                dic3={"type": "Feature","bbox":[],"geometry":geometry,"properties":properties}
+                                dic3 = {"type": "Feature", "bbox": [], "geometry": geometry, "properties": properties}
                                 dic3["bbox"].append(row['To-long'])
                                 dic3["bbox"].append(row['To-lat'])
                                 dic3["bbox"].append(row['From-long'])
@@ -2288,20 +2550,20 @@ class ToolBox:
 
                                 dicFinal["features"].append(dic3)
 
-                        #QgsMessageLog.logMessage(xlfile, 'ImPact Toolbox', level=Qgis.Info)
+                        # QgsMessageLog.logMessage(xlfile, 'ImPact Toolbox', level=Qgis.Info)
 
-                    #path=('C:/APIRequest/Movement file creation/')
-                    Fname= "Tij_"+xlfile.split('/')[-1][:-5]
+                    # path=('C:/APIRequest/Movement file creation/')
+                    Fname = "Tij_" + xlfile.split('/')[-1][:-5]
                     fileroute = path + "/" + Fname
-                    f = open(fileroute+".json", "w+")
-                    json.dump(dicFinal,f)
+                    f = open(fileroute + ".json", "w+")
+                    json.dump(dicFinal, f)
                     f.close()
 
                     if self.dlg.checkBox_15.isChecked():
-                        #Importing Movements JSON file
-                        layer = QgsVectorLayer(fileroute+".json", Fname, "ogr")
+                        # Importing Movements JSON file
+                        layer = QgsVectorLayer(fileroute + ".json", Fname, "ogr")
                         QgsProject.instance().addMapLayer(layer, True)
-                        
+
                         lyr = iface.activeLayer()
                         symbols = lyr.renderer().symbols(QgsRenderContext())
                         sym = symbols[0]
@@ -2315,48 +2577,57 @@ class ToolBox:
                 elif self.dlg.tabWidget_4.currentIndex() == 1:
                     Tij = self.dlg.lineEdit_29.text()
                     d = json.loads(open(Tij).read())
-                    path= self.dlg.lineEdit_15.text()
+                    path = self.dlg.lineEdit_15.text()
                     JsonMerged = {'type': 'FeatureCollection'}
-                    PROFILE= self.dlg.RoutingProfiles_5.currentText().lower()
+                    PROFILE = self.dlg.RoutingProfiles_5.currentText().lower()
                     m = str.strip(self.dlg.lineEdit_16.text())
-                    m2 = m.replace(', ', ',').replace(' ,',',')
+                    m2 = m.replace(', ', ',').replace(' ,', ',')
                     mode = m2.lower().split(',')
                     timestr = time.strftime("%Y%m%d_%H%M%S")
                     ApiReqList = []
                     featuresList = []
-                    failedReqs=[]
-                    api_dic={}
-                    failed_dic={}
+                    failedReqs = []
+                    api_dic = {}
+                    failed_dic = {}
 
                     for i in range(0, len(d['features'])):
                         if d['features'][i]['properties']['mode'].lower() in mode:
-                            FROM = str(d['features'][i]['geometry']['coordinates'][0][0])+","+str(d['features'][i]['geometry']['coordinates'][0][1])
-                            TO = str(d['features'][i]['geometry']['coordinates'][1][0])+","+str(d['features'][i]['geometry']['coordinates'][1][1])
-                            api = "https://routing.anyways.eu/api/route?loc="+FROM+"&loc="+TO+"&profile="+PROFILE
+                            FROM = str(d['features'][i]['geometry']['coordinates'][0][0]) + "," + str(
+                                d['features'][i]['geometry']['coordinates'][0][1])
+                            TO = str(d['features'][i]['geometry']['coordinates'][1][0]) + "," + str(
+                                d['features'][i]['geometry']['coordinates'][1][1])
+                            api = "https://routing.anyways.eu/api/route?loc=" + FROM + "&loc=" + TO + "&profile=" + PROFILE
                             ApiReqList.append(api)
                             if api in api_dic.keys():
                                 api_dic[api].append(i)
 
                             else:
-                                api_dic.update( {api : [i]} )
+                                api_dic.update({api: [i]})
                         else:
                             pass
 
-                    #1st round of reuqests
-                    @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60)        #This is the retry function!!! Instead of "max_tries=3" one can use: "max_time=60"
+                    # 1st round of reuqests
+                    @backoff.on_exception(backoff.expo, aiohttp.ClientError,
+                                          max_time=60)  # This is the retry function!!! Instead of "max_tries=3" one can use: "max_time=60"
                     async def get(url, session):
                         try:
                             for i in api_dic[url]:
                                 async with session.get(url=url) as response:
                                     obj = await response.json()
                                     for n in range(len(obj['features'])):
-                                        obj['features'][n]['properties']={}
-                                        obj['features'][n]['properties']['Profile']= PROFILE
-                                        obj['features'][n]['properties']['O_D']= "%s-%s" % (d['features'][i]['properties']['from_location'], d['features'][i]['properties']['to_location'])
-                                        obj['features'][n]['properties']['From_location']= d['features'][i]['properties']['from_location']
-                                        obj['features'][n]['properties']['To_location']= d['features'][i]['properties']['to_location']
-                                        obj['features'][n]['properties']['Movement']= d['features'][i]['properties']['mode']
-                                        obj['features'][n]['properties']['Count']= d['features'][i]['properties']['count']
+                                        obj['features'][n]['properties'] = {}
+                                        obj['features'][n]['properties']['Profile'] = PROFILE
+                                        obj['features'][n]['properties']['O_D'] = "%s-%s" % (
+                                        d['features'][i]['properties']['from_location'],
+                                        d['features'][i]['properties']['to_location'])
+                                        obj['features'][n]['properties']['From_location'] = \
+                                        d['features'][i]['properties']['from_location']
+                                        obj['features'][n]['properties']['To_location'] = \
+                                        d['features'][i]['properties']['to_location']
+                                        obj['features'][n]['properties']['Movement'] = d['features'][i]['properties'][
+                                            'mode']
+                                        obj['features'][n]['properties']['Count'] = d['features'][i]['properties'][
+                                            'count']
                                     for feats in obj['features']:
                                         featuresList.append(feats)
 
@@ -2365,8 +2636,7 @@ class ToolBox:
                                 failed_dic[url].append(i)
 
                             else:
-                                failed_dic.update( {url : [i]} )
-
+                                failed_dic.update({url: [i]})
 
                     async def main(urls):
                         connector = aiohttp.TCPConnector()
@@ -2377,10 +2647,10 @@ class ToolBox:
                         await session.close()
 
                     urls = ApiReqList
-                    amount=len(urls)
+                    amount = len(urls)
                     asyncio.run(main(urls))
 
-                    #2nd round of reuqests (if there're failed requests in the 1st round)
+                    # 2nd round of reuqests (if there're failed requests in the 1st round)
                     if len(failedReqs) > 0:
 
                         @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_tries=3)
@@ -2390,19 +2660,24 @@ class ToolBox:
                                     async with session.get(url=url) as response:
                                         obj = await response.json()
                                         for n in range(len(obj['features'])):
-                                            obj['features'][n]['properties']={}
-                                            obj['features'][n]['properties']['Profile']= PROFILE
-                                            obj['features'][n]['properties']['O_D']= "%s-%s" % (d['features'][i]['properties']['from_location'], d['features'][i]['properties']['to_location'])
-                                            obj['features'][n]['properties']['From_location']= d['features'][i]['properties']['from_location']
-                                            obj['features'][n]['properties']['To_location']= d['features'][i]['properties']['to_location']
-                                            obj['features'][n]['properties']['Movement']= d['features'][i]['properties']['mode']
-                                            obj['features'][n]['properties']['Count']= d['features'][i]['properties']['count']
+                                            obj['features'][n]['properties'] = {}
+                                            obj['features'][n]['properties']['Profile'] = PROFILE
+                                            obj['features'][n]['properties']['O_D'] = "%s-%s" % (
+                                            d['features'][i]['properties']['from_location'],
+                                            d['features'][i]['properties']['to_location'])
+                                            obj['features'][n]['properties']['From_location'] = \
+                                            d['features'][i]['properties']['from_location']
+                                            obj['features'][n]['properties']['To_location'] = \
+                                            d['features'][i]['properties']['to_location']
+                                            obj['features'][n]['properties']['Movement'] = \
+                                            d['features'][i]['properties']['mode']
+                                            obj['features'][n]['properties']['Count'] = d['features'][i]['properties'][
+                                                'count']
                                         for feats in obj['features']:
                                             featuresList.append(feats)
 
                             except Exception as e:
                                 failedReqs.append(url)
-
 
                         async def main(urls):
                             connector = aiohttp.TCPConnector()
@@ -2418,18 +2693,18 @@ class ToolBox:
                     else:
                         pass
 
-                    #QgsMessageLog.logMessage('\n'.join(map(str, failedReqs)), 'ImPact Toolbox', level=Qgis.Info)
+                    # QgsMessageLog.logMessage('\n'.join(map(str, failedReqs)), 'ImPact Toolbox', level=Qgis.Info)
 
-                    #write routings in a JSON file
+                    # write routings in a JSON file
                     JsonMerged['features'] = featuresList
                     Fname2 = "Routings_" + Tij.split('/')[-1][:-5] + timestr
-                    fileroute2 = path + "/" +Fname2
-                    f2 = open(fileroute2+".json" , "w+")
-                    json.dump(JsonMerged,f2)
+                    fileroute2 = path + "/" + Fname2
+                    f2 = open(fileroute2 + ".json", "w+")
+                    json.dump(JsonMerged, f2)
                     f2.close()
 
-                    #Importing Routings JSON file
-                    layer2 = QgsVectorLayer(fileroute2+".json", Fname2, "ogr")
+                    # Importing Routings JSON file
+                    layer2 = QgsVectorLayer(fileroute2 + ".json", Fname2, "ogr")
                     QgsProject.instance().addMapLayer(layer2, True)
 
                     lyr = iface.activeLayer()
@@ -2443,50 +2718,59 @@ class ToolBox:
                 elif self.dlg.tabWidget_4.currentIndex() == 2:
                     Tij2 = self.dlg.lineEdit_31.text()
                     d = json.loads(open(Tij2).read())
-                    path= self.dlg.lineEdit_20.text()
+                    path = self.dlg.lineEdit_20.text()
                     JsonMerged = {'type': 'FeatureCollection'}
-                    PROFILE= self.dlg.RoutingProfiles_7.currentText().lower()
+                    PROFILE = self.dlg.RoutingProfiles_7.currentText().lower()
                     INSTANCE = str.strip(self.dlg.lineEdit_22.text())
                     m = str.strip(self.dlg.lineEdit_30.text())
-                    m2 = m.replace(', ', ',').replace(' ,',',')
+                    m2 = m.replace(', ', ',').replace(' ,', ',')
                     mode = m2.lower().split(',')
                     timestr = time.strftime("%Y%m%d_%H%M%S")
                     ApiReqList = []
                     featuresList = []
-                    failedReqs=[]
-                    api_dic={}
-                    failed_dic={}
+                    failedReqs = []
+                    api_dic = {}
+                    failed_dic = {}
 
                     for i in range(0, len(d['features'])):
                         if d['features'][i]['properties']['mode'].lower() in mode:
-                            FROM = str(d['features'][i]['geometry']['coordinates'][0][1])+","+str(d['features'][i]['geometry']['coordinates'][0][0])
-                            TO = str(d['features'][i]['geometry']['coordinates'][1][1])+","+str(d['features'][i]['geometry']['coordinates'][1][0])
-                            api = "https://api.anyways.eu/publish/opa/"+INSTANCE+"/routing?profile="+PROFILE+"&loc="+FROM+"&loc="+TO
+                            FROM = str(d['features'][i]['geometry']['coordinates'][0][1]) + "," + str(
+                                d['features'][i]['geometry']['coordinates'][0][0])
+                            TO = str(d['features'][i]['geometry']['coordinates'][1][1]) + "," + str(
+                                d['features'][i]['geometry']['coordinates'][1][0])
+                            api = "https://api.anyways.eu/publish/opa/" + INSTANCE + "/routing?profile=" + PROFILE + "&loc=" + FROM + "&loc=" + TO
                             ApiReqList.append(api)
                             if api in api_dic.keys():
                                 api_dic[api].append(i)
 
                             else:
-                                api_dic.update( {api : [i]} )
+                                api_dic.update({api: [i]})
                         else:
                             pass
 
-                    #1st round of reuqests
-                    @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_time=60)        #This is the retry function!!! Instead of "max_tries=3" one can use: "max_time=60"
+                    # 1st round of reuqests
+                    @backoff.on_exception(backoff.expo, aiohttp.ClientError,
+                                          max_time=60)  # This is the retry function!!! Instead of "max_tries=3" one can use: "max_time=60"
                     async def get(url, session):
                         try:
                             for i in api_dic[url]:
                                 async with session.get(url=url) as response:
                                     obj = await response.json()
                                     for n in range(len(obj['features'])):
-                                        obj['features'][n]['properties']={}
-                                        obj['features'][n]['properties']['Profile']= PROFILE
-                                        obj['features'][n]['properties']['Instance']= INSTANCE
-                                        obj['features'][n]['properties']['O_D']= "%s-%s" % (d['features'][i]['properties']['from_location'], d['features'][i]['properties']['to_location'])
-                                        obj['features'][n]['properties']['From_location']= d['features'][i]['properties']['from_location']
-                                        obj['features'][n]['properties']['To_location']= d['features'][i]['properties']['to_location']
-                                        obj['features'][n]['properties']['Movement']= d['features'][i]['properties']['mode']
-                                        obj['features'][n]['properties']['Count']= d['features'][i]['properties']['count']
+                                        obj['features'][n]['properties'] = {}
+                                        obj['features'][n]['properties']['Profile'] = PROFILE
+                                        obj['features'][n]['properties']['Instance'] = INSTANCE
+                                        obj['features'][n]['properties']['O_D'] = "%s-%s" % (
+                                        d['features'][i]['properties']['from_location'],
+                                        d['features'][i]['properties']['to_location'])
+                                        obj['features'][n]['properties']['From_location'] = \
+                                        d['features'][i]['properties']['from_location']
+                                        obj['features'][n]['properties']['To_location'] = \
+                                        d['features'][i]['properties']['to_location']
+                                        obj['features'][n]['properties']['Movement'] = d['features'][i]['properties'][
+                                            'mode']
+                                        obj['features'][n]['properties']['Count'] = d['features'][i]['properties'][
+                                            'count']
                                     for feats in obj['features']:
                                         featuresList.append(feats)
 
@@ -2495,8 +2779,7 @@ class ToolBox:
                                 failed_dic[url].append(i)
 
                             else:
-                                failed_dic.update( {url : [i]} )
-
+                                failed_dic.update({url: [i]})
 
                     async def main(urls):
                         connector = aiohttp.TCPConnector()
@@ -2507,10 +2790,10 @@ class ToolBox:
                         await session.close()
 
                     urls = ApiReqList
-                    amount=len(urls)
+                    amount = len(urls)
                     asyncio.run(main(urls))
 
-                    #2nd round of reuqests (if there're failed requests in the 1st round)
+                    # 2nd round of reuqests (if there're failed requests in the 1st round)
                     if len(failedReqs) > 0:
 
                         @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_tries=3)
@@ -2520,20 +2803,25 @@ class ToolBox:
                                     async with session.get(url=url) as response:
                                         obj = await response.json()
                                         for n in range(len(obj['features'])):
-                                            obj['features'][n]['properties']={}
-                                            obj['features'][n]['properties']['Profile']= PROFILE
-                                            obj['features'][n]['properties']['Instance']= INSTANCE
-                                            obj['features'][n]['properties']['O_D']= "%s-%s" % (d['features'][i]['properties']['from_location'], d['features'][i]['properties']['to_location'])
-                                            obj['features'][n]['properties']['From_location']= d['features'][i]['properties']['from_location']
-                                            obj['features'][n]['properties']['To_location']= d['features'][i]['properties']['to_location']
-                                            obj['features'][n]['properties']['Movement']= d['features'][i]['properties']['mode']
-                                            obj['features'][n]['properties']['Count']= d['features'][i]['properties']['count']
+                                            obj['features'][n]['properties'] = {}
+                                            obj['features'][n]['properties']['Profile'] = PROFILE
+                                            obj['features'][n]['properties']['Instance'] = INSTANCE
+                                            obj['features'][n]['properties']['O_D'] = "%s-%s" % (
+                                            d['features'][i]['properties']['from_location'],
+                                            d['features'][i]['properties']['to_location'])
+                                            obj['features'][n]['properties']['From_location'] = \
+                                            d['features'][i]['properties']['from_location']
+                                            obj['features'][n]['properties']['To_location'] = \
+                                            d['features'][i]['properties']['to_location']
+                                            obj['features'][n]['properties']['Movement'] = \
+                                            d['features'][i]['properties']['mode']
+                                            obj['features'][n]['properties']['Count'] = d['features'][i]['properties'][
+                                                'count']
                                         for feats in obj['features']:
                                             featuresList.append(feats)
 
                             except Exception as e:
                                 failedReqs.append(url)
-
 
                         async def main(urls):
                             connector = aiohttp.TCPConnector()
@@ -2547,20 +2835,20 @@ class ToolBox:
                         asyncio.run(main(urls))
 
                     else:
-                        pass	
- 
-                   #QgsMessageLog.logMessage('\n'.join(map(str, failedReqs)), 'ImPact Toolbox', level=Qgis.Info)
+                        pass
 
-                    #write routings in a JSON file
+                    # QgsMessageLog.logMessage('\n'.join(map(str, failedReqs)), 'ImPact Toolbox', level=Qgis.Info)
+
+                    # write routings in a JSON file
                     JsonMerged['features'] = featuresList
                     Fname2 = "ShortCutRoutings_" + Tij2.split('/')[-1][:-5] + timestr
-                    fileroute2 = path + "/" +Fname2
-                    f2 = open(fileroute2+".json" , "w+")
-                    json.dump(JsonMerged,f2)
+                    fileroute2 = path + "/" + Fname2
+                    f2 = open(fileroute2 + ".json", "w+")
+                    json.dump(JsonMerged, f2)
                     f2.close()
 
-                    #Importing Routings JSON file
-                    layer2 = QgsVectorLayer(fileroute2+".json", Fname2, "ogr")
+                    # Importing Routings JSON file
+                    layer2 = QgsVectorLayer(fileroute2 + ".json", Fname2, "ogr")
                     QgsProject.instance().addMapLayer(layer2, True)
 
                     lyr = iface.activeLayer()
@@ -2569,4 +2857,4 @@ class ToolBox:
                     c = self.dlg.mColorButton_7.color()
                     sym.setColor(QColor(c))
                     sym.setWidth(float(self.dlg.lineEdit_21.text()))
-                    lyr.triggerRepaint()						
+                    lyr.triggerRepaint()

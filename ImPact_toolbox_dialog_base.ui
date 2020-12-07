@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>559</width>
-    <height>701</height>
+    <height>738</height>
    </rect>
   </property>
   <property name="contextMenuPolicy">
@@ -37,7 +37,7 @@
      <x>30</x>
      <y>50</y>
      <width>501</width>
-     <height>581</height>
+     <height>601</height>
     </rect>
    </property>
    <property name="font">
@@ -75,7 +75,7 @@
     <number>10</number>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>3</number>
    </property>
    <property name="tabSpacing">
     <number>10</number>
@@ -86,7 +86,7 @@
       <x>0</x>
       <y>0</y>
       <width>499</width>
-      <height>435</height>
+      <height>455</height>
      </rect>
     </property>
     <attribute name="label">
@@ -98,7 +98,7 @@
        <x>0</x>
        <y>0</y>
        <width>501</width>
-       <height>441</height>
+       <height>461</height>
       </rect>
      </property>
      <property name="font">
@@ -173,7 +173,42 @@
        </item>
        <item>
         <property name="text">
+         <string>bicycle.safety</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.commute</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort_safety</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort_safety_speed</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
          <string>bicycle.networks</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.node_network</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.cycle_highway</string>
         </property>
        </item>
        <item>
@@ -193,7 +228,7 @@
        </item>
        <item>
         <property name="text">
-         <string>pedestrian.shortest</string>
+         <string>pedestrian.default</string>
         </property>
        </item>
       </widget>
@@ -201,7 +236,7 @@
        <property name="geometry">
         <rect>
          <x>160</x>
-         <y>120</y>
+         <y>140</y>
          <width>251</width>
          <height>22</height>
         </rect>
@@ -227,7 +262,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>120</y>
+         <y>140</y>
          <width>91</width>
          <height>16</height>
         </rect>
@@ -240,7 +275,7 @@
        <property name="geometry">
         <rect>
          <x>130</x>
-         <y>120</y>
+         <y>140</y>
          <width>31</width>
          <height>28</height>
         </rect>
@@ -266,7 +301,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>180</y>
+         <y>200</y>
          <width>131</width>
          <height>20</height>
         </rect>
@@ -279,7 +314,7 @@
        <property name="geometry">
         <rect>
          <x>340</x>
-         <y>190</y>
+         <y>210</y>
          <width>71</width>
          <height>21</height>
         </rect>
@@ -292,7 +327,7 @@
        <property name="geometry">
         <rect>
          <x>340</x>
-         <y>160</y>
+         <y>180</y>
          <width>71</width>
          <height>22</height>
         </rect>
@@ -305,7 +340,7 @@
        <property name="geometry">
         <rect>
          <x>300</x>
-         <y>160</y>
+         <y>180</y>
          <width>41</width>
          <height>21</height>
         </rect>
@@ -318,13 +353,26 @@
        <property name="geometry">
         <rect>
          <x>300</x>
-         <y>190</y>
+         <y>210</y>
          <width>41</width>
          <height>21</height>
         </rect>
        </property>
        <property name="text">
         <string>Color</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_70">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>100</y>
+         <width>401</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:6pt;&quot;&gt;For more details on profiles, please visit &lt;/span&gt;&lt;a href=&quot;https://docs.anyways.eu/routing-api/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;our documentation website&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </widget>
@@ -362,7 +410,7 @@
        <property name="geometry">
         <rect>
          <x>160</x>
-         <y>140</y>
+         <y>160</y>
          <width>231</width>
          <height>22</height>
         </rect>
@@ -398,7 +446,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>140</y>
+         <y>160</y>
          <width>91</width>
          <height>16</height>
         </rect>
@@ -411,7 +459,7 @@
        <property name="geometry">
         <rect>
          <x>130</x>
-         <y>137</y>
+         <y>157</y>
          <width>31</width>
          <height>28</height>
         </rect>
@@ -437,7 +485,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>190</y>
+         <y>210</y>
          <width>141</width>
          <height>20</height>
         </rect>
@@ -450,7 +498,7 @@
        <property name="geometry">
         <rect>
          <x>320</x>
-         <y>200</y>
+         <y>220</y>
          <width>71</width>
          <height>21</height>
         </rect>
@@ -463,7 +511,7 @@
        <property name="geometry">
         <rect>
          <x>280</x>
-         <y>200</y>
+         <y>220</y>
          <width>31</width>
          <height>21</height>
         </rect>
@@ -476,7 +524,7 @@
        <property name="geometry">
         <rect>
          <x>280</x>
-         <y>170</y>
+         <y>190</y>
          <width>41</width>
          <height>21</height>
         </rect>
@@ -489,7 +537,7 @@
        <property name="geometry">
         <rect>
          <x>320</x>
-         <y>170</y>
+         <y>190</y>
          <width>71</width>
          <height>22</height>
         </rect>
@@ -530,7 +578,42 @@
        </item>
        <item>
         <property name="text">
+         <string>bicycle.safety</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.commute</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort_safety</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort_safety_speed</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
          <string>bicycle.networks</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.node_network</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.cycle_highway</string>
         </property>
        </item>
        <item>
@@ -550,9 +633,22 @@
        </item>
        <item>
         <property name="text">
-         <string>pedestrian.shortest</string>
+         <string>pedestrian.default</string>
         </property>
        </item>
+      </widget>
+      <widget class="QLabel" name="label_75">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>120</y>
+         <width>401</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:6pt;&quot;&gt;For more details on profiles, please visit &lt;/span&gt;&lt;a href=&quot;https://docs.anyways.eu/routing-api/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;our documentation website&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
       </widget>
      </widget>
     </widget>
@@ -563,7 +659,7 @@
       <x>0</x>
       <y>0</y>
       <width>499</width>
-      <height>435</height>
+      <height>455</height>
      </rect>
     </property>
     <attribute name="label">
@@ -575,7 +671,7 @@
        <x>0</x>
        <y>0</y>
        <width>501</width>
-       <height>441</height>
+       <height>461</height>
       </rect>
      </property>
      <property name="font">
@@ -621,7 +717,7 @@
        <property name="geometry">
         <rect>
          <x>160</x>
-         <y>160</y>
+         <y>180</y>
          <width>251</width>
          <height>22</height>
         </rect>
@@ -647,7 +743,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>160</y>
+         <y>180</y>
          <width>91</width>
          <height>16</height>
         </rect>
@@ -660,7 +756,7 @@
        <property name="geometry">
         <rect>
          <x>130</x>
-         <y>160</y>
+         <y>180</y>
          <width>31</width>
          <height>28</height>
         </rect>
@@ -686,7 +782,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>220</y>
+         <y>240</y>
          <width>131</width>
          <height>20</height>
         </rect>
@@ -699,7 +795,7 @@
        <property name="geometry">
         <rect>
          <x>340</x>
-         <y>230</y>
+         <y>250</y>
          <width>71</width>
          <height>21</height>
         </rect>
@@ -712,7 +808,7 @@
        <property name="geometry">
         <rect>
          <x>340</x>
-         <y>200</y>
+         <y>220</y>
          <width>71</width>
          <height>22</height>
         </rect>
@@ -725,7 +821,7 @@
        <property name="geometry">
         <rect>
          <x>300</x>
-         <y>200</y>
+         <y>220</y>
          <width>41</width>
          <height>21</height>
         </rect>
@@ -738,7 +834,7 @@
        <property name="geometry">
         <rect>
          <x>300</x>
-         <y>230</y>
+         <y>250</y>
          <width>41</width>
          <height>21</height>
         </rect>
@@ -771,6 +867,19 @@
        </property>
        <property name="text">
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;ShortCut Instance &lt;span style=&quot; color:#ff0000;&quot;&gt;*&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_68">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>140</y>
+         <width>401</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:6pt;&quot;&gt;For more details on profiles, please visit &lt;/span&gt;&lt;a href=&quot;https://docs.anyways.eu/routing-api/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;our documentation website&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
       <widget class="QComboBox" name="RoutingProfiles">
@@ -810,7 +919,22 @@
        </item>
        <item>
         <property name="text">
+         <string>bicycle.commute</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
          <string>bicycle.comfort</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort_safety</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort_safety_speed</string>
         </property>
        </item>
        <item>
@@ -820,12 +944,17 @@
        </item>
        <item>
         <property name="text">
-         <string>bicycle.commute</string>
+         <string>bicycle.node_network</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>car</string>
+         <string>bicycle.cycle_highway</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>car.fastest</string>
         </property>
        </item>
        <item>
@@ -835,17 +964,12 @@
        </item>
        <item>
         <property name="text">
-         <string>car.opa</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
          <string>car.classifications</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>pedestrian.shortest</string>
+         <string>pedestrian.default</string>
         </property>
        </item>
       </widget>
@@ -884,7 +1008,7 @@
        <property name="geometry">
         <rect>
          <x>160</x>
-         <y>190</y>
+         <y>210</y>
          <width>231</width>
          <height>22</height>
         </rect>
@@ -920,7 +1044,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>190</y>
+         <y>210</y>
          <width>91</width>
          <height>16</height>
         </rect>
@@ -933,7 +1057,7 @@
        <property name="geometry">
         <rect>
          <x>130</x>
-         <y>187</y>
+         <y>207</y>
          <width>31</width>
          <height>28</height>
         </rect>
@@ -959,7 +1083,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>240</y>
+         <y>260</y>
          <width>141</width>
          <height>20</height>
         </rect>
@@ -972,7 +1096,7 @@
        <property name="geometry">
         <rect>
          <x>320</x>
-         <y>250</y>
+         <y>270</y>
          <width>71</width>
          <height>21</height>
         </rect>
@@ -985,7 +1109,7 @@
        <property name="geometry">
         <rect>
          <x>280</x>
-         <y>250</y>
+         <y>270</y>
          <width>31</width>
          <height>21</height>
         </rect>
@@ -998,7 +1122,7 @@
        <property name="geometry">
         <rect>
          <x>280</x>
-         <y>220</y>
+         <y>240</y>
          <width>41</width>
          <height>21</height>
         </rect>
@@ -1011,7 +1135,7 @@
        <property name="geometry">
         <rect>
          <x>320</x>
-         <y>220</y>
+         <y>240</y>
          <width>71</width>
          <height>22</height>
         </rect>
@@ -1044,6 +1168,19 @@
        </property>
        <property name="text">
         <string/>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_69">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>170</y>
+         <width>401</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:6pt;&quot;&gt;For more details on profiles, please visit &lt;/span&gt;&lt;a href=&quot;https://docs.anyways.eu/routing-api/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;our documentation website&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
       <widget class="QComboBox" name="RoutingProfiles_2">
@@ -1083,7 +1220,22 @@
        </item>
        <item>
         <property name="text">
+         <string>bicycle.commute</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
          <string>bicycle.comfort</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort_safety</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort_safety_speed</string>
         </property>
        </item>
        <item>
@@ -1093,12 +1245,17 @@
        </item>
        <item>
         <property name="text">
-         <string>bicycle.commute</string>
+         <string>bicycle.node_network</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>car</string>
+         <string>bicycle.cycle_highway</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>car.fastest</string>
         </property>
        </item>
        <item>
@@ -1108,17 +1265,12 @@
        </item>
        <item>
         <property name="text">
-         <string>car.opa</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
          <string>car.classifications</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>pedestrian.shortest</string>
+         <string>pedestrian.default</string>
         </property>
        </item>
       </widget>
@@ -1131,7 +1283,7 @@
       <x>0</x>
       <y>0</y>
       <width>499</width>
-      <height>435</height>
+      <height>455</height>
      </rect>
     </property>
     <attribute name="label">
@@ -1143,7 +1295,7 @@
        <x>0</x>
        <y>0</y>
        <width>501</width>
-       <height>441</height>
+       <height>461</height>
       </rect>
      </property>
      <property name="font">
@@ -1167,7 +1319,7 @@
        <property name="geometry">
         <rect>
          <x>370</x>
-         <y>300</y>
+         <y>310</y>
          <width>71</width>
          <height>22</height>
         </rect>
@@ -1180,7 +1332,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>300</y>
+         <y>310</y>
          <width>41</width>
          <height>21</height>
         </rect>
@@ -1193,7 +1345,7 @@
        <property name="geometry">
         <rect>
          <x>180</x>
-         <y>257</y>
+         <y>267</y>
          <width>31</width>
          <height>28</height>
         </rect>
@@ -1206,7 +1358,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>70</y>
+         <y>60</y>
          <width>121</width>
          <height>16</height>
         </rect>
@@ -1219,7 +1371,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>110</y>
+         <y>100</y>
          <width>51</width>
          <height>16</height>
         </rect>
@@ -1232,7 +1384,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>260</y>
+         <y>270</y>
          <width>91</width>
          <height>16</height>
         </rect>
@@ -1258,7 +1410,7 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>260</y>
+         <y>270</y>
          <width>231</width>
          <height>22</height>
         </rect>
@@ -1271,7 +1423,7 @@
        <property name="geometry">
         <rect>
          <x>370</x>
-         <y>340</y>
+         <y>350</y>
          <width>71</width>
          <height>21</height>
         </rect>
@@ -1284,7 +1436,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>340</y>
+         <y>350</y>
          <width>31</width>
          <height>21</height>
         </rect>
@@ -1297,16 +1449,13 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>70</y>
+         <y>60</y>
          <width>231</width>
          <height>22</height>
         </rect>
        </property>
       </widget>
       <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_13">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
        <property name="geometry">
         <rect>
          <x>210</x>
@@ -1329,7 +1478,7 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>150</y>
+         <y>160</y>
          <width>231</width>
          <height>22</height>
         </rect>
@@ -1355,7 +1504,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>150</y>
+         <y>160</y>
          <width>81</width>
          <height>16</height>
         </rect>
@@ -1368,7 +1517,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>320</y>
+         <y>330</y>
          <width>181</width>
          <height>20</height>
         </rect>
@@ -1381,7 +1530,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>220</y>
+         <y>230</y>
          <width>101</width>
          <height>20</height>
         </rect>
@@ -1394,7 +1543,7 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>220</y>
+         <y>230</y>
          <width>81</width>
          <height>20</height>
         </rect>
@@ -1407,7 +1556,7 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>190</y>
+         <y>200</y>
          <width>81</width>
          <height>20</height>
         </rect>
@@ -1423,7 +1572,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>190</y>
+         <y>200</y>
          <width>81</width>
          <height>20</height>
         </rect>
@@ -1436,7 +1585,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>200</y>
+         <y>210</y>
          <width>91</width>
          <height>16</height>
         </rect>
@@ -1449,7 +1598,7 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>110</y>
+         <y>100</y>
          <width>231</width>
          <height>22</height>
         </rect>
@@ -1477,7 +1626,42 @@
        </item>
        <item>
         <property name="text">
+         <string>bicycle.safety</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.commute</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort_safety</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort_safety_speed</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
          <string>bicycle.networks</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.node_network</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.cycle_highway</string>
         </property>
        </item>
        <item>
@@ -1497,9 +1681,22 @@
        </item>
        <item>
         <property name="text">
-         <string>pedestrian.shortest</string>
+         <string>pedestrian.default</string>
         </property>
        </item>
+      </widget>
+      <widget class="QLabel" name="label_64">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>120</y>
+         <width>401</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:6pt;&quot;&gt;For more details on profiles, please visit &lt;/span&gt;&lt;a href=&quot;https://docs.anyways.eu/routing-api/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;our documentation website&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
       </widget>
      </widget>
      <widget class="QWidget" name="tab_6">
@@ -1536,7 +1733,7 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>300</y>
+         <y>310</y>
          <width>231</width>
          <height>22</height>
         </rect>
@@ -1549,7 +1746,7 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>70</y>
+         <y>60</y>
          <width>231</width>
          <height>22</height>
         </rect>
@@ -1559,7 +1756,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>150</y>
+         <y>140</y>
          <width>51</width>
          <height>16</height>
         </rect>
@@ -1572,7 +1769,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>300</y>
+         <y>310</y>
          <width>91</width>
          <height>16</height>
         </rect>
@@ -1585,7 +1782,7 @@
        <property name="geometry">
         <rect>
          <x>180</x>
-         <y>297</y>
+         <y>307</y>
          <width>31</width>
          <height>28</height>
         </rect>
@@ -1598,7 +1795,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>70</y>
+         <y>60</y>
          <width>121</width>
          <height>16</height>
         </rect>
@@ -1611,7 +1808,7 @@
        <property name="geometry">
         <rect>
          <x>370</x>
-         <y>380</y>
+         <y>390</y>
          <width>71</width>
          <height>21</height>
         </rect>
@@ -1624,7 +1821,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>380</y>
+         <y>390</y>
          <width>31</width>
          <height>21</height>
         </rect>
@@ -1637,7 +1834,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>340</y>
+         <y>350</y>
          <width>41</width>
          <height>21</height>
         </rect>
@@ -1650,7 +1847,7 @@
        <property name="geometry">
         <rect>
          <x>370</x>
-         <y>340</y>
+         <y>350</y>
          <width>71</width>
          <height>22</height>
         </rect>
@@ -1663,7 +1860,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>110</y>
+         <y>100</y>
          <width>121</width>
          <height>16</height>
         </rect>
@@ -1676,7 +1873,7 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>110</y>
+         <y>100</y>
          <width>231</width>
          <height>22</height>
         </rect>
@@ -1689,7 +1886,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>190</y>
+         <y>200</y>
          <width>91</width>
          <height>16</height>
         </rect>
@@ -1702,7 +1899,7 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>190</y>
+         <y>200</y>
          <width>231</width>
          <height>22</height>
         </rect>
@@ -1728,7 +1925,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>360</y>
+         <y>370</y>
          <width>181</width>
          <height>20</height>
         </rect>
@@ -1741,7 +1938,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>240</y>
+         <y>250</y>
          <width>91</width>
          <height>16</height>
         </rect>
@@ -1754,7 +1951,7 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>230</y>
+         <y>240</y>
          <width>81</width>
          <height>20</height>
         </rect>
@@ -1770,7 +1967,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>230</y>
+         <y>240</y>
          <width>81</width>
          <height>20</height>
         </rect>
@@ -1783,7 +1980,7 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>260</y>
+         <y>270</y>
          <width>81</width>
          <height>20</height>
         </rect>
@@ -1796,7 +1993,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>260</y>
+         <y>270</y>
          <width>101</width>
          <height>20</height>
         </rect>
@@ -1805,11 +2002,24 @@
         <string>Bus or Tram</string>
        </property>
       </widget>
+      <widget class="QLabel" name="label_66">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>160</y>
+         <width>401</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:6pt;&quot;&gt;For more details on profiles, please visit &lt;/span&gt;&lt;a href=&quot;https://docs.anyways.eu/routing-api/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;our documentation website&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
       <widget class="QComboBox" name="RoutingProfiles_6">
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>150</y>
+         <y>140</y>
          <width>231</width>
          <height>22</height>
         </rect>
@@ -1842,7 +2052,22 @@
        </item>
        <item>
         <property name="text">
+         <string>bicycle.commute</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
          <string>bicycle.comfort</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort_safety</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort_safety_speed</string>
         </property>
        </item>
        <item>
@@ -1852,12 +2077,17 @@
        </item>
        <item>
         <property name="text">
-         <string>bicycle.commute</string>
+         <string>bicycle.node_network</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>car</string>
+         <string>bicycle.cycle_highway</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>car.fastest</string>
         </property>
        </item>
        <item>
@@ -1867,17 +2097,12 @@
        </item>
        <item>
         <property name="text">
-         <string>car.opa</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
          <string>car.classifications</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>pedestrian.shortest</string>
+         <string>pedestrian.default</string>
         </property>
        </item>
       </widget>
@@ -1890,7 +2115,7 @@
       <x>0</x>
       <y>0</y>
       <width>499</width>
-      <height>435</height>
+      <height>455</height>
      </rect>
     </property>
     <attribute name="label">
@@ -1902,7 +2127,7 @@
        <x>0</x>
        <y>0</y>
        <width>501</width>
-       <height>441</height>
+       <height>461</height>
       </rect>
      </property>
      <property name="font">
@@ -1916,7 +2141,7 @@
       <enum>QTabWidget::Triangular</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab_7">
       <attribute name="title">
@@ -2113,7 +2338,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>190</y>
+         <y>210</y>
          <width>41</width>
          <height>21</height>
         </rect>
@@ -2126,7 +2351,7 @@
        <property name="geometry">
         <rect>
          <x>370</x>
-         <y>220</y>
+         <y>240</y>
          <width>71</width>
          <height>21</height>
         </rect>
@@ -2152,7 +2377,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>220</y>
+         <y>240</y>
          <width>41</width>
          <height>21</height>
         </rect>
@@ -2165,7 +2390,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>150</y>
+         <y>170</y>
          <width>91</width>
          <height>16</height>
         </rect>
@@ -2178,7 +2403,7 @@
        <property name="geometry">
         <rect>
          <x>370</x>
-         <y>190</y>
+         <y>210</y>
          <width>71</width>
          <height>22</height>
         </rect>
@@ -2204,7 +2429,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>110</y>
+         <y>130</y>
          <width>51</width>
          <height>16</height>
         </rect>
@@ -2217,7 +2442,7 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>110</y>
+         <y>130</y>
          <width>231</width>
          <height>22</height>
         </rect>
@@ -2256,7 +2481,7 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>153</y>
+         <y>173</y>
          <width>231</width>
          <height>22</height>
         </rect>
@@ -2269,7 +2494,7 @@
        <property name="geometry">
         <rect>
          <x>180</x>
-         <y>150</y>
+         <y>170</y>
          <width>31</width>
          <height>28</height>
         </rect>
@@ -2310,7 +2535,42 @@
        </item>
        <item>
         <property name="text">
+         <string>bicycle.safety</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.commute</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort_safety</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort_safety_speed</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
          <string>bicycle.networks</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.node_network</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.cycle_highway</string>
         </property>
        </item>
        <item>
@@ -2330,9 +2590,22 @@
        </item>
        <item>
         <property name="text">
-         <string>pedestrian.shortest</string>
+         <string>pedestrian.default</string>
         </property>
        </item>
+      </widget>
+      <widget class="QLabel" name="label_48">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>90</y>
+         <width>401</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:6pt;&quot;&gt;For more details on profiles, please visit &lt;/span&gt;&lt;a href=&quot;https://docs.anyways.eu/routing-api/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;our documentation website&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
       </widget>
      </widget>
      <widget class="QWidget" name="tab_8">
@@ -2359,7 +2632,7 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>190</y>
+         <y>210</y>
          <width>231</width>
          <height>22</height>
         </rect>
@@ -2385,7 +2658,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>190</y>
+         <y>210</y>
          <width>91</width>
          <height>16</height>
         </rect>
@@ -2398,7 +2671,7 @@
        <property name="geometry">
         <rect>
          <x>180</x>
-         <y>187</y>
+         <y>207</y>
          <width>31</width>
          <height>28</height>
         </rect>
@@ -2411,7 +2684,7 @@
        <property name="geometry">
         <rect>
          <x>370</x>
-         <y>270</y>
+         <y>290</y>
          <width>71</width>
          <height>21</height>
         </rect>
@@ -2424,7 +2697,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>270</y>
+         <y>290</y>
          <width>31</width>
          <height>21</height>
         </rect>
@@ -2437,7 +2710,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>230</y>
+         <y>250</y>
          <width>41</width>
          <height>21</height>
         </rect>
@@ -2450,7 +2723,7 @@
        <property name="geometry">
         <rect>
          <x>370</x>
-         <y>230</y>
+         <y>250</y>
          <width>71</width>
          <height>22</height>
         </rect>
@@ -2489,7 +2762,7 @@
        <property name="geometry">
         <rect>
          <x>40</x>
-         <y>150</y>
+         <y>170</y>
          <width>91</width>
          <height>16</height>
         </rect>
@@ -2528,13 +2801,26 @@
        <property name="geometry">
         <rect>
          <x>210</x>
-         <y>150</y>
+         <y>170</y>
          <width>231</width>
          <height>22</height>
         </rect>
        </property>
        <property name="text">
         <string/>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_63">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>130</y>
+         <width>401</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:6pt;&quot;&gt;For more details on profiles, please visit &lt;/span&gt;&lt;a href=&quot;https://docs.anyways.eu/routing-api/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;our documentation website&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
       <widget class="QComboBox" name="RoutingProfiles_7">
@@ -2574,7 +2860,22 @@
        </item>
        <item>
         <property name="text">
+         <string>bicycle.commute</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
          <string>bicycle.comfort</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort_safety</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>bicycle.comfort_safety_speed</string>
         </property>
        </item>
        <item>
@@ -2584,12 +2885,17 @@
        </item>
        <item>
         <property name="text">
-         <string>bicycle.commute</string>
+         <string>bicycle.node_network</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>car</string>
+         <string>bicycle.cycle_highway</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>car.fastest</string>
         </property>
        </item>
        <item>
@@ -2599,17 +2905,12 @@
        </item>
        <item>
         <property name="text">
-         <string>car.opa</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
          <string>car.classifications</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>pedestrian.shortest</string>
+         <string>pedestrian.default</string>
         </property>
        </item>
       </widget>
@@ -2641,7 +2942,7 @@
    <property name="geometry">
     <rect>
      <x>180</x>
-     <y>660</y>
+     <y>680</y>
      <width>193</width>
      <height>28</height>
     </rect>
@@ -2657,7 +2958,7 @@
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>630</y>
+     <y>650</y>
      <width>341</width>
      <height>20</height>
     </rect>
