@@ -6,7 +6,7 @@
 name=ImPact toolbox
 qgisMinimumVersion=3.0
 description=This plugin is a suite of tools for the ImPact Analysis
-version=1.52
+version=1.53
 author=Hamed Eftekhar @ ANYWAYS
 email=hamed@anyways.eu
 
