@@ -3,7 +3,7 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=ImPact toolbox
+name=Impact toolbox
 qgisMinimumVersion=3.4.11-Madeira
 description=This plugin automates ANYWAYS Routing API
 version=0.0.1
