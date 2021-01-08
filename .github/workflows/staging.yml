@@ -8,10 +8,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
+    - name: Read metadata.txt
+      id: metadata
+      uses: juliangruber/read-file-action@v1
+      with:
+        path: ./metadata.txt
+    - name: Echo
+      run: echo ${{ steps.metadata.outputs.content }}
     - uses: actions-ecosystem/action-regex-match@v2
       id: regex-match
       with:
-        text: 'version=1.00'
+        text: ${{ steps.metadata.outputs.content }}
         regex: '^version=(.*)$'
     - name: Zip Folder
       run: zip -r ${{ steps.regex-match.outputs.group1 }}.zip .
