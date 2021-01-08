@@ -28,6 +28,7 @@ jobs:
       with:
         text: ${{ steps.metadata.outputs.content }}
         regex: '^version=(.*)$'
+        flags: 'gm'
     - run: echo ${{ steps.regex-match.outputs.match }}
     - run: echo ${{ steps.regex-match.outputs.group1 }}
     - name: Copy Zip
