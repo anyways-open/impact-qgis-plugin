@@ -1,0 +1,44 @@
+name: staging
+on:
+  push:
+    branches:
+      - develop
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+    - name: Install pb_tool
+      run: python -m pip install pb_tool
+    - name: Compile
+      run: pb_tool compile
+    - name: Zip
+      run: pb_tool zip
+    - name: Read metadata.txt
+      id: metadata
+      uses: juliangruber/read-file-action@v1
+      with:
+        path: ./metadata.txt
+    - uses: actions-ecosystem/action-regex-match@v2
+      id: regex-match
+      with:
+        text: ${{ steps.metadata.outputs.content }}
+        regex: '^version=(.*)$'
+        flags: 'gm'
+    - run: echo ${{ steps.regex-match.outputs.match }}
+    - run: echo ${{ steps.regex-match.outputs.group1 }}
+    - name: Copy Zip
+      run: cp ./zip_build/anyways_impact_toolbox.zip anyways-impact-toolbox-${{ steps.regex-match.outputs.group1 }}.zip
+    - uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest"
+        prerelease: true
+        title: "v${{ steps.regex-match.outputs.group1 }}-dev"
+        files: |
+          LICENSE
+          *.zip

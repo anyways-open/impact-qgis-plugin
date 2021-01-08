@@ -6,7 +6,7 @@
 name=ImPact toolbox
 qgisMinimumVersion=3.4.11-Madeira
 description=This plugin automates ANYWAYS Routing API
-version=1.00
+version=0.0.1
 author=Hamed Eftekhar @ ANYWAYS
 email=support@anyways.eu
 
