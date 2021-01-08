@@ -273,7 +273,7 @@
          </item>
          <item>
           <property name="text">
-           <string>car.fastest</string>
+           <string>car</string>
           </property>
          </item>
          <item>
@@ -497,7 +497,7 @@
          </item>
          <item>
           <property name="text">
-           <string>car.fastest</string>
+           <string>car</string>
           </property>
          </item>
          <item>
