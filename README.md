@@ -1,3 +1,5 @@
-# Qgis-Plugins
+# Impact QGIS Plugin
 
-This is the code for the 1st version of ANYWAYS QGIS plugins; Routing API
+![staging](https://github.com/anyways-open/impact-qgis-plugin/workflows/staging/badge.svg)  
+
+This repo contains the code for the Impact plugin for QGIS.
