@@ -8,7 +8,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
+    - uses: actions-ecosystem/action-regex-match@v2
+      id: regex-match
+      with:
+        text: metadata.txt
+        regex: '^version=(.*)$'
     - name: Zip Folder
-      run: zip -r release.zip .
+      run: zip -r ${{ steps.regex-match.outputs.group1 }}.zip .
     - name: Release to Github
       run: echo "Release"
