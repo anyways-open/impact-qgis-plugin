@@ -27,7 +27,8 @@ jobs:
       id: regex-match
       with:
         text: ${{ steps.metadata.outputs.content }}
-        regex: '^version=(.*)$'
+        regex: '^version=(.*)\s*$'
+    - run: echo ${{ steps.regex-match.outputs.group1 }}
     - name: Copy Zip
       run: cp ./zip_build/anyways_impact_toolbox.zip anyways-impact-toolbox-${{ steps.regex-match.outputs.group1 }}.zip
     - uses: "marvinpinto/action-automatic-releases@latest"
