@@ -32,7 +32,7 @@ from qgis.gui import QgsMessageBar
 from .resources_rc import *
 # Import the code for the dialog
 from .ImPact_toolbox_dialog import ToolBoxDialog
-import sys, os.path, json, shutil, time, asyncio
+import sys, os.path, json, shutil, time, asyncio, os
 import requests
 
 #module for this tool
@@ -204,6 +204,10 @@ class ToolBox:
         if result:
             if self.dlg.toolBox.currentIndex() == 0:            # ROUTING
                 KEY = self.dlg.routingTab_KeyHolder.text()
+                PATH=os.path.dirname(os.path.realpath(__file__))
+                with open (PATH+"/RoutingAPI_Key.txt", "w") as text_file:
+                    print(KEY, file=text_file)
+                
                 if self.dlg.routingWgt.currentIndex() == 0:        # ROUTING ALL POI's 
 
                     # get vars from UI
