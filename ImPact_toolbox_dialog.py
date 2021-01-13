@@ -26,7 +26,7 @@ import os
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
-from qgis.core import QgsProject
+from qgis.core import QgsProject, QgsMapLayerProxyModel
 from .ImPact_toolbox_dialog_base import Ui_APIRequestDialogBase
 
 class ToolBoxDialog(QDialog, Ui_APIRequestDialogBase):
@@ -38,6 +38,7 @@ class ToolBoxDialog(QDialog, Ui_APIRequestDialogBase):
         #load UI
         self.setupUi(self)
         
+        #Retrive the Key & project path (if plugin is launched in a saved Qgis project file and insert them in the coresponding boxed (show them in their boxes)
         key_path=os.path.dirname(os.path.realpath(__file__))+"/RoutingAPI_Key.txt"
         try:
             ExistingKey=open(key_path, "r+").read()
@@ -52,7 +53,12 @@ class ToolBoxDialog(QDialog, Ui_APIRequestDialogBase):
         else:
             self.routingTab1_outDirTxt.setText(dir_path)
             self.routingTab2_outDirTxt.setText(dir_path)
-            
+        
+        #Filter QgsMapLayerComboBoxes to show Points layers only
+        self.routingTab1_mLayers.setFilters(QgsMapLayerProxyModel.PointLayer)  
+        self.routingTab2_O_mLayers.setFilters(QgsMapLayerProxyModel.PointLayer)
+        self.routingTab2_D_mLayers.setFilters(QgsMapLayerProxyModel.PointLayer)
+        
         #connect eventhandlers
         self.routingTab1_OutDirBtn.clicked.connect( self.dir1clicked )
         self.routingTab2_OutDirBtn.clicked.connect( self.dir2clicked )

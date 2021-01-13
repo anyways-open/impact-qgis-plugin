@@ -204,6 +204,8 @@ class ToolBox:
         if result:
             if self.dlg.toolBox.currentIndex() == 0:            # ROUTING
                 KEY = self.dlg.routingTab_KeyHolder.text()
+                
+                #save they in a txtfile
                 PATH=os.path.dirname(os.path.realpath(__file__))
                 with open (PATH+"/RoutingAPI_Key.txt", "w") as text_file:
                     print(KEY, file=text_file)
