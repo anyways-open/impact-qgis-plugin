@@ -23,19 +23,23 @@ class Ui_APIRequestDialogBase(object):
         APIRequestDialogBase.setModal(False)
         self.gridLayout_6 = QtWidgets.QGridLayout(APIRequestDialogBase)
         self.gridLayout_6.setObjectName("gridLayout_6")
-        self.label = QtWidgets.QLabel(APIRequestDialogBase)
-        font = QtGui.QFont()
-        font.setPointSize(11)
-        font.setBold(True)
-        font.setWeight(75)
-        self.label.setFont(font)
-        self.label.setObjectName("label")
-        self.gridLayout_6.addWidget(self.label, 0, 0, 1, 1)
-        self.button_box = QtWidgets.QDialogButtonBox(APIRequestDialogBase)
-        self.button_box.setOrientation(QtCore.Qt.Horizontal)
-        self.button_box.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
-        self.button_box.setObjectName("button_box")
-        self.gridLayout_6.addWidget(self.button_box, 7, 0, 1, 1)
+        self.routingTab_KeyHolder = QtWidgets.QLineEdit(APIRequestDialogBase)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.routingTab_KeyHolder.sizePolicy().hasHeightForWidth())
+        self.routingTab_KeyHolder.setSizePolicy(sizePolicy)
+        self.routingTab_KeyHolder.setClearButtonEnabled(True)
+        self.routingTab_KeyHolder.setObjectName("routingTab_KeyHolder")
+        self.gridLayout_6.addWidget(self.routingTab_KeyHolder, 1, 1, 1, 3)
+        self.label_2 = QtWidgets.QLabel(APIRequestDialogBase)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.label_2.sizePolicy().hasHeightForWidth())
+        self.label_2.setSizePolicy(sizePolicy)
+        self.label_2.setObjectName("label_2")
+        self.gridLayout_6.addWidget(self.label_2, 1, 0, 1, 1)
         self.label_4 = QtWidgets.QLabel(APIRequestDialogBase)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -43,9 +47,24 @@ class Ui_APIRequestDialogBase(object):
         sizePolicy.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
         self.label_4.setSizePolicy(sizePolicy)
         self.label_4.setObjectName("label_4")
-        self.gridLayout_6.addWidget(self.label_4, 4, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.label_4, 7, 0, 1, 2)
+        self.button_box = QtWidgets.QDialogButtonBox(APIRequestDialogBase)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.button_box.sizePolicy().hasHeightForWidth())
+        self.button_box.setSizePolicy(sizePolicy)
+        self.button_box.setOrientation(QtCore.Qt.Horizontal)
+        self.button_box.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.button_box.setObjectName("button_box")
+        self.gridLayout_6.addWidget(self.button_box, 10, 0, 1, 4)
         self.toolBox = QtWidgets.QToolBox(APIRequestDialogBase)
         self.toolBox.setEnabled(True)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.toolBox.sizePolicy().hasHeightForWidth())
+        self.toolBox.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
         font.setPointSize(9)
         font.setBold(True)
@@ -58,16 +77,30 @@ class Ui_APIRequestDialogBase(object):
         self.toolBox.setAcceptDrops(False)
         self.toolBox.setAutoFillBackground(False)
         self.toolBox.setStyleSheet("")
-        self.toolBox.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.toolBox.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.toolBox.setFrameShape(QtWidgets.QFrame.Box)
+        self.toolBox.setFrameShadow(QtWidgets.QFrame.Raised)
         self.toolBox.setLineWidth(1)
-        self.toolBox.setMidLineWidth(10)
+        self.toolBox.setMidLineWidth(2)
         self.toolBox.setObjectName("toolBox")
         self.routingTab = QtWidgets.QWidget()
-        self.routingTab.setGeometry(QtCore.QRect(0, 0, 831, 620))
+        self.routingTab.setGeometry(QtCore.QRect(0, 0, 825, 585))
         self.routingTab.setObjectName("routingTab")
         self.gridLayout_3 = QtWidgets.QGridLayout(self.routingTab)
         self.gridLayout_3.setObjectName("gridLayout_3")
+        self.textBrowser = QtWidgets.QTextBrowser(self.routingTab)
+        self.textBrowser.setEnabled(True)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.textBrowser.sizePolicy().hasHeightForWidth())
+        self.textBrowser.setSizePolicy(sizePolicy)
+        self.textBrowser.setTabChangesFocus(False)
+        self.textBrowser.setUndoRedoEnabled(False)
+        self.textBrowser.setReadOnly(True)
+        self.textBrowser.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse|QtCore.Qt.TextSelectableByMouse)
+        self.textBrowser.setOpenExternalLinks(True)
+        self.textBrowser.setObjectName("textBrowser")
+        self.gridLayout_3.addWidget(self.textBrowser, 0, 2, 2, 1)
         self.routingWgt = QtWidgets.QTabWidget(self.routingTab)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -322,39 +355,22 @@ class Ui_APIRequestDialogBase(object):
         self.label_27.setObjectName("label_27")
         self.gridLayout.addWidget(self.label_27, 3, 0, 1, 1)
         self.routingWgt.addTab(self.routingTab2, "")
-        self.gridLayout_3.addWidget(self.routingWgt, 1, 0, 1, 2)
-        self.routingTab_KeyHolder = QtWidgets.QLineEdit(self.routingTab)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.routingTab_KeyHolder.sizePolicy().hasHeightForWidth())
-        self.routingTab_KeyHolder.setSizePolicy(sizePolicy)
-        self.routingTab_KeyHolder.setObjectName("routingTab_KeyHolder")
-        self.gridLayout_3.addWidget(self.routingTab_KeyHolder, 0, 1, 1, 1)
-        self.label_2 = QtWidgets.QLabel(self.routingTab)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.label_2.sizePolicy().hasHeightForWidth())
-        self.label_2.setSizePolicy(sizePolicy)
-        self.label_2.setObjectName("label_2")
-        self.gridLayout_3.addWidget(self.label_2, 0, 0, 1, 1)
-        self.textBrowser = QtWidgets.QTextBrowser(self.routingTab)
-        self.textBrowser.setEnabled(True)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.textBrowser.sizePolicy().hasHeightForWidth())
-        self.textBrowser.setSizePolicy(sizePolicy)
-        self.textBrowser.setTabChangesFocus(False)
-        self.textBrowser.setUndoRedoEnabled(False)
-        self.textBrowser.setReadOnly(True)
-        self.textBrowser.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse|QtCore.Qt.TextSelectableByMouse)
-        self.textBrowser.setOpenExternalLinks(True)
-        self.textBrowser.setObjectName("textBrowser")
-        self.gridLayout_3.addWidget(self.textBrowser, 0, 2, 2, 1)
+        self.gridLayout_3.addWidget(self.routingWgt, 0, 0, 2, 2)
         self.toolBox.addItem(self.routingTab, "")
-        self.gridLayout_6.addWidget(self.toolBox, 2, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.toolBox, 5, 0, 1, 4)
+        self.label = QtWidgets.QLabel(APIRequestDialogBase)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy)
+        font = QtGui.QFont()
+        font.setPointSize(11)
+        font.setBold(True)
+        font.setWeight(75)
+        self.label.setFont(font)
+        self.label.setObjectName("label")
+        self.gridLayout_6.addWidget(self.label, 0, 0, 1, 4)
 
         self.retranslateUi(APIRequestDialogBase)
         self.toolBox.setCurrentIndex(0)
@@ -367,8 +383,40 @@ class Ui_APIRequestDialogBase(object):
     def retranslateUi(self, APIRequestDialogBase):
         _translate = QtCore.QCoreApplication.translate
         APIRequestDialogBase.setWindowTitle(_translate("APIRequestDialogBase", "ImPact ToolBox"))
-        self.label.setText(_translate("APIRequestDialogBase", "<html><head/><body><p><span style=\" color:#ffaa00;\">ANYWAYS</span> Impact Management &amp; Analysis ToolBox</p></body></html>"))
+        self.label_2.setText(_translate("APIRequestDialogBase", "<html><head/><body><p>API Key <span style=\" color:#ff0000;\">*</span></p></body></html>"))
         self.label_4.setText(_translate("APIRequestDialogBase", "<html><head/><body><p><span style=\" color:#ff0000;\">*</span> Indicates required field</p></body></html>"))
+        self.textBrowser.setHtml(_translate("APIRequestDialogBase", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:9pt; font-weight:600; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\'; font-size:12pt; text-decoration: underline;\">Application:</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-size:12pt; text-decoration: underline;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">All POIs:</span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\"> Routing between a set of Points of Interest (POIs) based on a given mode of transport (routing profile)</span><span style=\" font-family:\'MS Shell Dlg 2\'; font-size:10pt; font-weight:400;\"> </span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">    </span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Origins to Destinations:</span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\"> Routing from a set of Origins to a set of Destinations based on a given mode of transport (routing profile)</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-weight:400;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\'; font-size:12pt; text-decoration: underline;\">Fields Description:</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-size:12pt; text-decoration: underline;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">API Key: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Insert your API key here . If you don’t have one, you can request via </span><a href=\"mailto:support@anyways.eu\"><span style=\" font-family:\'MS Shell Dlg 2\'; text-decoration: underline; color:#0000ff;\">email</span></a><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">.</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\';\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\'; font-size:11pt; text-decoration: underline;\">All POIs:</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Points of Interest (POIs):</span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\"> Select the layer that contains your points of interest.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Profile: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Select your desired routing profile. For more information about routing profiles, please visit our </span><a href=\"https://docs.anyways.eu/routing-api/\"><span style=\" font-family:\'MS Shell Dlg 2\'; text-decoration: underline; color:#0000ff;\">documentation website</span></a><span style=\" font-family:\'MS Shell Dlg 2\';\">.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Output Folder: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Select the folder in which you’d like to save the routings JSON file.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Seperate Routing: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Check this box if you’d like to have routing between each pair of points saved as a separate JSON file in the folder you selected above and subsequently added in QGIS as separate layers. </span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Width &amp; Color:</span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\"> Choose the symbology of routing layer/s in QGIS.</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-weight:400;\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\'; font-size:11pt; text-decoration: underline;\">Origins to Destinations:</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Origins: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Select the layer that contains your </span><span style=\" font-family:\'MS Shell Dlg 2\';\">Origin</span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\"> points.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Destinations: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Select the layer that contains your </span><span style=\" font-family:\'MS Shell Dlg 2\';\">Desination</span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\"> points.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Profile: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Select your desired routing profile. For more information about routing profiles, please visit our </span><a href=\"https://docs.anyways.eu/routing-api/\"><span style=\" font-family:\'MS Shell Dlg 2\'; text-decoration: underline; color:#0000ff;\">documentation website</span></a><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Output Folder: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Select the folder in which you’d like to save the routings JSON file.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Seperate Routing: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Check this box if you’d like to have routing between each pair of points saved as a separate JSON file in the folder you selected above and subsequently added in QGIS as separate layers. </span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Width &amp; Color: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Choose the symbology of routing layer/s in QGIS.</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-weight:400;\"><br /></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-weight:400;\"><br /></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-weight:400;\"><br /></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-weight:400;\"><br /></p></body></html>"))
         self.label_21.setText(_translate("APIRequestDialogBase", "<html><head/><body><p>Output folder <span style=\" color:#ff0000;\">*</span></p></body></html>"))
         self.routingTab1_profileCbx.setToolTip(_translate("APIRequestDialogBase", "Mode of travel"))
         self.routingTab1_profileCbx.setItemText(0, _translate("APIRequestDialogBase", "bicycle.fastest"))
@@ -405,40 +453,8 @@ class Ui_APIRequestDialogBase(object):
         self.label_30.setText(_translate("APIRequestDialogBase", "Width"))
         self.label_27.setText(_translate("APIRequestDialogBase", "<html><head/><body><p>Output folder <span style=\" color:#ff0000;\">*</span></p></body></html>"))
         self.routingWgt.setTabText(self.routingWgt.indexOf(self.routingTab2), _translate("APIRequestDialogBase", "Origins to Destinations"))
-        self.label_2.setText(_translate("APIRequestDialogBase", "<html><head/><body><p>API Key <span style=\" color:#ff0000;\">*</span></p></body></html>"))
-        self.textBrowser.setHtml(_translate("APIRequestDialogBase", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:9pt; font-weight:600; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\'; font-size:12pt; text-decoration: underline;\">Application:</span></p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-size:12pt; text-decoration: underline;\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">All POIs:</span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\"> Routing between a set of Points of Interest (POIs) based on a given mode of transport (routing profile)</span><span style=\" font-family:\'MS Shell Dlg 2\'; font-size:10pt; font-weight:400;\"> </span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">    </span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Origins to Destinations:</span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\"> Routing from a set of Origins to a set of Destinations based on a given mode of transport (routing profile)</span></p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-weight:400;\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\'; font-size:12pt; text-decoration: underline;\">Fields Description:</span></p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-size:12pt; text-decoration: underline;\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">API Key: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Insert your API key here . If you don’t have one, you can request via </span><a href=\"mailto:support@anyways.eu\"><span style=\" font-family:\'MS Shell Dlg 2\'; text-decoration: underline; color:#0000ff;\">email</span></a><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">.</span></p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\';\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\'; font-size:11pt; text-decoration: underline;\">All POIs:</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Points of Interest (POIs):</span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\"> Select the layer that contains your points of interest.</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Profile: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Select your desired routing profile. For more information about routing profiles, please visit our </span><a href=\"https://docs.anyways.eu/routing-api/\"><span style=\" font-family:\'MS Shell Dlg 2\'; text-decoration: underline; color:#0000ff;\">documentation website</span></a><span style=\" font-family:\'MS Shell Dlg 2\';\">.</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Output Folder: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Select the folder in which you’d like to save the routings JSON file.</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Seperate Routing: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Check this box if you’d like to have routing between each pair of points saved as a separate JSON file in the folder you selected above and subsequently added in QGIS as separate layers. </span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Width &amp; Color:</span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\"> Choose the symbology of routing layer/s in QGIS.</span></p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-weight:400;\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\'; font-size:11pt; text-decoration: underline;\">Origins to Destinations:</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Origins: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Select the layer that contains your </span><span style=\" font-family:\'MS Shell Dlg 2\';\">Origin</span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\"> points.</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Destinations: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Select the layer that contains your </span><span style=\" font-family:\'MS Shell Dlg 2\';\">Desination</span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\"> points.</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Profile: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Select your desired routing profile. For more information about routing profiles, please visit our </span><a href=\"https://docs.anyways.eu/routing-api/\"><span style=\" font-family:\'MS Shell Dlg 2\'; text-decoration: underline; color:#0000ff;\">documentation website</span></a><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">.</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Output Folder: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Select the folder in which you’d like to save the routings JSON file.</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Seperate Routing: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Check this box if you’d like to have routing between each pair of points saved as a separate JSON file in the folder you selected above and subsequently added in QGIS as separate layers. </span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\';\">Width &amp; Color: </span><span style=\" font-family:\'MS Shell Dlg 2\'; font-weight:400;\">Choose the symbology of routing layer/s in QGIS.</span></p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-weight:400;\"><br /></p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-weight:400;\"><br /></p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-weight:400;\"><br /></p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'MS Shell Dlg 2\'; font-weight:400;\"><br /></p></body></html>"))
         self.toolBox.setItemText(self.toolBox.indexOf(self.routingTab), _translate("APIRequestDialogBase", "Routing API"))
+        self.label.setText(_translate("APIRequestDialogBase", "<html><head/><body><p><span style=\" color:#ffaa00;\">ANYWAYS</span> Impact Management &amp; Analysis ToolBox</p></body></html>"))
 
 from qgscolorbutton import QgsColorButton
 from qgsmaplayercombobox import QgsMapLayerComboBox

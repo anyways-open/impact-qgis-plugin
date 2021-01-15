@@ -202,14 +202,14 @@ class ToolBox:
         result = self.dlg.exec_()
         # if OK was pressed
         if result:
-            if self.dlg.toolBox.currentIndex() == 0:            # ROUTING
-                KEY = self.dlg.routingTab_KeyHolder.text()
+            KEY = self.dlg.routingTab_KeyHolder.text()
                 
-                #save they in a txtfile
-                PATH=os.path.dirname(os.path.realpath(__file__))
-                with open (PATH+"/RoutingAPI_Key.txt", "w") as text_file:
-                    print(KEY, file=text_file)
-                
+            #save hey in a txtfile
+            PATH=os.path.dirname(os.path.realpath(__file__))
+            with open (PATH+"/API_Key.txt", "w") as text_file:
+                print(KEY, file=text_file)
+
+            if self.dlg.toolBox.currentIndex() == 0:            # ROUTING        
                 if self.dlg.routingWgt.currentIndex() == 0:        # ROUTING ALL POI's 
 
                     # get vars from UI

@@ -40,7 +40,7 @@ class ToolBoxDialog(QDialog, Ui_APIRequestDialogBase):
         self.setupUi(self)
         
         #Retrive the Key & project path (if plugin is launched in a saved Qgis project file and insert them in the coresponding boxed (show them in their boxes)
-        key_path=os.path.dirname(os.path.realpath(__file__))+"/RoutingAPI_Key.txt"
+        key_path=os.path.dirname(os.path.realpath(__file__))+"/API_Key.txt"
         try:
             ExistingKey=open(key_path, "r+").read()
             self.routingTab_KeyHolder.setText(ExistingKey)
@@ -60,13 +60,14 @@ class ToolBoxDialog(QDialog, Ui_APIRequestDialogBase):
         self.routingTab2_O_mLayers.setFilters(QgsMapLayerProxyModel.PointLayer)
         self.routingTab2_D_mLayers.setFilters(QgsMapLayerProxyModel.PointLayer)
         
+		#Show the default color in the color-box
+        self.routingTab1_mColorBtn.setColor(QColor("#ffaa00"))
+        self.routingTab2_mColorBtn.setColor(QColor("#ffaa00"))
+		
         #connect eventhandlers
         self.routingTab1_OutDirBtn.clicked.connect( self.dir1clicked )
         self.routingTab2_OutDirBtn.clicked.connect( self.dir2clicked )
         
-        #Show the default color in the color-box
-        self.routingTab1_mColorBtn.setColor(QColor("#ffaa00"))
-        self.routingTab2_mColorBtn.setColor(QColor("#ffaa00"))
 
 
     #eventhandlers 
