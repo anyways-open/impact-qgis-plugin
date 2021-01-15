@@ -26,6 +26,7 @@ import os
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
+from PyQt5.QtGui import *
 from qgis.core import QgsProject, QgsMapLayerProxyModel
 from .ImPact_toolbox_dialog_base import Ui_APIRequestDialogBase
 
@@ -62,6 +63,10 @@ class ToolBoxDialog(QDialog, Ui_APIRequestDialogBase):
         #connect eventhandlers
         self.routingTab1_OutDirBtn.clicked.connect( self.dir1clicked )
         self.routingTab2_OutDirBtn.clicked.connect( self.dir2clicked )
+        
+        #Show the default color in the color-box
+        self.routingTab1_mColorBtn.setColor(QColor("#000000"))
+        self.routingTab2_mColorBtn.setColor(QColor("#000000"))
 
 
     #eventhandlers 
