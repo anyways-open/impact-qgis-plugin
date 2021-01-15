@@ -65,8 +65,8 @@ class ToolBoxDialog(QDialog, Ui_APIRequestDialogBase):
         self.routingTab2_OutDirBtn.clicked.connect( self.dir2clicked )
         
         #Show the default color in the color-box
-        self.routingTab1_mColorBtn.setColor(QColor("#000000"))
-        self.routingTab2_mColorBtn.setColor(QColor("#000000"))
+        self.routingTab1_mColorBtn.setColor(QColor("#ffaa00"))
+        self.routingTab2_mColorBtn.setColor(QColor("#ffaa00"))
 
 
     #eventhandlers 
