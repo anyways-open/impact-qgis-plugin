@@ -36,7 +36,7 @@ import sys, os.path, json, shutil, time, asyncio, os
 import requests
 
 #module for this tool
-from .impact import routing, shortcut, addGeojsonsToMap, checkForNullGeometry, qgsError, write2File, time_now, CrsTransformation
+from .impact import routing, shortcut, addGeojsonsToMap, checkForNullGeometry, qgsError, write2File, time_now, CrsTransformation, CreateInstance, Networksfile, Keyfile, Clientfile
 
 #TODO: refactor 
 #import pandas as pd
@@ -206,9 +206,7 @@ class ToolBox:
             KEY = self.dlg.KeyHolder.text()
                 
             #save hey in a txtfile
-            PATH=os.path.dirname(os.path.realpath(__file__))
-            with open (PATH+"/API_Key.txt", "w") as text_file:
-                print(KEY, file=text_file)
+            Keyfile(KEY)
 
             if self.dlg.toolBox.currentIndex() == 0:            # ROUTING        
                 if self.dlg.routingWgt.currentIndex() == 0:        # ROUTING ALL POI's 
@@ -352,11 +350,20 @@ class ToolBox:
                     # get vars from UI
                     ODLayer = self.dlg.shortcutTab1_mLayers.currentLayer()
                     path = self.dlg.routingTab1_outDirTxt.text()
-                    INSTANCE = str.strip(self.dlg.shortcutTab1_InstanceTxt.text())
+                    client = str.strip(self.dlg.shortcutTab1_ClientTxt.text())
+                    network = str.strip(self.dlg.shortcutTab1_NetworkTxt.text())
+                    instance = self.dlg.shortcutTab1_InstanceCbx.currentText()
                     PROFILE = self.dlg.shortcutTab1_profileCbx.currentText().lower()
                     size = self.dlg.shortcutTab1_widthNum.value()
                     color =  self.dlg.shortcutTab1_mColorBtn.color()
                     sepRoutes = self.dlg.shortcutTab1_SepRoutes_Cbx.isChecked()
+
+                    #create INSTANCE var
+                    INSTANCE = CreateInstance(client, network, instance)
+
+                    #update Network list
+                    Clientfile(client)
+                    Networksfile(network)
 
                     #other variabels 
                     gjsList = []
@@ -421,11 +428,20 @@ class ToolBox:
                     OLayer =  self.dlg.shortcutTab2_O_mLayers.currentLayer()
                     DLayer =  self.dlg.shortcutTab2_D_mLayers.currentLayer()
                     path =    self.dlg.routingTab2_outDirTxt.text()
-                    INSTANCE = str.strip(self.dlg.shortcutTab2_InstanceTxt.text())
+                    client = str.strip(self.dlg.shortcutTab2_ClientTxt.text())
+                    network = str.strip(self.dlg.shortcutTab2_NetworkTxt.text())
+                    instance = self.dlg.shortcutTab2_InstanceCbx.currentText()
                     PROFILE = self.dlg.shortcutTab2_profileCbx.currentText().lower()
                     size =    self.dlg.shortcutTab2_widthNum.value()
                     color =   self.dlg.shortcutTab2_mColorBtn.color()
                     sepRoutes = self.dlg.shortcutTab2_SepRoutes_Cbx.isChecked()
+
+                    #create INSTANCE var
+                    INSTANCE = CreateInstance(client, network, instance)
+
+                    #update Network list
+                    Clientfile(client)
+                    Networksfile(network)
 
                     #other variabels                   
                     gjsList = []

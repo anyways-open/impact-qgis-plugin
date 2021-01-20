@@ -27,6 +27,7 @@ from qgis.PyQt.QtWidgets import QDialog, QFileDialog
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 from qgis.core import QgsProject, QgsMapLayerProxyModel
 from .ImPact_toolbox_dialog_base import Ui_APIRequestDialogBase
 
@@ -72,6 +73,27 @@ class ToolBoxDialog(QDialog, Ui_APIRequestDialogBase):
         self.routingTab2_mColorBtn.setColor(QColor("#ffaa00"))
         self.shortcutTab1_mColorBtn.setColor(QColor("#ffaa00"))
         self.shortcutTab2_mColorBtn.setColor(QColor("#ffaa00"))
+
+        #Retrive client in the client_box
+        client_path=os.path.dirname(os.path.realpath(__file__))+"/client.txt"
+        try:
+            client=open(client_path, "r+").read()
+            self.shortcutTab1_ClientTxt.setText(client)
+            self.shortcutTab2_ClientTxt.setText(client)
+        except IOError:
+            self.shortcutTab1_ClientTxt.setText("")
+            self.shortcutTab2_ClientTxt.setText("")
+
+        #Autocomplete Network box
+        network_path=os.path.dirname(os.path.realpath(__file__))+"/Networks_list.txt"
+        try:
+            networks = open(network_path, "r+").read()
+            networks_list = networks.split('\n')[:-1]
+            completer = QCompleter(networks_list)
+            self.shortcutTab1_NetworkTxt.setCompleter(completer)
+            self.shortcutTab2_NetworkTxt.setCompleter(completer)
+        except IOError:
+            pass
 
         #connect eventhandlers
         self.routingTab1_OutDirBtn.clicked.connect( self.dir1clicked )
