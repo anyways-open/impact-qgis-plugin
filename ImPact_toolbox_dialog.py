@@ -43,30 +43,41 @@ class ToolBoxDialog(QDialog, Ui_APIRequestDialogBase):
         key_path=os.path.dirname(os.path.realpath(__file__))+"/API_Key.txt"
         try:
             ExistingKey=open(key_path, "r+").read()
-            self.routingTab_KeyHolder.setText(ExistingKey)
+            self.KeyHolder.setText(ExistingKey)
         except IOError:
-            self.routingTab_KeyHolder.setText("")
+            self.KeyHolder.setText("")
             
         dir_path = QgsProject.instance().readPath("./")
         if dir_path == "./" :
             self.routingTab1_outDirTxt.setText("")
             self.routingTab2_outDirTxt.setText("")
+            self.shortcutTab1_outDirTxt.setText("")
+            self.shortcutTab2_outDirTxt.setText("")
         else:
             self.routingTab1_outDirTxt.setText(dir_path)
             self.routingTab2_outDirTxt.setText(dir_path)
+            self.shortcutTab1_outDirTxt.setText(dir_path)
+            self.shortcutTab2_outDirTxt.setText(dir_path)
         
         #Filter QgsMapLayerComboBoxes to show Points layers only
         self.routingTab1_mLayers.setFilters(QgsMapLayerProxyModel.PointLayer)  
         self.routingTab2_O_mLayers.setFilters(QgsMapLayerProxyModel.PointLayer)
         self.routingTab2_D_mLayers.setFilters(QgsMapLayerProxyModel.PointLayer)
+        self.shortcutTab1_mLayers.setFilters(QgsMapLayerProxyModel.PointLayer)
+        self.shortcutTab2_O_mLayers.setFilters(QgsMapLayerProxyModel.PointLayer)
+        self.shortcutTab2_D_mLayers.setFilters(QgsMapLayerProxyModel.PointLayer)
         
-		#Show the default color in the color-box
+        #Show the default color in the color-box
         self.routingTab1_mColorBtn.setColor(QColor("#ffaa00"))
         self.routingTab2_mColorBtn.setColor(QColor("#ffaa00"))
-		
+        self.shortcutTab1_mColorBtn.setColor(QColor("#ffaa00"))
+        self.shortcutTab2_mColorBtn.setColor(QColor("#ffaa00"))
+
         #connect eventhandlers
         self.routingTab1_OutDirBtn.clicked.connect( self.dir1clicked )
         self.routingTab2_OutDirBtn.clicked.connect( self.dir2clicked )
+        self.shortcutTab1_OutDirBtn.clicked.connect( self.dir3clicked )
+        self.shortcutTab2_OutDirBtn.clicked.connect( self.dir4clicked )
         
 
 
@@ -74,4 +85,8 @@ class ToolBoxDialog(QDialog, Ui_APIRequestDialogBase):
     dir1clicked = lambda self: self.routingTab1_outDirTxt.setText(
          QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )
     dir2clicked = lambda self: self.routingTab2_outDirTxt.setText(
+         QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )
+    dir3clicked = lambda self: self.shortcutTab1_outDirTxt.setText(
+         QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )
+    dir4clicked = lambda self: self.shortcutTab2_outDirTxt.setText(
          QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )

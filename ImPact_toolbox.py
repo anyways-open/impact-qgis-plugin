@@ -36,7 +36,7 @@ import sys, os.path, json, shutil, time, asyncio, os
 import requests
 
 #module for this tool
-from .impact import routing, addGeojsonsToMap, checkForNullGeometry, qgsError, write2File, time_now,CrsTransformation
+from .impact import routing, shortcut, addGeojsonsToMap, checkForNullGeometry, qgsError, write2File, time_now, CrsTransformation
 
 #TODO: refactor 
 #import pandas as pd
@@ -195,6 +195,7 @@ class ToolBox:
             self.first_start = False
             self.dlg = ToolBoxDialog()
             self._r = routing.routing()
+            self._sh = shortcut.shortcut()
 
         # show the dialog
         self.dlg.show()
@@ -202,7 +203,7 @@ class ToolBox:
         result = self.dlg.exec_()
         # if OK was pressed
         if result:
-            KEY = self.dlg.routingTab_KeyHolder.text()
+            KEY = self.dlg.KeyHolder.text()
                 
             #save hey in a txtfile
             PATH=os.path.dirname(os.path.realpath(__file__))
@@ -342,4 +343,144 @@ class ToolBox:
 
                     # add to map
                     groupName = PROFILE.upper() + "_Routings"
+                    addGeojsonsToMap(self.iface, fileList, groupName, size, color )
+
+
+            elif self.dlg.toolBox.currentIndex() == 1:            # SHORTCUT
+                if self.dlg.shortcutWgt.currentIndex() == 0:        # SHORTCUT ALL POI's 
+
+                    # get vars from UI
+                    ODLayer = self.dlg.shortcutTab1_mLayers.currentLayer()
+                    path = self.dlg.routingTab1_outDirTxt.text()
+                    INSTANCE = str.strip(self.dlg.shortcutTab1_InstanceTxt.text())
+                    PROFILE = self.dlg.shortcutTab1_profileCbx.currentText().lower()
+                    size = self.dlg.shortcutTab1_widthNum.value()
+                    color =  self.dlg.shortcutTab1_mColorBtn.color()
+                    sepRoutes = self.dlg.shortcutTab1_SepRoutes_Cbx.isChecked()
+
+                    #other variabels 
+                    gjsList = []
+                    fileList = []
+                    POIs = [ { 'id': f[0], 'yx': [f.geometry().asPoint().y(),  f.geometry().asPoint().x()] }
+                               for f in CrsTransformation(ODLayer) if f.geometry().isNull() == False ]
+
+                    #WARN if file has null-geometries
+                    checkForNullGeometry(self.iface, ODLayer, self.tr('The POIs Layer has Null geometries!') )
+
+                    #loop trought all poi's. 
+                    for from_poi in POIs: 
+                        for to_poi in POIs: 
+                            if from_poi == to_poi: continue
+                            
+                            #make http request, response is in geojson format
+                            response = self._sh.fromto(from_poi['yx'] , to_poi['yx'] , KEY , INSTANCE , PROFILE)  
+
+                            from_id  = str( from_poi['id'] )
+                            to_id    = str(  to_poi['id']  )
+                            O_D      = "{0}_{1}".format( from_poi['id'], to_poi['id'] )
+                            if ('features' in response) == False or len(response['features']) == 0:
+                                response = { "type": 'FeatureCollection',
+                                        "features":[{'type': 'Feature', 'name': 'ShapeMeta',
+                                               'properties': {'name': 'N/A', 'highway': 'N/A', 'Instance':INSTANCE , 'profile': PROFILE, 
+                                               'From': from_id, 'To':  to_id, 'O_D': O_D } 
+                                            }] }
+                            else:
+                                for n in range(len(response['features'])):
+                                    response['features'][n]['properties']['Instance'] = INSTANCE
+                                    response['features'][n]['properties']['From'] = from_id
+                                    response['features'][n]['properties']['To']   = to_id
+                                    response['features'][n]['properties']['O_D']  = O_D
+                            gjsList.append(response)
+                    #TODO handle http errors
+
+                    if sepRoutes:    # routing All POI's WITH separated routes
+                        for gjs in gjsList:
+                            from_poi_id = gjs['features'][0]['properties']['From']
+                            to_poi_id = gjs['features'][0]['properties']['To'] 
+                            outName = path + "/{0}_to_{1}_by_{2}_{3} {4}.json".format(from_poi_id, to_poi_id, PROFILE.upper(), INSTANCE.replace("/", "-")[:-2], INSTANCE[-1]) 
+                            write2File(outName, gjs)
+                            fileList.append(outName)
+                    else:                                                 # routing All POI's NO separated routes     
+                        #map responses into one geojson
+                        gjs = { "type": 'FeatureCollection',  "features": []}
+                        for item in  gjsList: 
+                            gjs['features'] += item['features']
+
+                        #Write output
+                        outName =  path + "/ShortCutRoutings_{0} {1}_by_{2}_{3}.json".format(INSTANCE.replace("/", "-")[:-2], INSTANCE[-1], PROFILE.upper(), time_now()) 
+                        write2File(outName, gjs)
+                        fileList = [outName]
+
+                    # add to map
+                    groupName = "ShortCut " + INSTANCE.replace("/", " ") + ":" + PROFILE.upper()
+                    addGeojsonsToMap(self.iface, fileList, groupName, size, color )
+
+                elif self.dlg.shortcutWgt.currentIndex() == 1:      # SHORTCUT Origins to Destinations
+                
+                    # get vars from UI
+                    OLayer =  self.dlg.shortcutTab2_O_mLayers.currentLayer()
+                    DLayer =  self.dlg.shortcutTab2_D_mLayers.currentLayer()
+                    path =    self.dlg.routingTab2_outDirTxt.text()
+                    INSTANCE = str.strip(self.dlg.shortcutTab2_InstanceTxt.text())
+                    PROFILE = self.dlg.shortcutTab2_profileCbx.currentText().lower()
+                    size =    self.dlg.shortcutTab2_widthNum.value()
+                    color =   self.dlg.shortcutTab2_mColorBtn.color()
+                    sepRoutes = self.dlg.shortcutTab2_SepRoutes_Cbx.isChecked()
+
+                    #other variabels                   
+                    gjsList = []
+                    fileList = []
+                    O_POIs = [ { 'id': f[0], 'yx': [f.geometry().asPoint().y(),  f.geometry().asPoint().x()] }
+                               for f in CrsTransformation(OLayer) if f.geometry().isNull() == False ]
+                    D_POIs = [ { 'id': f[0], 'yx': [f.geometry().asPoint().y(),  f.geometry().asPoint().x()] }
+                               for f in CrsTransformation(DLayer) if f.geometry().isNull() == False ]
+
+                    #WARN if file has null-geometries
+                    checkForNullGeometry(self.iface, OLayer, self.tr("The origin POI's Layer has Null geometries!") )
+                    checkForNullGeometry(self.iface, DLayer, self.tr("The destination POI's Layer has Null geometries!") )
+
+                    #loop trought all poi's. 
+                    for from_poi in O_POIs: 
+                        for to_poi in D_POIs: 
+                            response = self._sh.fromto(from_poi['yx'] , to_poi['yx'] , KEY , INSTANCE , PROFILE)  # http request, response is in geojson format
+
+                            from_id  = str( from_poi['id'] )
+                            to_id    = str(  to_poi['id']  )
+                            O_D      = "{0}_{1}".format( from_poi['id'], to_poi['id'] )
+                            if ('features' in response) == False or len(response['features']) == 0:
+                                response = { "type": 'FeatureCollection',
+                                        "features":[{'type': 'Feature', 'name': 'ShapeMeta',
+                                               'properties': {'name': 'N/A', 'highway': 'N/A', 'Instance':INSTANCE ,'profile': PROFILE, 
+                                               'From': from_id, 'To':  to_id, 'O_D': O_D } 
+                                            }] }
+                            else:
+                                for n in range(len(response['features'])):
+                                    response['features'][n]['properties']['Instance'] = INSTANCE
+                                    response['features'][n]['properties']['From'] = from_id
+                                    response['features'][n]['properties']['To']   = to_id
+                                    response['features'][n]['properties']['O_D']  = O_D
+                            gjsList.append(response)
+                    #TODO handle http errors
+
+                    if sepRoutes:  # Origins to Destinations WITH separated routes
+                        for gjs in gjsList:
+                            from_poi_id = gjs['features'][0]['properties']['From']
+                            to_poi_id = gjs['features'][0]['properties']['To'] 
+                            outName = path + "/{0}_to_{1}_by_{2}_{3} {4}.json".format(from_poi_id, to_poi_id, PROFILE.upper(), INSTANCE.replace("/", "-")[:-2], INSTANCE[-1]) 
+                            write2File(outName, gjs)
+                            fileList.append(outName)
+
+                    else:                                                 # Origins to Destinations NO separated routes     
+                        #map responses into one geojson
+                        gjs = { "type": 'FeatureCollection',  "features": []}
+                        for item in  gjsList: 
+                            gjs['features'] += item['features']
+
+                        #Write output
+                        outName =  path + "/ShortCutRoutings_{0} {1}_by_{2}_{3}.json".format(INSTANCE.replace("/", "-")[:-2], INSTANCE[-1], PROFILE.upper(), time_now())   
+                        write2File(outName , gjs )
+                        fileList = [outName]
+
+                    # add to map
+                    groupName = "ShortCut " + INSTANCE.replace("/", " ") + ":" + PROFILE.upper()
                     addGeojsonsToMap(self.iface, fileList, groupName, size, color )

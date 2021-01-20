@@ -42,5 +42,3 @@ jobs:
         files: |
           LICENSE
           *.zip
-    - name: Publish To QGIS repo.
-      run: python ./deployment/plugin_upload.py -u xivk -w ${{ secrets.QGIS_REPO_SECRET }} anyways-impact-toolbox-${{ steps.regex-match.outputs.group1 }}.zip
