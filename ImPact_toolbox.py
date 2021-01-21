@@ -349,7 +349,7 @@ class ToolBox:
 
                     # get vars from UI
                     ODLayer = self.dlg.shortcutTab1_mLayers.currentLayer()
-                    path = self.dlg.routingTab1_outDirTxt.text()
+                    path = self.dlg.shortcutTab1_outDirTxt.text()
                     client = str.strip(self.dlg.shortcutTab1_ClientTxt.text())
                     network = str.strip(self.dlg.shortcutTab1_NetworkTxt.text())
                     instance = self.dlg.shortcutTab1_InstanceCbx.currentText()
