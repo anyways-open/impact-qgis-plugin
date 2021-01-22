@@ -4,9 +4,9 @@
 
 [general]
 name=Impact toolbox
-qgisMinimumVersion=3.4.11-Madeira
+qgisMinimumVersion=3.0
 description=This plugin automates ANYWAYS Routing API
-version=0.0.1
+version=0.0.3
 author=Hamed Eftekhar @ ANYWAYS
 email=support@anyways.eu
 
