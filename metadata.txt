@@ -23,10 +23,10 @@ repository=https://github.com/anyways-open/qgis-plugins
 
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
-# changelog=
+changelog=Fixed issue with QGIS versioning support.
 
 # Tags are comma separated with spaces allowed
-tags=python
+tags=routing,mobility,traffic
 
 homepage=https://www.anyways.eu/
 category=Plugins
