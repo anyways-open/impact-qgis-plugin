@@ -32,6 +32,7 @@ from qgis.gui import QgsMessageBar
 from .resources_rc import *
 # Import the code for the dialog
 from .ImPact_toolbox_dialog import ToolBoxDialog
+<<<<<<< Updated upstream
 import sys, os.path, json, shutil, time, asyncio, os
 import requests
 
@@ -40,6 +41,13 @@ import requests
 from .impact import routing, addGeojsonsToMap, checkForNullGeometry, qgsError, write2File, time_now,CrsTransformation
 =======
 from .impact import routing, shortcut, impact, addGeojsonsToMap, checkForNullGeometry, qgsError, write2File, time_now, CrsTransformation, CreateInstance, Networksfile, Keyfile, Clientfile
+>>>>>>> Stashed changes
+=======
+import sys, os.path, json, shutil, time, asyncio
+import requests
+
+#module for this tool
+from .impact import routing, addGeojsonsToMap, checkForNullGeometry, qgsError, write2File, time_now,CrsTransformation
 >>>>>>> Stashed changes
 
 #TODO: refactor 
@@ -200,9 +208,12 @@ class ToolBox:
             self.dlg = ToolBoxDialog()
             self._r = routing.routing()
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
             self._sh = shortcut.shortcut()
             self._imp = impact.impact()
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
         # show the dialog
@@ -211,6 +222,7 @@ class ToolBox:
         result = self.dlg.exec_()
         # if OK was pressed
         if result:
+<<<<<<< Updated upstream
             KEY = self.dlg.routingTab_KeyHolder.text()
                 
             #save hey in a txtfile
@@ -291,6 +303,78 @@ class ToolBox:
 
                 elif self.dlg.routingWgt.currentIndex() == 1:      # ROUTING Origins to Destinations
                 
+=======
+            if self.dlg.toolBox.currentIndex() == 0:            # ROUTING
+                KEY = self.dlg.routingTab_KeyHolder.text()
+                if self.dlg.routingWgt.currentIndex() == 0:        # ROUTING ALL POI's 
+
+                    # get vars from UI
+                    ODLayer = self.dlg.routingTab1_mLayers.currentLayer()
+                    path = self.dlg.routingTab1_outDirTxt.text()
+                    PROFILE = self.dlg.routingTab1_profileCbx.currentText().lower()
+                    size = self.dlg.routingTab1_widthNum.value()
+                    color =  self.dlg.routingTab1_mColorBtn.color()
+                    sepRoutes = self.dlg.routingtab1_SepRoutes_Cbx.isChecked()
+
+                    #other variabels 
+                    gjsList = []
+                    fileList = []
+                    POIs = [ { 'id': f[0], 'xy': [f.geometry().asPoint().x(),  f.geometry().asPoint().y()] }
+                               for f in CrsTransformation(ODLayer) if f.geometry().isNull() == False ]
+
+                    #WARN if file has null-geometries
+                    checkForNullGeometry(self.iface, ODLayer, self.tr('The POIs Layer has Null geometries!') )
+
+                    #loop trought all poi's. 
+                    for from_poi in POIs: 
+                        for to_poi in POIs: 
+                            if from_poi == to_poi: continue
+                            
+                            #make http request, response is in geojson format
+                            response = self._r.fromto(from_poi['xy'] , to_poi['xy'] , KEY , PROFILE)  
+
+                            from_id  = str( from_poi['id'] )
+                            to_id    = str(  to_poi['id']  )
+                            O_D      = "{0}_{1}".format( from_poi['id'], to_poi['id'] )
+                            if ('features' in response) == False or len(response['features']) == 0:
+                                response = { "type": 'FeatureCollection',
+                                        "features":[{'type': 'Feature', 'name': 'ShapeMeta',
+                                               'properties': {'name': 'N/A', 'highway': 'N/A', 'profile': PROFILE, 
+                                               'From': from_id, 'To':  to_id, 'O_D': O_D } 
+                                            }] }
+                            else:
+                                for n in range(len(response['features'])):
+                                    response['features'][n]['properties']['From'] = from_id
+                                    response['features'][n]['properties']['To']   = to_id
+                                    response['features'][n]['properties']['O_D']  = O_D
+                            gjsList.append(response)
+                    #TODO handle http errors
+
+                    if sepRoutes:    # routing All POI's WITH separated routes
+                        for gjs in gjsList:
+                            from_poi_id = gjs['features'][0]['properties']['From']
+                            to_poi_id = gjs['features'][0]['properties']['To'] 
+                            outName = path + "/{0}_to_{1}_by_{2}.json".format(from_poi_id, to_poi_id, PROFILE.upper() ) 
+                            write2File(outName, gjs)
+                            fileList.append(outName)
+                    else:                                                 # routing All POI's NO separated routes     
+                        #map responses into one geojson
+                        gjs = { "type": 'FeatureCollection',  "features": []}
+                        for item in  gjsList: 
+                            gjs['features'] += item['features']
+
+                        #Write output
+                        outName =  path + "/Routings_by_{0}_{1}.json".format(PROFILE.upper(), time_now() ) 
+                        write2File(outName, gjs)
+                        fileList = [outName]
+
+                    # add to map
+                    groupName = PROFILE.upper() + "_Routings"
+                    addGeojsonsToMap(self.iface, fileList, groupName, size, color )
+
+                elif self.dlg.routingWgt.currentIndex() == 1:      # ROUTING Origins to Destinations
+                
+>>>>>>> Stashed changes
                     # get vars from UI
                     OLayer =  self.dlg.routingTab2_O_mLayers.currentLayer()
                     DLayer =  self.dlg.routingTab2_D_mLayers.currentLayer()
@@ -321,17 +405,25 @@ class ToolBox:
                             to_id    = str(  to_poi['id']  )
                             O_D      = "{0}_{1}".format( from_poi['id'], to_poi['id'] )
                             if ('features' in response) == False or len(response['features']) == 0:
+<<<<<<< Updated upstream
                                 response = {}
                                 response = { "type": 'FeatureCollection',
                                         "features":[{'type': 'Feature', 'name': 'ShapeMeta', "geometry": {"type": "LineString", "coordinates":[]},
+=======
+                                response = { "type": 'FeatureCollection',
+                                        "features":[{'type': 'Feature', 'name': 'ShapeMeta',
+>>>>>>> Stashed changes
                                                'properties': {'name': 'N/A', 'highway': 'N/A', 'profile': PROFILE, 
                                                'From': from_id, 'To':  to_id, 'O_D': O_D } 
                                             }] }
                             else:
                                 for n in range(len(response['features'])):
+<<<<<<< Updated upstream
                                     if 'guid' in response['features'][n]['properties'].keys():
                                         response['features'][n]['properties'].pop('guid')
                                     response['features'][n]['properties']['profile'] = PROFILE
+=======
+>>>>>>> Stashed changes
                                     response['features'][n]['properties']['From'] = from_id
                                     response['features'][n]['properties']['To']   = to_id
                                     response['features'][n]['properties']['O_D']  = O_D
@@ -342,7 +434,11 @@ class ToolBox:
                         for gjs in gjsList:
                             from_poi_id = gjs['features'][0]['properties']['From']
                             to_poi_id = gjs['features'][0]['properties']['To'] 
+<<<<<<< Updated upstream
                             outName = path + "/{0}_{1}_to_{2}.json".format(PROFILE.upper(), from_poi_id, to_poi_id) 
+=======
+                            outName = path + "/{0}_to_{1}_by_{2}.json".format(from_poi_id, to_poi_id, PROFILE ) 
+>>>>>>> Stashed changes
                             write2File(outName, gjs)
                             fileList.append(outName)
 
@@ -353,11 +449,16 @@ class ToolBox:
                             gjs['features'] += item['features']
 
                         #Write output
+<<<<<<< Updated upstream
                         outName =  path + "/{0}_{1}.json".format(PROFILE.upper(), time_now() ) 
+=======
+                        outName =  path + "/Routings_{0}_{1}.json".format(PROFILE.upper(), time_now() ) 
+>>>>>>> Stashed changes
                         write2File(outName , gjs )
                         fileList = [outName]
 
                     # add to map
+<<<<<<< Updated upstream
                     groupName = "Routings: " + PROFILE.upper()
                     addGeojsonsToMap(self.iface, fileList, groupName, size, color )
 <<<<<<< Updated upstream
@@ -694,4 +795,8 @@ class ToolBox:
                     groupName = "ShortCut " + network + ' ' + instance +": " + PROFILE.upper()
                     addGeojsonsToMap(self.iface, fileList, groupName, size, color )
 
+>>>>>>> Stashed changes
+=======
+                    groupName = PROFILE.upper() + "_Routings"
+                    addGeojsonsToMap(self.iface, fileList, groupName, size, color )
 >>>>>>> Stashed changes

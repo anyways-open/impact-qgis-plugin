@@ -14,7 +14,11 @@ class routing(object):
     def profiles(self):
         return ["car", "car.shortest", "car.opa","car.default", "car.classifications",
         "car.classifications_aggressive", "pedestrian", "pedestrian.shortest", "pedestrian.default", "pedestrian.opa",
+<<<<<<< Updated upstream
         "bicycle", "bicycle.fastest", "bicycle.shortest", "bicycle.safety", "bicycle.comfort", "bicycle.comfort_safety",
+=======
+        "bicycle.fastest", "bicycle.shortest", "bicycle.safety", "bicycle.comfort", "bicycle.comfort_safety",
+>>>>>>> Stashed changes
         "bicycle.electrical_fastest", "bicycle.networks", "bicycle.brussels", "bicycle.genk", "bicycle.antwerp",
         "bicycle.cycle_highway", "bicycle.node_network", "bicycle.commute",  "bicycle.b2w",  "bicycle.anyways_network"]
 

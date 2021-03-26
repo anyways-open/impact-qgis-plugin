@@ -125,5 +125,9 @@ dmypy.json
 .pyre/
 
 docs/
+<<<<<<< Updated upstream
 .vscode/
 zip_build/
+=======
+.vscode/
+>>>>>>> Stashed changes

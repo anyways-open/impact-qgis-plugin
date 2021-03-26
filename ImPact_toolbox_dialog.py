@@ -26,8 +26,11 @@ import os
 from qgis.PyQt.QtWidgets import QDialog, QFileDialog
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
+<<<<<<< Updated upstream
 from PyQt5.QtGui import *
 from qgis.core import QgsProject, QgsMapLayerProxyModel
+=======
+>>>>>>> Stashed changes
 from .ImPact_toolbox_dialog_base import Ui_APIRequestDialogBase
 
 class ToolBoxDialog(QDialog, Ui_APIRequestDialogBase):
@@ -38,6 +41,7 @@ class ToolBoxDialog(QDialog, Ui_APIRequestDialogBase):
 
         #load UI
         self.setupUi(self)
+<<<<<<< Updated upstream
         
         #Retrive the Key & project path (if plugin is launched in a saved Qgis project file and insert them in the coresponding boxed (show them in their boxes)
         key_path=os.path.dirname(os.path.realpath(__file__))+"/API_Key.txt"
@@ -123,16 +127,22 @@ class ToolBoxDialog(QDialog, Ui_APIRequestDialogBase):
             self.shortcutTab2_NetworkTxt.setCompleter(completer)
         except IOError:
             pass
+=======
+
+>>>>>>> Stashed changes
 
         #connect eventhandlers
         self.routingTab1_OutDirBtn.clicked.connect( self.dir1clicked )
         self.routingTab2_OutDirBtn.clicked.connect( self.dir2clicked )
+<<<<<<< Updated upstream
         self.impactTab1_OutDirBtn.clicked.connect( self.dir3clicked )
         self.impactTab2_OutDirBtn.clicked.connect( self.dir4clicked )
         self.shortcutTab1_OutDirBtn.clicked.connect( self.dir5clicked )
         self.shortcutTab2_OutDirBtn.clicked.connect( self.dir6clicked )
 >>>>>>> Stashed changes
         
+=======
+>>>>>>> Stashed changes
 
 
     #eventhandlers 
@@ -140,6 +150,7 @@ class ToolBoxDialog(QDialog, Ui_APIRequestDialogBase):
          QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )
     dir2clicked = lambda self: self.routingTab2_outDirTxt.setText(
          QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 =======
     dir3clicked = lambda self: self.impactTab1_outDirTxt.setText(
@@ -150,4 +161,6 @@ class ToolBoxDialog(QDialog, Ui_APIRequestDialogBase):
          QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )
     dir6clicked = lambda self: self.shortcutTab2_outDirTxt.setText(
          QFileDialog.getExistingDirectory(self, "Select a directory to save routings", "") )         
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes

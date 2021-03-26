@@ -1,5 +1,6 @@
 # Impact QGIS Plugin
 
+<<<<<<< Updated upstream
 ![staging](https://github.com/anyways-open/impact-qgis-plugin/workflows/staging/badge.svg)  
 
 This repo contains the code for the **Impact toolbox** plugin for QGIS.
@@ -9,3 +10,6 @@ This plugin has been developed to automate accessing the [Anyways](https://www.a
 - Accessibility analysis & assessment
 - **Impact analysis** (e.g., traffic shift due to the closure of a level crossing)
 - etc.
+=======
+This is the code for the 1st version of ANYWAYS QGIS plugins; Routing API
+>>>>>>> Stashed changes

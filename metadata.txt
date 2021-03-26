@@ -3,6 +3,7 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
+<<<<<<< Updated upstream
 name=Impact toolbox
 qgisMinimumVersion=3.0
 description=This plugin automates ANYWAYS Routing API
@@ -11,6 +12,16 @@ author=Hamed Eftekhar @ ANYWAYS
 email=support@anyways.eu
 
 about=This plugin automates ANYWAYS Routing, Impact and ShortCut APIs by:
+=======
+name=ImPact toolbox
+qgisMinimumVersion=3.4.11-Madeira
+description=This plugin automates ANYWAYS Routing API
+version=1.00
+author=Hamed Eftekhar @ ANYWAYS
+email=support@anyways.eu
+
+about=This plugin automates ANYWAYS Routing API by:
+>>>>>>> Stashed changes
 	-Taking a set of Points of Interest (POIs) and returning routings between all of them based on a given routing profile 
 	-Taking two sets of POIs as Origins and Destinations and returning routings from all origins to all Destinations based on a given routing profile
 
