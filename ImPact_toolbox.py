@@ -36,7 +36,7 @@ import sys, os.path, json, shutil, time, asyncio, os
 import requests
 
 #module for this tool
-from .impact import routing, shortcut, addGeojsonsToMap, checkForNullGeometry, qgsError, write2File, time_now, CrsTransformation, CreateInstance, Networksfile, Keyfile, Clientfile
+from .impact import routing, shortcut, impact, addGeojsonsToMap, checkForNullGeometry, qgsError, write2File, time_now, CrsTransformation, CreateInstance, Networksfile, Keyfile, Clientfile
 
 #TODO: refactor 
 #import pandas as pd
@@ -196,6 +196,7 @@ class ToolBox:
             self.dlg = ToolBoxDialog()
             self._r = routing.routing()
             self._sh = shortcut.shortcut()
+            self._imp = impact.impact()
 
         # show the dialog
         self.dlg.show()
@@ -240,13 +241,17 @@ class ToolBox:
                             to_id    = str(  to_poi['id']  )
                             O_D      = "{0}_{1}".format( from_poi['id'], to_poi['id'] )
                             if ('features' in response) == False or len(response['features']) == 0:
+                                response = {}
                                 response = { "type": 'FeatureCollection',
-                                        "features":[{'type': 'Feature', 'name': 'ShapeMeta',
+                                        "features":[{'type': 'Feature', 'name': 'ShapeMeta', "geometry": {"type": "LineString", "coordinates":[]},
                                                'properties': {'name': 'N/A', 'highway': 'N/A', 'profile': PROFILE, 
                                                'From': from_id, 'To':  to_id, 'O_D': O_D } 
                                             }] }
                             else:
                                 for n in range(len(response['features'])):
+                                    if 'guid' in response['features'][n]['properties'].keys():
+                                        response['features'][n]['properties'].pop('guid')
+                                    response['features'][n]['properties']['profile'] = PROFILE
                                     response['features'][n]['properties']['From'] = from_id
                                     response['features'][n]['properties']['To']   = to_id
                                     response['features'][n]['properties']['O_D']  = O_D
@@ -257,7 +262,7 @@ class ToolBox:
                         for gjs in gjsList:
                             from_poi_id = gjs['features'][0]['properties']['From']
                             to_poi_id = gjs['features'][0]['properties']['To'] 
-                            outName = path + "/{0}_to_{1}_by_{2}.json".format(from_poi_id, to_poi_id, PROFILE.upper() ) 
+                            outName = path + "/{0}_{1}_to_{2}.json".format(PROFILE.upper(), from_poi_id, to_poi_id) 
                             write2File(outName, gjs)
                             fileList.append(outName)
                     else:                                                 # routing All POI's NO separated routes     
@@ -267,12 +272,12 @@ class ToolBox:
                             gjs['features'] += item['features']
 
                         #Write output
-                        outName =  path + "/Routings_by_{0}_{1}.json".format(PROFILE.upper(), time_now() ) 
+                        outName =  path + "/{0}_{1}.json".format(PROFILE.upper(), time_now() ) 
                         write2File(outName, gjs)
                         fileList = [outName]
 
                     # add to map
-                    groupName = PROFILE.upper() + "_Routings"
+                    groupName = "Routings: " + PROFILE.upper()
                     addGeojsonsToMap(self.iface, fileList, groupName, size, color )
 
                 elif self.dlg.routingWgt.currentIndex() == 1:      # ROUTING Origins to Destinations
@@ -307,13 +312,17 @@ class ToolBox:
                             to_id    = str(  to_poi['id']  )
                             O_D      = "{0}_{1}".format( from_poi['id'], to_poi['id'] )
                             if ('features' in response) == False or len(response['features']) == 0:
+                                response = {}
                                 response = { "type": 'FeatureCollection',
-                                        "features":[{'type': 'Feature', 'name': 'ShapeMeta',
+                                        "features":[{'type': 'Feature', 'name': 'ShapeMeta', "geometry": {"type": "LineString", "coordinates":[]},
                                                'properties': {'name': 'N/A', 'highway': 'N/A', 'profile': PROFILE, 
                                                'From': from_id, 'To':  to_id, 'O_D': O_D } 
                                             }] }
                             else:
                                 for n in range(len(response['features'])):
+                                    if 'guid' in response['features'][n]['properties'].keys():
+                                        response['features'][n]['properties'].pop('guid')
+                                    response['features'][n]['properties']['profile'] = PROFILE
                                     response['features'][n]['properties']['From'] = from_id
                                     response['features'][n]['properties']['To']   = to_id
                                     response['features'][n]['properties']['O_D']  = O_D
@@ -324,7 +333,7 @@ class ToolBox:
                         for gjs in gjsList:
                             from_poi_id = gjs['features'][0]['properties']['From']
                             to_poi_id = gjs['features'][0]['properties']['To'] 
-                            outName = path + "/{0}_to_{1}_by_{2}.json".format(from_poi_id, to_poi_id, PROFILE ) 
+                            outName = path + "/{0}_{1}_to_{2}.json".format(PROFILE.upper(), from_poi_id, to_poi_id) 
                             write2File(outName, gjs)
                             fileList.append(outName)
 
@@ -335,16 +344,181 @@ class ToolBox:
                             gjs['features'] += item['features']
 
                         #Write output
-                        outName =  path + "/Routings_{0}_{1}.json".format(PROFILE.upper(), time_now() ) 
+                        outName =  path + "/{0}_{1}.json".format(PROFILE.upper(), time_now() ) 
                         write2File(outName , gjs )
                         fileList = [outName]
 
                     # add to map
-                    groupName = PROFILE.upper() + "_Routings"
+                    groupName = "Routings: " + PROFILE.upper()
                     addGeojsonsToMap(self.iface, fileList, groupName, size, color )
 
 
-            elif self.dlg.toolBox.currentIndex() == 1:            # SHORTCUT
+            elif self.dlg.toolBox.currentIndex() == 1:            # IMPACT
+                if self.dlg.impactWgt.currentIndex() == 0:        # IMPACT ALL POI's 
+
+                    # get vars from UI
+                    ODLayer = self.dlg.impactTab1_mLayers.currentLayer()
+                    path = self.dlg.impactTab1_outDirTxt.text()
+                    client = str.strip(self.dlg.impactTab1_ClientTxt.text())
+                    network = str.strip(self.dlg.impactTab1_NetworkTxt.text())
+                    instance = self.dlg.impactTab1_InstanceCbx.currentText()
+                    PROFILE = self.dlg.impactTab1_profileCbx.currentText().lower()
+                    size = self.dlg.impactTab1_widthNum.value()
+                    color =  self.dlg.impactTab1_mColorBtn.color()
+                    sepRoutes = self.dlg.impactTab1_SepRoutes_Cbx.isChecked()
+
+                    #create INSTANCE var
+                    INSTANCE = CreateInstance(client, network, instance)
+
+                    #update Network list
+                    Clientfile(client)
+                    Networksfile(network)
+
+                    #other variabels 
+                    gjsList = []
+                    fileList = []
+                    POIs = [ { 'id': f[0], 'yx': [f.geometry().asPoint().y(),  f.geometry().asPoint().x()] }
+                               for f in CrsTransformation(ODLayer) if f.geometry().isNull() == False ]
+
+                    #WARN if file has null-geometries
+                    checkForNullGeometry(self.iface, ODLayer, self.tr('The POIs Layer has Null geometries!') )
+
+                    #loop trought all poi's. 
+                    for from_poi in POIs: 
+                        for to_poi in POIs: 
+                            if from_poi == to_poi: continue
+                            
+                            #make http request, response is in geojson format
+                            response = self._imp.fromto(from_poi['yx'] , to_poi['yx'] , KEY , INSTANCE , PROFILE)  
+
+                            from_id  = str( from_poi['id'] )
+                            to_id    = str(  to_poi['id']  )
+                            O_D      = "{0}_{1}".format( from_poi['id'], to_poi['id'] )
+                            if ('features' in response) == False or len(response['features']) == 0:
+                                response = {}
+                                response = { "type": 'FeatureCollection',
+                                        "features":[{'type': 'Feature', 'name': 'ShapeMeta', "geometry": {"type": "LineString", "coordinates":[]},
+                                               'properties': {'name': 'N/A', 'highway': 'N/A', 'Instance':network+' '+instance , 'profile': PROFILE, 
+                                               'From': from_id, 'To':  to_id, 'O_D': O_D } 
+                                            }] }
+                            else:
+                                for n in range(len(response['features'])):
+                                    if 'guid' in response['features'][n]['properties'].keys():
+                                        response['features'][n]['properties'].pop('guid')
+                                    response['features'][n]['properties']['profile'] = PROFILE
+                                    response['features'][n]['properties']['Instance'] = network+' '+instance
+                                    response['features'][n]['properties']['From'] = from_id
+                                    response['features'][n]['properties']['To']   = to_id
+                                    response['features'][n]['properties']['O_D']  = O_D
+                            gjsList.append(response)
+                    #TODO handle http errors
+
+                    if sepRoutes:    # routing All POI's WITH separated routes
+                        for gjs in gjsList:
+                            from_poi_id = gjs['features'][0]['properties']['From']
+                            to_poi_id = gjs['features'][0]['properties']['To'] 
+                            outName = path + "/Impact_{0}_{1}_{2}_{3}_to_{4}.json".format(network, instance, PROFILE.upper(), from_poi_id, to_poi_id)
+                            write2File(outName, gjs)
+                            fileList.append(outName)
+                    else:                                                 # routing All POI's NO separated routes     
+                        #map responses into one geojson
+                        gjs = { "type": 'FeatureCollection',  "features": []}
+                        for item in  gjsList: 
+                            gjs['features'] += item['features']
+
+                        #Write output
+                        outName =  path + "/Impact_{0}_{1}_{2}_{3}.json".format(network, instance, PROFILE.upper(), time_now()) 
+                        write2File(outName, gjs)
+                        fileList = [outName]
+
+                    # add to map
+                    groupName = "Impact " + network + ' ' + instance +": " + PROFILE.upper()
+                    addGeojsonsToMap(self.iface, fileList, groupName, size, color )
+
+                elif self.dlg.impactWgt.currentIndex() == 1:      # IMPACT Origins to Destinations
+                
+                    # get vars from UI
+                    OLayer =  self.dlg.impactTab2_O_mLayers.currentLayer()
+                    DLayer =  self.dlg.impactTab2_D_mLayers.currentLayer()
+                    path =    self.dlg.impactTab2_outDirTxt.text()
+                    client = str.strip(self.dlg.impactTab2_ClientTxt.text())
+                    network = str.strip(self.dlg.impactTab2_NetworkTxt.text())
+                    instance = self.dlg.impactTab2_InstanceCbx.currentText()
+                    PROFILE = self.dlg.impactTab2_profileCbx.currentText().lower()
+                    size =    self.dlg.impactTab2_widthNum.value()
+                    color =   self.dlg.impactTab2_mColorBtn.color()
+                    sepRoutes = self.dlg.impactTab2_SepRoutes_Cbx.isChecked()
+
+                    #create INSTANCE var
+                    INSTANCE = CreateInstance(client, network, instance)
+
+                    #update Network list
+                    Clientfile(client)
+                    Networksfile(network)
+
+                    #other variabels                   
+                    gjsList = []
+                    fileList = []
+                    O_POIs = [ { 'id': f[0], 'yx': [f.geometry().asPoint().y(),  f.geometry().asPoint().x()] }
+                               for f in CrsTransformation(OLayer) if f.geometry().isNull() == False ]
+                    D_POIs = [ { 'id': f[0], 'yx': [f.geometry().asPoint().y(),  f.geometry().asPoint().x()] }
+                               for f in CrsTransformation(DLayer) if f.geometry().isNull() == False ]
+
+                    #WARN if file has null-geometries
+                    checkForNullGeometry(self.iface, OLayer, self.tr("The origin POI's Layer has Null geometries!") )
+                    checkForNullGeometry(self.iface, DLayer, self.tr("The destination POI's Layer has Null geometries!") )
+
+                    #loop trought all poi's. 
+                    for from_poi in O_POIs: 
+                        for to_poi in D_POIs: 
+                            response = self._imp.fromto(from_poi['yx'] , to_poi['yx'] , KEY , INSTANCE , PROFILE)  # http request, response is in geojson format
+
+                            from_id  = str( from_poi['id'] )
+                            to_id    = str(  to_poi['id']  )
+                            O_D      = "{0}_{1}".format( from_poi['id'], to_poi['id'] )
+                            if ('features' in response) == False or len(response['features']) == 0:
+                                response = {}
+                                response = { "type": 'FeatureCollection',
+                                        "features":[{'type': 'Feature', 'name': 'ShapeMeta', "geometry": {"type": "LineString", "coordinates":[]},
+                                               'properties': {'name': 'N/A', 'highway': 'N/A', 'Instance':network+' '+instance ,'profile': PROFILE, 
+                                               'From': from_id, 'To':  to_id, 'O_D': O_D } 
+                                            }] }
+                            else:
+                                for n in range(len(response['features'])):
+                                    if 'guid' in response['features'][n]['properties'].keys():
+                                        response['features'][n]['properties'].pop('guid')
+                                    response['features'][n]['properties']['profile'] = PROFILE
+                                    response['features'][n]['properties']['Instance'] = network+' '+instance
+                                    response['features'][n]['properties']['From'] = from_id
+                                    response['features'][n]['properties']['To']   = to_id
+                                    response['features'][n]['properties']['O_D']  = O_D
+                            gjsList.append(response)
+                    #TODO handle http errors
+
+                    if sepRoutes:  # Origins to Destinations WITH separated routes
+                        for gjs in gjsList:
+                            from_poi_id = gjs['features'][0]['properties']['From']
+                            to_poi_id = gjs['features'][0]['properties']['To'] 
+                            outName = path + "/Impact_{0}_{1}_{2}_{3}_to_{4}.json".format(network, instance, PROFILE.upper(), from_poi_id, to_poi_id)
+                            write2File(outName, gjs)
+                            fileList.append(outName)
+
+                    else:                                                 # Origins to Destinations NO separated routes     
+                        #map responses into one geojson
+                        gjs = { "type": 'FeatureCollection',  "features": []}
+                        for item in  gjsList: 
+                            gjs['features'] += item['features']
+
+                        #Write output
+                        outName =  path + "/Impact_{0}_{1}_{2}_{3}.json".format(network, instance, PROFILE.upper(), time_now())   
+                        write2File(outName , gjs )
+                        fileList = [outName]
+
+                    # add to map
+                    groupName = "Impact " + network + ' ' + instance +": " + PROFILE.upper()
+                    addGeojsonsToMap(self.iface, fileList, groupName, size, color )
+
+            elif self.dlg.toolBox.currentIndex() == 2:            # SHORTCUT
                 if self.dlg.shortcutWgt.currentIndex() == 0:        # SHORTCUT ALL POI's 
 
                     # get vars from UI
@@ -386,14 +560,18 @@ class ToolBox:
                             to_id    = str(  to_poi['id']  )
                             O_D      = "{0}_{1}".format( from_poi['id'], to_poi['id'] )
                             if ('features' in response) == False or len(response['features']) == 0:
+                                response = {}
                                 response = { "type": 'FeatureCollection',
-                                        "features":[{'type': 'Feature', 'name': 'ShapeMeta',
-                                               'properties': {'name': 'N/A', 'highway': 'N/A', 'Instance':INSTANCE , 'profile': PROFILE, 
+                                        "features":[{'type': 'Feature', 'name': 'ShapeMeta', "geometry": {"type": "LineString", "coordinates":[]},
+                                               'properties': {'name': 'N/A', 'highway': 'N/A', 'Instance':network+' '+instance , 'profile': PROFILE, 
                                                'From': from_id, 'To':  to_id, 'O_D': O_D } 
                                             }] }
                             else:
                                 for n in range(len(response['features'])):
-                                    response['features'][n]['properties']['Instance'] = INSTANCE
+                                    if 'guid' in response['features'][n]['properties'].keys():
+                                        response['features'][n]['properties'].pop('guid')
+                                    response['features'][n]['properties']['profile'] = PROFILE
+                                    response['features'][n]['properties']['Instance'] = network+' '+instance
                                     response['features'][n]['properties']['From'] = from_id
                                     response['features'][n]['properties']['To']   = to_id
                                     response['features'][n]['properties']['O_D']  = O_D
@@ -404,7 +582,7 @@ class ToolBox:
                         for gjs in gjsList:
                             from_poi_id = gjs['features'][0]['properties']['From']
                             to_poi_id = gjs['features'][0]['properties']['To'] 
-                            outName = path + "/{0}_to_{1}_by_{2}_{3} {4}.json".format(from_poi_id, to_poi_id, PROFILE.upper(), INSTANCE.replace("/", "-")[:-2], INSTANCE[-1]) 
+                            outName = path + "/ShortCut_{0}_{1}_{2}_{3}_to_{4}.json".format(network, instance, PROFILE.upper(), from_poi_id, to_poi_id) 
                             write2File(outName, gjs)
                             fileList.append(outName)
                     else:                                                 # routing All POI's NO separated routes     
@@ -414,12 +592,12 @@ class ToolBox:
                             gjs['features'] += item['features']
 
                         #Write output
-                        outName =  path + "/ShortCutRoutings_{0} {1}_by_{2}_{3}.json".format(INSTANCE.replace("/", "-")[:-2], INSTANCE[-1], PROFILE.upper(), time_now()) 
+                        outName =  path + "/ShortCut_{0}_{1}_{2}_{3}.json".format(network, instance, PROFILE.upper(), time_now()) 
                         write2File(outName, gjs)
                         fileList = [outName]
 
                     # add to map
-                    groupName = "ShortCut " + INSTANCE.replace("/", " ") + ":" + PROFILE.upper()
+                    groupName = "ShortCut " + network + ' ' + instance +": " + PROFILE.upper()
                     addGeojsonsToMap(self.iface, fileList, groupName, size, color )
 
                 elif self.dlg.shortcutWgt.currentIndex() == 1:      # SHORTCUT Origins to Destinations
@@ -427,7 +605,7 @@ class ToolBox:
                     # get vars from UI
                     OLayer =  self.dlg.shortcutTab2_O_mLayers.currentLayer()
                     DLayer =  self.dlg.shortcutTab2_D_mLayers.currentLayer()
-                    path =    self.dlg.routingTab2_outDirTxt.text()
+                    path =    self.dlg.shortcutTab2_outDirTxt.text()
                     client = str.strip(self.dlg.shortcutTab2_ClientTxt.text())
                     network = str.strip(self.dlg.shortcutTab2_NetworkTxt.text())
                     instance = self.dlg.shortcutTab2_InstanceCbx.currentText()
@@ -464,14 +642,18 @@ class ToolBox:
                             to_id    = str(  to_poi['id']  )
                             O_D      = "{0}_{1}".format( from_poi['id'], to_poi['id'] )
                             if ('features' in response) == False or len(response['features']) == 0:
+                                response = {}
                                 response = { "type": 'FeatureCollection',
-                                        "features":[{'type': 'Feature', 'name': 'ShapeMeta',
-                                               'properties': {'name': 'N/A', 'highway': 'N/A', 'Instance':INSTANCE ,'profile': PROFILE, 
+                                        "features":[{'type': 'Feature', 'name': 'ShapeMeta',"geometry": {"type": "LineString", "coordinates":[]},
+                                               'properties': {'name': 'N/A', 'highway': 'N/A', 'Instance':network+' '+instance ,'profile': PROFILE, 
                                                'From': from_id, 'To':  to_id, 'O_D': O_D } 
                                             }] }
                             else:
                                 for n in range(len(response['features'])):
-                                    response['features'][n]['properties']['Instance'] = INSTANCE
+                                    if 'guid' in response['features'][n]['properties'].keys():
+                                        response['features'][n]['properties'].pop('guid')
+                                    response['features'][n]['properties']['profile'] = PROFILE
+                                    response['features'][n]['properties']['Instance'] = network+' '+instance
                                     response['features'][n]['properties']['From'] = from_id
                                     response['features'][n]['properties']['To']   = to_id
                                     response['features'][n]['properties']['O_D']  = O_D
@@ -482,7 +664,7 @@ class ToolBox:
                         for gjs in gjsList:
                             from_poi_id = gjs['features'][0]['properties']['From']
                             to_poi_id = gjs['features'][0]['properties']['To'] 
-                            outName = path + "/{0}_to_{1}_by_{2}_{3} {4}.json".format(from_poi_id, to_poi_id, PROFILE.upper(), INSTANCE.replace("/", "-")[:-2], INSTANCE[-1]) 
+                            outName = path + "/ShortCut_{0}_{1}_{2}_{3}_to_{4}.json".format(network, instance, PROFILE.upper(), from_poi_id, to_poi_id) 
                             write2File(outName, gjs)
                             fileList.append(outName)
 
@@ -493,10 +675,11 @@ class ToolBox:
                             gjs['features'] += item['features']
 
                         #Write output
-                        outName =  path + "/ShortCutRoutings_{0} {1}_by_{2}_{3}.json".format(INSTANCE.replace("/", "-")[:-2], INSTANCE[-1], PROFILE.upper(), time_now())   
+                        outName =  path + "/ShortCut_{0}_{1}_{2}_{3}.json".format(network, instance, PROFILE.upper(), time_now())   
                         write2File(outName , gjs )
                         fileList = [outName]
 
                     # add to map
-                    groupName = "ShortCut " + INSTANCE.replace("/", " ") + ":" + PROFILE.upper()
+                    groupName = "ShortCut " + network + ' ' + instance +": " + PROFILE.upper()
                     addGeojsonsToMap(self.iface, fileList, groupName, size, color )
+
