@@ -106,3 +106,41 @@ def CrsTransformation(layer):
             f.setGeometry(g)
             features.append(f)
     return features
+
+def CreateInstance(client, network, instance):
+    subdomain=''
+    if len(str.strip(client)) > 0:
+        subdomain += str.strip(client) + '/'
+    if len (str.strip(network))>0:
+        subdomain += str.strip(network) + '/'
+    INSTANCE = subdomain + instance
+    return INSTANCE
+
+def Networksfile(network): 
+    """takes instance and write/add it to a txtfile containing all instances used by a user"""
+
+    PATH=os.path.dirname(os.path.realpath(__file__))[:-7]
+    try: 
+        NetFile=open(PATH+"/Networks_list.txt", 'r')
+        contents= NetFile.read()
+        contents_list=contents.split('\n')[:-1]
+    except IOError:
+        contents_list=[]
+        
+    with open(PATH+"/Networks_list.txt", 'a+') as f:
+        if network not in contents_list:
+            f.write(network+'\n')
+
+def Keyfile(key): 
+    """takes instance and write/add it to a txtfile containing all instances used by a user"""
+
+    PATH=os.path.dirname(os.path.realpath(__file__))[:-7]
+    with open(PATH+"/API_Key.txt", 'w') as f:
+        f.write(key)
+        
+def Clientfile(client): 
+    """takes instance and write/add it to a txtfile containing all instances used by a user"""
+
+    PATH=os.path.dirname(os.path.realpath(__file__))[:-7]
+    with open(PATH+"/client.txt", 'w') as f:
+        f.write(client)

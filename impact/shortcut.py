@@ -2,13 +2,13 @@ import requests
 import sys, os.path
 from urllib.parse import urljoin
 
-BASE_URL_ANYWAYS= "https://routing.anyways.eu/"
-BASE_PATH = 'api/route?'
+BASE_URL_ANYWAYS= "https://api.anyways.eu/"
+BASE_PATH = 'publish/opa/'
 
-class routing(object):
+class shortcut(object):
 
     def __init__(self, base_url=BASE_URL_ANYWAYS, url_path=BASE_PATH):
-        self.url = urljoin( base_url , url_path )
+        self.url = urljoin( base_url , url_path)
         self._s = requests.Session()
 
     def profiles(self):
@@ -19,7 +19,7 @@ class routing(object):
         "bicycle.cycle_highway", "bicycle.node_network", "bicycle.commute",  "bicycle.b2w",  "bicycle.anyways_network"]
 
 
-    def fromto(self, origin, destination, key, profile="car" ):
+    def fromto(self, origin, destination, key, instance ,profile="car" ):
         """ 
         Plot a route from a origin to a destination. 
 
@@ -28,10 +28,10 @@ class routing(object):
             destination -- the end coördinate in as lisr form [X,Y]
             profile -- the profile, must be from predefined list (default "car")
         """
-        return self.route([origin, destination], key, profile=profile)
+        return self.route([origin, destination], key, instance ,profile=profile)
 
 
-    def route(self, stops=[], key='' , profile="car"):
+    def route(self, stops=[], key='', instance='' ,profile="car"):
         """ 
         Plot a route with 2 or more many stops.
 
@@ -40,11 +40,11 @@ class routing(object):
             profile -- the profile, must be from predefined list (default "car")
         """
         params = {}
-        
+
         params["api-key"] = key
         
-        if profile and not profile in self.profiles(): 
-            raise Exception( "Profile most be from list: "+ ", ".join(self.profiles() ) )
+        if profile and not profile in self.profiles():
+            raise Exception( "Profile must be from list: "+ ", ".join(self.profiles() ) )
         else:
             params["profile"] = profile
 
@@ -52,6 +52,7 @@ class routing(object):
            raise Exception( "Must include at least 2 stops")
 
         params["loc"] = [ ",".join(map(str, xy )) for xy in stops ]
-        response = self._s.get(self.url, params=params)
+
+        response = self._s.get(self.url+instance+'/routing', params=params)
 
         return response.json()

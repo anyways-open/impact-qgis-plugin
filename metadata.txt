@@ -6,11 +6,11 @@
 name=Impact toolbox
 qgisMinimumVersion=3.0
 description=This plugin automates ANYWAYS Routing API
-version=0.0.2
+version=0.0.3
 author=Hamed Eftekhar @ ANYWAYS
 email=support@anyways.eu
 
-about=This plugin automates ANYWAYS Routing API by:
+about=This plugin automates ANYWAYS Routing, Impact and ShortCut APIs by:
 	-Taking a set of Points of Interest (POIs) and returning routings between all of them based on a given routing profile 
 	-Taking two sets of POIs as Origins and Destinations and returning routings from all origins to all Destinations based on a given routing profile
 
@@ -23,10 +23,10 @@ repository=https://github.com/anyways-open/qgis-plugins
 
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
-changelog=Fixed issue with QGIS versioning support.
+# changelog=
 
 # Tags are comma separated with spaces allowed
-tags=routing,mobility,traffic
+tags=python
 
 homepage=https://www.anyways.eu/
 category=Plugins
