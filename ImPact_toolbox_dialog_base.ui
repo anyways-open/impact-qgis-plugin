@@ -1,0 +1,712 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+    <class>APIRequestDialogBase</class>
+    <widget class="QDialog" name="APIRequestDialogBase">
+        <property name="enabled">
+            <bool>true</bool>
+        </property>
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>1213</width>
+                <height>806</height>
+            </rect>
+        </property>
+        <property name="contextMenuPolicy">
+            <enum>Qt::DefaultContextMenu</enum>
+        </property>
+        <property name="windowTitle">
+            <string>ImPact ToolBox</string>
+        </property>
+        <property name="styleSheet">
+            <string notr="true"/>
+        </property>
+        <property name="sizeGripEnabled">
+            <bool>false</bool>
+        </property>
+        <property name="modal">
+            <bool>false</bool>
+        </property>
+        <widget class="QLabel" name="label_anyways_header">
+            <property name="geometry">
+                <rect>
+                    <x>20</x>
+                    <y>760</y>
+                    <width>501</width>
+                    <height>21</height>
+                </rect>
+            </property>
+            <property name="font">
+                <font>
+                    <pointsize>11</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                </font>
+            </property>
+            <property name="text">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ffaa00;&quot;&gt;ANYWAYS&lt;/span&gt;
+                    Impact Management &amp;amp; Analysis ToolBox&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                </string>
+            </property>
+        </widget>
+        <widget class="QTabWidget" name="main_tab">
+            <property name="geometry">
+                <rect>
+                    <x>10</x>
+                    <y>10</y>
+                    <width>1191</width>
+                    <height>721</height>
+                </rect>
+            </property>
+            <property name="currentIndex">
+                <number>0</number>
+            </property>
+            <widget class="QWidget" name="settings_tab">
+                <attribute name="title">
+                    <string>Settings</string>
+                </attribute>
+                <widget class="QWidget" name="formLayoutWidget">
+                    <property name="geometry">
+                        <rect>
+                            <x>10</x>
+                            <y>10</y>
+                            <width>1151</width>
+                            <height>661</height>
+                        </rect>
+                    </property>
+                    <layout class="QFormLayout" name="settings_form">
+                        <item row="0" column="0">
+                            <widget class="QLabel" name="label">
+                                <property name="text">
+                                    <string>Api-Key</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="0" column="1">
+                            <widget class="QLineEdit" name="api_key_field"/>
+                        </item>
+                        <item row="2" column="1">
+                            <widget class="QLabel" name="label_2">
+                                <property name="text">
+                                    <string>A personal string which acts as key, provided to you by ANYWAYS BV.</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="3" column="1">
+                            <spacer name="verticalSpacer">
+                                <property name="orientation">
+                                    <enum>Qt::Vertical</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                    <size>
+                                        <width>20</width>
+                                        <height>40</height>
+                                    </size>
+                                </property>
+                            </spacer>
+                        </item>
+                        <item row="11" column="1">
+                            <widget class="QLabel" name="label_5">
+                                <property name="text">
+                                    <string>The URL of one of your impact instances. Copy and paste the URL of any
+                                        instance here, the tool will figure out which instances exist. You can pick any
+                                        later on
+                                    </string>
+                                </property>
+                                <property name="wordWrap">
+                                    <bool>true</bool>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="12" column="1">
+                            <spacer name="verticalSpacer_2">
+                                <property name="orientation">
+                                    <enum>Qt::Vertical</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                    <size>
+                                        <width>20</width>
+                                        <height>40</height>
+                                    </size>
+                                </property>
+                            </spacer>
+                        </item>
+                        <item row="13" column="0">
+                            <widget class="QLabel" name="label_4">
+                                <property name="text">
+                                    <string>Project directory</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="13" column="1">
+                            <widget class="QgsFileWidget" name="project_directory"/>
+                        </item>
+                        <item row="14" column="1">
+                            <widget class="QLabel" name="label_6">
+                                <property name="text">
+                                    <string>This is the path of the current project. All intermediate files (output from
+                                        routeplanning, ...) will be saved here as geoJson.
+                                    </string>
+                                </property>
+                                <property name="scaledContents">
+                                    <bool>false</bool>
+                                </property>
+                                <property name="wordWrap">
+                                    <bool>true</bool>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="15" column="1">
+                            <spacer name="verticalSpacer_5">
+                                <property name="orientation">
+                                    <enum>Qt::Vertical</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                    <size>
+                                        <width>20</width>
+                                        <height>40</height>
+                                    </size>
+                                </property>
+                            </spacer>
+                        </item>
+                        <item row="7" column="1">
+                            <widget class="QComboBox" name="impact_instance_selector"/>
+                        </item>
+                        <item row="7" column="0">
+                            <widget class="QLabel" name="label_3">
+                                <property name="text">
+                                    <string>ImPact URL</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="1" column="1">
+                            <widget class="QPushButton" name="save_settings_button">
+                                <property name="text">
+                                    <string>Save settings</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="10" column="1">
+                            <widget class="QPushButton" name="save_area_outline">
+                                <property name="text">
+                                    <string>Save the outline of this Impact instance as a layer</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="8" column="1">
+                            <widget class="QLineEdit" name="impact_url_textfield"/>
+                        </item>
+                        <item row="9" column="1">
+                            <widget class="QPushButton" name="save_impact_url_button">
+                                <property name="text">
+                                    <string>Save impact instance</string>
+                                </property>
+                            </widget>
+                        </item>
+                    </layout>
+                    <zorder>label</zorder>
+                    <zorder>api_key_field</zorder>
+                    <zorder>label_2</zorder>
+                    <zorder>label_5</zorder>
+                    <zorder>label_4</zorder>
+                    <zorder>project_directory</zorder>
+                    <zorder>label_6</zorder>
+                    <zorder>impact_instance_selector</zorder>
+                    <zorder>label_3</zorder>
+                    <zorder>save_settings_button</zorder>
+                    <zorder>save_area_outline</zorder>
+                    <zorder>save_impact_url_button</zorder>
+                    <zorder>impact_url_textfield</zorder>
+                </widget>
+            </widget>
+            <widget class="QWidget" name="movement_pairs_tab">
+                <attribute name="title">
+                    <string>Load movement pairs</string>
+                </attribute>
+                <widget class="QWidget" name="formLayoutWidget_5">
+                    <property name="geometry">
+                        <rect>
+                            <x>10</x>
+                            <y>0</y>
+                            <width>1131</width>
+                            <height>661</height>
+                        </rect>
+                    </property>
+                    <layout class="QFormLayout" name="movement_pairs_form">
+                        <item row="0" column="1">
+                            <widget class="QLabel" name="label_19">
+                                <property name="text">
+                                    <string>The FOD Mobiliteit did a survey in 2017 collecting how people moved from
+                                        their home to their work. This open data set can be queried to construct a
+                                        movement pair layer.
+                                    </string>
+                                </property>
+                                <property name="wordWrap">
+                                    <bool>true</bool>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="4" column="1">
+                            <widget class="QLabel" name="label_20">
+                                <property name="text">
+                                    <string/>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="1" column="1">
+                            <widget class="QgsMapLayerComboBox" name="home_locations"/>
+                        </item>
+                        <item row="1" column="0">
+                            <widget class="QLabel" name="label_21">
+                                <property name="text">
+                                    <string>Home area</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="2" column="1">
+                            <widget class="QLabel" name="label_22">
+                                <property name="text">
+                                    <string>A polygon marking the boundaries where the commuters live. Note that all
+                                        commuters are bundled to the centerpoint of the municipality
+                                    </string>
+                                </property>
+                                <property name="wordWrap">
+                                    <bool>true</bool>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="5" column="1">
+                            <widget class="QgsMapLayerComboBox" name="work_locations"/>
+                        </item>
+                        <item row="5" column="0">
+                            <widget class="QLabel" name="label_23">
+                                <property name="text">
+                                    <string>Work locations</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="6" column="1">
+                            <widget class="QLabel" name="label_24">
+                                <property name="text">
+                                    <string>The locations where the commuters work</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="9" column="1">
+                            <widget class="QCheckBox" name="include_cyclists">
+                                <property name="text">
+                                    <string>Include cyclist counts</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="10" column="1">
+                            <widget class="QCheckBox" name="include_car">
+                                <property name="text">
+                                    <string>Include car counts</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="11" column="1">
+                            <widget class="QCheckBox" name="include_train">
+                                <property name="text">
+                                    <string>Include train counts</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="12" column="1">
+                            <widget class="QCheckBox" name="include_public_transport">
+                                <property name="text">
+                                    <string>Include public transport counts</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="8" column="1">
+                            <spacer name="verticalSpacer_3">
+                                <property name="orientation">
+                                    <enum>Qt::Vertical</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                    <size>
+                                        <width>20</width>
+                                        <height>40</height>
+                                    </size>
+                                </property>
+                            </spacer>
+                        </item>
+                        <item row="9" column="0">
+                            <widget class="QLabel" name="label_25">
+                                <property name="text">
+                                    <string>Transport modes to count</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="3" column="1">
+                            <widget class="QLabel" name="label_27">
+                                <property name="text">
+                                    <string>Make sure this area is big enough. Only works in Belgium</string>
+                                </property>
+                                <property name="wordWrap">
+                                    <bool>true</bool>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="7" column="1">
+                            <widget class="QLabel" name="label_28">
+                                <property name="text">
+                                    <string>Make sure this area is big enough. Only works in Belgium; can be the same as
+                                        locations of departure
+                                    </string>
+                                </property>
+                                <property name="wordWrap">
+                                    <bool>true</bool>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="13" column="1">
+                            <spacer name="verticalSpacer_4">
+                                <property name="orientation">
+                                    <enum>Qt::Vertical</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                    <size>
+                                        <width>20</width>
+                                        <height>40</height>
+                                    </size>
+                                </property>
+                            </spacer>
+                        </item>
+                        <item row="14" column="1">
+                            <widget class="QPushButton" name="query_movement_pairs_button">
+                                <property name="text">
+                                    <string>Query movement pairs</string>
+                                </property>
+                            </widget>
+                        </item>
+                    </layout>
+                </widget>
+            </widget>
+            <widget class="QWidget" name="routeplanning_tab">
+                <attribute name="title">
+                    <string>Routeplanning</string>
+                </attribute>
+                <widget class="QWidget" name="formLayoutWidget_2">
+                    <property name="geometry">
+                        <rect>
+                            <x>0</x>
+                            <y>20</y>
+                            <width>1181</width>
+                            <height>591</height>
+                        </rect>
+                    </property>
+                    <layout class="QFormLayout" name="routeplanning_form">
+                        <item row="1" column="1">
+                            <widget class="QLabel" name="label_15">
+                                <property name="text">
+                                    <string>Calculate routes between multiple departure points and multiple arrival
+                                        points
+                                    </string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="2" column="1">
+                            <widget class="QLabel" name="label_29">
+                                <property name="text">
+                                    <string>All individual road segments will be grouped and counted</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="3" column="0">
+                            <widget class="QLabel" name="label_7">
+                                <property name="text">
+                                    <string>Scenario</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="3" column="1">
+                            <widget class="QComboBox" name="scenario_picker">
+                                <property name="editable">
+                                    <bool>false</bool>
+                                </property>
+                                <property name="currentText">
+                                    <string/>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="4" column="1">
+                            <widget class="QLabel" name="label_8">
+                                <property name="text">
+                                    <string>Use real-life routeplanning or a scenario from your ImPact instance</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="7" column="0">
+                            <widget class="QLabel" name="label_9">
+                                <property name="text">
+                                    <string>Profile</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="7" column="1">
+                            <widget class="QComboBox" name="profile_picker"/>
+                        </item>
+                        <item row="8" column="1">
+                            <widget class="QLabel" name="label_10">
+                                <property name="text">
+                                    <string>Select which vehicle to plan and it behaves. Read below how the profile
+                                        behaves
+                                    </string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="9" column="1">
+                            <widget class="QLabel" name="profile_explanation">
+                                <property name="font">
+                                    <font>
+                                        <weight>75</weight>
+                                        <italic>true</italic>
+                                        <bold>true</bold>
+                                    </font>
+                                </property>
+                                <property name="text">
+                                    <string>(Select a profile first. The profile info will be shown here)</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="6" column="1">
+                            <widget class="QTabWidget" name="toolbox_origin_destination_or_movement">
+                                <property name="sizePolicy">
+                                    <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
+                                        <horstretch>0</horstretch>
+                                        <verstretch>0</verstretch>
+                                    </sizepolicy>
+                                </property>
+                                <property name="minimumSize">
+                                    <size>
+                                        <width>0</width>
+                                        <height>210</height>
+                                    </size>
+                                </property>
+                                <property name="currentIndex">
+                                    <number>0</number>
+                                </property>
+                                <widget class="QWidget" name="tab1">
+                                    <attribute name="title">
+                                        <string>Plan routes between point layers</string>
+                                    </attribute>
+                                    <widget class="QWidget" name="formLayoutWidget_4">
+                                        <property name="geometry">
+                                            <rect>
+                                                <x>0</x>
+                                                <y>10</y>
+                                                <width>1091</width>
+                                                <height>161</height>
+                                            </rect>
+                                        </property>
+                                        <layout class="QFormLayout" name="formLayout_3">
+                                            <item row="0" column="0">
+                                                <widget class="QLabel" name="label_11">
+                                                    <property name="text">
+                                                        <string>Departure</string>
+                                                    </property>
+                                                </widget>
+                                            </item>
+                                            <item row="0" column="1">
+                                                <widget class="QgsMapLayerComboBox" name="departure_layer_picker"/>
+                                            </item>
+                                            <item row="1" column="1">
+                                                <widget class="QLabel" name="label_12">
+                                                    <property name="text">
+                                                        <string>Every point in this layer will be considered a departure
+                                                            point
+                                                        </string>
+                                                    </property>
+                                                </widget>
+                                            </item>
+                                            <item row="2" column="1">
+                                                <widget class="QgsMapLayerComboBox" name="arrival_layer_picker"/>
+                                            </item>
+                                            <item row="2" column="0">
+                                                <widget class="QLabel" name="label_13">
+                                                    <property name="text">
+                                                        <string>Arrival</string>
+                                                    </property>
+                                                </widget>
+                                            </item>
+                                            <item row="3" column="1">
+                                                <widget class="QLabel" name="label_14">
+                                                    <property name="text">
+                                                        <string>Every point in this layer will be used as arrival point.
+                                                            To do matrix routing, select the same as departure
+                                                        </string>
+                                                    </property>
+                                                </widget>
+                                            </item>
+                                        </layout>
+                                    </widget>
+                                </widget>
+                                <widget class="QWidget" name="tab_2">
+                                    <attribute name="title">
+                                        <string>Plan routes over a linestring layer</string>
+                                    </attribute>
+                                    <widget class="QWidget" name="formLayoutWidget_3">
+                                        <property name="geometry">
+                                            <rect>
+                                                <x>0</x>
+                                                <y>10</y>
+                                                <width>1141</width>
+                                                <height>131</height>
+                                            </rect>
+                                        </property>
+                                        <layout class="QFormLayout" name="formLayout_2">
+                                            <item row="0" column="1">
+                                                <widget class="QgsMapLayerComboBox" name="movement_pairs_layer_picker"/>
+                                            </item>
+                                            <item row="0" column="0">
+                                                <widget class="QLabel" name="label_17">
+                                                    <property name="text">
+                                                        <string>Select a movement layer</string>
+                                                    </property>
+                                                </widget>
+                                            </item>
+                                            <item row="1" column="1">
+                                                <widget class="QLabel" name="label_18">
+                                                    <property name="text">
+                                                        <string>Use a layer with movement data (e.g. loaded from file or
+                                                            from the FOD). Routeplanning will be performed on every
+                                                            origin-destination pair, which will be weighted
+                                                        </string>
+                                                    </property>
+                                                    <property name="wordWrap">
+                                                        <bool>true</bool>
+                                                    </property>
+                                                </widget>
+                                            </item>
+                                        </layout>
+                                    </widget>
+                                </widget>
+                            </widget>
+                        </item>
+                        <item row="5" column="1">
+                            <widget class="QLabel" name="label_16">
+                                <property name="text">
+                                    <string/>
+                                </property>
+                            </widget>
+                        </item>
+                    </layout>
+                </widget>
+                <widget class="QPushButton" name="perform_routeplanning_button">
+                    <property name="geometry">
+                        <rect>
+                            <x>730</x>
+                            <y>620</y>
+                            <width>441</width>
+                            <height>51</height>
+                        </rect>
+                    </property>
+                    <property name="text">
+                        <string>Perform routeplanning</string>
+                    </property>
+                </widget>
+            </widget>
+            <widget class="QWidget" name="traffic_diff_tab">
+                <attribute name="title">
+                    <string>Calculate traffic differences</string>
+                </attribute>
+                <widget class="QWidget" name="formLayoutWidget_6">
+                    <property name="geometry">
+                        <rect>
+                            <x>10</x>
+                            <y>10</y>
+                            <width>1171</width>
+                            <height>641</height>
+                        </rect>
+                    </property>
+                    <layout class="QFormLayout" name="traffic_diff_form">
+                        <item row="1" column="1">
+                            <widget class="QgsMapLayerComboBox" name="zero_situation_picker"/>
+                        </item>
+                        <item row="1" column="0">
+                            <widget class="QLabel" name="label_30">
+                                <property name="text">
+                                    <string>Zero situation</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="2" column="1">
+                            <widget class="QLabel" name="label_31">
+                                <property name="text">
+                                    <string>The weighted segment layer of the original, zero situation.</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="0" column="1">
+                            <widget class="QLabel" name="label_32">
+                                <property name="text">
+                                    <string>Compare two layers of weighted segments to calculate a traffic shift. These
+                                        can be constructed in the routeplanning tab
+                                    </string>
+                                </property>
+                                <property name="wordWrap">
+                                    <bool>true</bool>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="3" column="1">
+                            <widget class="QgsMapLayerComboBox" name="new_situation_picker"/>
+                        </item>
+                        <item row="3" column="0">
+                            <widget class="QLabel" name="label_33">
+                                <property name="text">
+                                    <string>New situation</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="4" column="1">
+                            <widget class="QLabel" name="label_34">
+                                <property name="text">
+                                    <string>The weighted segment layer of the new (hypothetical) situation.</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="6" column="1">
+                            <widget class="QPushButton" name="calculate_traffic_shift_button">
+                                <property name="text">
+                                    <string>Calculate traffic shift</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="5" column="1">
+                            <spacer name="verticalSpacer_6">
+                                <property name="orientation">
+                                    <enum>Qt::Vertical</enum>
+                                </property>
+                                <property name="sizeHint" stdset="0">
+                                    <size>
+                                        <width>20</width>
+                                        <height>40</height>
+                                    </size>
+                                </property>
+                            </spacer>
+                        </item>
+                    </layout>
+                </widget>
+            </widget>
+        </widget>
+    </widget>
+    <customwidgets>
+        <customwidget>
+            <class>QgsFileWidget</class>
+            <extends>QWidget</extends>
+            <header>qgsfilewidget.h</header>
+        </customwidget>
+        <customwidget>
+            <class>QgsMapLayerComboBox</class>
+            <extends>QComboBox</extends>
+            <header>qgsmaplayercombobox.h</header>
+        </customwidget>
+    </customwidgets>
+    <resources/>
+    <connections/>
+</ui>
