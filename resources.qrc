@@ -1,5 +1,0 @@
-<RCC>
-    <qresource prefix="/plugins/ImPact_toolbox" >
-        <file>icon.png</file>
-    </qresource>
-</RCC>
