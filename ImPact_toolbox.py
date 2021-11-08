@@ -163,10 +163,10 @@ class ToolBox:
 
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
-        icon_path = ':/plugins/src/icon.png'
+        icon_path = ':/plugins/anyways_impact_toolbox/icon.png'
         self.add_action(
             icon_path,
-            text=self.tr(u'ImPact ToolBox 2.3'),
+            text=self.tr(u'ImPact ToolBox'),
             callback=self.open_dialog,
             parent=self.iface.mainWindow())
 
