@@ -127,3 +127,5 @@ dmypy.json
 docs/
 .vscode/
 zip_build/
+
+.idea/*
