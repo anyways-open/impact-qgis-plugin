@@ -358,6 +358,11 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self.perform_routeplanning_button.setText("Perform routeplanning")
 
         self.log("Requesting routes, isImpact? " + str(routing_api_obj.is_impact_backend))
+        
+        def onError(msg):
+            self.error_user(msg)
+            with_routes_callback(None)
+        
         try:
             routing_api_obj.request_all_routes(
                 from_coors, to_coors,
