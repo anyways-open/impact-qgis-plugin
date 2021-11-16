@@ -310,7 +310,21 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self.layer_styling.style_routeplanning_layer(lyr, "FAILED", scenario_index)    
 
 
-    def perform_many_to_many_routeplanning(self, routing_api_obj, profile, from_coors, to_coors, scenario, scenario_index, with_routes_callback, with_failed_features_callback):
+    def perform_many_to_many_routeplanning(self, routing_api_obj, profile, from_coors, to_coors, scenario, scenario_index, with_routes_callback, with_failed_features_callback, prep_feature_at = None):
+        """
+        
+        :param routing_api_obj: 
+        :param profile: 
+        :param from_coors: 
+        :param to_coors: 
+        :param scenario: 
+        :param scenario_index: 
+        :param with_routes_callback: 
+        :param with_failed_features_callback: 
+        :param prep_feature_at: (i: number, j: number, feature: geojson) => void. This is used e.g. to set a count on featuers at a certain position in the returned matrix
+        :return: 
+        """
+        
         
         def routeplanning_many_to_many_done(routes):
             # routes: featureCollection[][]
@@ -344,6 +358,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                                 continue
         
                             routing_api_obj.patch_feature(feature)
+                            if prep_feature_at is not None:
+                                prep_feature_at(from_index, to_index, feature)
         
                             features.append(feature)
         
@@ -417,18 +433,27 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
             from_coors = extract_coordinates_array(from_coordinates, True)
             to_coors = extract_coordinates_array(to_coordinates, True)
+            
+            def add_count(i, j, feature):
+                self.log("Prepping "+str(i)+", "+str(j)+", "+str(feature))
+                try:
+                    feature['properties']['count'] = from_coordinates[i].attribute('count')
+                except:
+                    pass
 
-           
             def with_routes_callback(features):
                 self.perform_routeplanning_button.setEnabled(True)
                 self.perform_routeplanning_button.setText("Perform routeplanning again")
+                
+                # If there is a count on the departure coordinate, this count is copied to the correspondig feature
+                
                 self.createHistLayer(features, name, profile, scenario_index)
               
 
             def with_failed(failed):
                 self.createFailLayer(failed, name, profile, scenario_index)
 
-            self.perform_many_to_many_routeplanning(routing_api_obj, profile, from_coors, to_coors, scenario, scenario_index, with_routes_callback, with_failed)
+            self.perform_many_to_many_routeplanning(routing_api_obj, profile, from_coors, to_coors, scenario, scenario_index, with_routes_callback, with_failed, add_count)
         else:
             
             # We have to calculate 'N' classical routes
