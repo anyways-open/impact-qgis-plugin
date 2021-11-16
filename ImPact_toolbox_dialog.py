@@ -292,26 +292,25 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self.layer_styling.style_routeplanning_layer(lyr, profile, scenario_index)
 
 
-    def perform_many_to_many_routeplanning(self, routing_api_obj, profile, from_coors, to_coors, scenario, scenario_index, with_routes_callback):
-        
-        def createFailLayer(failed_linestrings):
-            if len(failed_linestrings) > 0:
-                self.error_user(
-                    "Not every requested route could be calculated; " + str(
-                        len(failed_linestrings)) + " routes failed. A layer with failed requests has been created")
-                histogram = feature_histogram.feature_histogram(failed_linestrings)
-                geojson = histogram.to_geojson()
-                timestr = time.strftime("%Y%m%d_%H%M%S")
-                name = "Routeplanned_failed_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
-                filename = self.path + "/" + name + ".geojson"
-                f = open(filename, "w+")
-                f.write(json.dumps(geojson))
-                f.close()
-    
-                lyr = QgsVectorLayer(filename, name, "ogr")
-                QgsProject.instance().addMapLayer(lyr)
-                self.layer_styling.style_routeplanning_layer(lyr, "FAILED", scenario_index)
+    def createFailLayer(self, failed_linestrings, name, profile, scenario_index):
+        if len(failed_linestrings) > 0:
+            self.error_user(
+                "Not every requested route could be calculated; " + str(
+                    len(failed_linestrings)) + " routes failed. A layer with failed requests has been created")
+            histogram = feature_histogram.feature_histogram(failed_linestrings)
+            geojson = histogram.to_geojson()
+            timestr = time.strftime("%Y%m%d_%H%M%S")
+            filename = self.path + "/" + name + ".geojson"
+            f = open(filename, "w+")
+            f.write(json.dumps(geojson))
+            f.close()
 
+            lyr = QgsVectorLayer(filename, name, "ogr")
+            QgsProject.instance().addMapLayer(lyr)
+            self.layer_styling.style_routeplanning_layer(lyr, "FAILED", scenario_index)    
+
+
+    def perform_many_to_many_routeplanning(self, routing_api_obj, profile, from_coors, to_coors, scenario, scenario_index, with_routes_callback, with_failed_features_callback):
         
         def routeplanning_many_to_many_done(routes):
             # routes: featureCollection[][]
@@ -351,8 +350,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                     to_index = to_index + 1
                 from_index = from_index + 1
 
+            with_failed_features_callback(failed_linestrings)
             with_routes_callback(features)
-            createFailLayer(failed_linestrings)
         
             self.perform_routeplanning_button.setEnabled(True)
             self.perform_routeplanning_button.setText("Perform routeplanning")
@@ -426,7 +425,10 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.createHistLayer(features, name, profile, scenario_index)
               
 
-            self.perform_many_to_many_routeplanning(routing_api_obj, profile, from_coors, to_coors, scenario, scenario_index, with_routes_callback)
+            def with_failed(failed):
+                self.createFailLayer(failed, name, profile, scenario_index)
+
+            self.perform_many_to_many_routeplanning(routing_api_obj, profile, from_coors, to_coors, scenario, scenario_index, with_routes_callback, with_failed)
         else:
             
             # We have to calculate 'N' classical routes
@@ -435,6 +437,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             line_layer = self.movement_pairs_layer_picker.currentLayer()
             line_features = extract_valid_geometries(self.iface, transform_layer_to_WGS84(line_layer))
             name = "Routeplanned_hist_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
+            name_failed = "Failed_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
 
             # as_point_array: [from, to][]
             as_point_array = list(map(lambda lf: lf.geometry().asPolyline(), line_features))
@@ -456,7 +459,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 departure = [line[0].y(), line[0].x()]
                 arrival = [line[1].y(), line[1].x()]
 
-                self.log("Grouping "+str(departure)+" "+str(arrival))
                 departure_str = str(departure)
                 arr_str = str(arrival)
                 
@@ -491,10 +493,15 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             # Requesting everythin at once would crash QGIS
             # So, instead, we run the routeplanning. The callback for this routeplanning will gather the results in 'results' and trigger of a new routeplanning
             results = list()
+            failed = list()
+            
+            def append_failed(failed_features):
+                failed.extend(failed_features)
+                self.log("Extended the failed list with "+str(len(failed_features))+" up to "+str(len(failed)))
+            
             def register_result_and_run_next(features):
                 if features is not None:
                     results.extend(features)
-                    self.log("Got some results, "+str(len(results))+"/"+str(target_count)+" which has "+str(len(features))+" features")
                 self.perform_routeplanning_button.setText("Performing routeplanning, "+str(len(toDo))+" left...")
     
                 # self.createHistLayer(features , name, profile, scenario_index)
@@ -502,11 +509,12 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                     self.log("Got all the features, merging them together")
                     self.perform_routeplanning_button.setEnabled(True)
                     self.perform_routeplanning_button.setText("Perform routeplanning again")
-    
                     self.createHistLayer(results , name, profile, scenario_index)
+                    self.log("Creating a fail-layer with "+str(len(failed)))
+                    self.createFailLayer(failed, name_failed, profile, scenario_index)
                 else:
                     (departures, arrivals) = toDo.pop()
-                    self.perform_many_to_many_routeplanning(routing_api_obj, profile, departures, arrivals, scenario, scenario_index, register_result_and_run_next)
+                    self.perform_many_to_many_routeplanning(routing_api_obj, profile, departures, arrivals, scenario, scenario_index, register_result_and_run_next, append_failed)
 
             register_result_and_run_next(None)
 
