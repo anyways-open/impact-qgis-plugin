@@ -7,7 +7,7 @@ from PyQt5.QtNetwork import QNetworkReply, QNetworkRequest
 from qgis.core import *
 
 standalone_mode = False
-staging_mode = True
+staging_mode = False
 
 def setStandalone():
     """
