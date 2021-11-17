@@ -24,6 +24,11 @@ class default_layer_styling:
     def __init__(self):
         pass
 
+
+    def log(self, msg):
+        QgsMessageLog.logMessage(msg, 'ImPact Toolbox', level=Qgis.Info)
+
+
     def style_impact_outline(self, qgsLayer):
         symbols = qgsLayer.renderer().symbols(QgsRenderContext())
         sym = symbols[0]
@@ -45,7 +50,7 @@ class default_layer_styling:
         
         w = 0.0
         for (lower, upper) in boundaries:
-            w = w + 0.5
+            w = w + 0.4
             
             # The positive case
             symbol = QgsSymbol.defaultSymbol(layer.geometryType()).createSimple({'offset': '0.5'})
@@ -62,15 +67,30 @@ class default_layer_styling:
             ranges.append(rng)
 
         renderer = QgsGraduatedSymbolRenderer("count", ranges)
-
+        
+        paint_effects = renderer.paintEffect().effectList()
+        for effect in paint_effects:
+            self.log("Effect str is "+str(effect))
+            if str(effect).find('QgsDropShadow') < 0:
+                continue
+            # effect is the dropShadowEffect
+            effect.setEnabled(True)
+            break
+        renderer.paintEffect().setEnabled(True)
         layer.setRenderer(renderer)
-
+        
         pal_layer = QgsPalLayerSettings()
         pal_layer.fieldName = 'count'
         pal_layer.enabled = True
+        
         format = QgsTextFormat()
         format.setColor(QColor(255, 255, 255))
         format.setBlendMode(QPainter.CompositionMode_Difference)
+        bufferSettings = QgsTextBufferSettings()
+        bufferSettings.color = QColor(255,255,255)
+        bufferSettings.setSize(1)
+        bufferSettings.setEnabled(True)
+        format.setBuffer(bufferSettings)
         pal_layer.setFormat(format)
         pal_layer.dist = -7
         pal_layer.mergeLines = True
@@ -92,19 +112,13 @@ class default_layer_styling:
         symbols = qgsLayer.renderer().symbols(QgsRenderContext())
         sym = symbols[0]
 
-        dashed_line = QgsSimpleLineSymbolLayer()
+        line_rendering = QgsSimpleLineSymbolLayer()
+        line_rendering.setUseCustomDashPattern(True)
+        line_rendering.setPenCapStyle(Qt.RoundCap)
+        line_rendering.setOffset(0.2 * offset)
 
-        dashes = [6, 2]
-        for i in range(source_index - 1):
-            dashes.append(2)
-            dashes.append(2)
-
-        dashed_line.setCustomDashVector(dashes)
-        dashed_line.setUseCustomDashPattern(True)
-        dashed_line.setPenCapStyle(Qt.RoundCap)
-        dashed_line.setOffset(0.2 * offset)
         sym.deleteSymbolLayer(0)
-        sym.appendSymbolLayer(dashed_line)
+        sym.appendSymbolLayer(line_rendering)
 
         sym.setColor(QColor(color))
         sym.setWidth(1.0)

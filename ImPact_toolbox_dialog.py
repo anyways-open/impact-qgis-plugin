@@ -277,6 +277,119 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self.query_movement_pairs_button.setEnabled(True)
             self.query_movement_pairs_button.setText("Query movement pairs")
 
+
+    def createHistLayer(self, features, name, profile, scenario_index):
+        if len(features) > 0:
+            histogram = feature_histogram.feature_histogram(features)
+            geojson = histogram.to_geojson()
+            filename = self.path + "/" + name + ".geojson"
+            f = open(filename, "w+")
+            f.write(json.dumps(geojson))
+            f.close()
+
+            lyr = QgsVectorLayer(filename, name, "ogr")
+            QgsProject.instance().addMapLayer(lyr)
+            self.layer_styling.style_routeplanning_layer(lyr, profile, scenario_index)
+
+
+    def createFailLayer(self, failed_linestrings, name, profile, scenario_index):
+        if len(failed_linestrings) > 0:
+            self.error_user(
+                "Not every requested route could be calculated; " + str(
+                    len(failed_linestrings)) + " routes failed. A layer with failed requests has been created")
+            histogram = feature_histogram.feature_histogram(failed_linestrings)
+            geojson = histogram.to_geojson()
+            timestr = time.strftime("%Y%m%d_%H%M%S")
+            filename = self.path + "/" + name + ".geojson"
+            f = open(filename, "w+")
+            f.write(json.dumps(geojson))
+            f.close()
+
+            lyr = QgsVectorLayer(filename, name, "ogr")
+            QgsProject.instance().addMapLayer(lyr)
+            self.layer_styling.style_routeplanning_layer(lyr, "FAILED", scenario_index)    
+
+
+    def perform_many_to_many_routeplanning(self, routing_api_obj, profile, from_coors, to_coors, scenario, scenario_index, with_routes_callback, with_failed_features_callback, prep_feature_at = None):
+        """
+        
+        :param routing_api_obj: 
+        :param profile: 
+        :param from_coors: 
+        :param to_coors: 
+        :param scenario: 
+        :param scenario_index: 
+        :param with_routes_callback: 
+        :param with_failed_features_callback: 
+        :param prep_feature_at: (i: number, j: number, feature: geojson) => void. This is used e.g. to set a count on featuers at a certain position in the returned matrix
+        :return: 
+        """
+        
+        
+        def routeplanning_many_to_many_done(routes):
+            # routes: featureCollection[][]
+            features = []
+            failed_linestrings = []
+        
+            from_index = 0
+            for route_list in routes["routes"]:
+                to_index = 0
+                for route in route_list:
+        
+                    if "error" in route:
+                        err_msg = route["error_message"]
+                        self.log("Route failed because of "+err_msg)
+                        fromC = list(reversed(from_coors[from_index]))
+                        toC = list(reversed(to_coors[to_index]))
+                        # Something went wrong here
+                        failed_linestrings.append({
+                            "type": "Feature",
+                            "properties": {"error_message": err_msg,
+                                           "guid": str(from_coors[from_index]) + "," + str(
+                                               to_coors[to_index])},
+                            "geometry": {
+                                "type": "LineString",
+                                "coordinates": [ fromC, toC ]
+                            }
+                        })
+                    else:
+                        for feature in route["features"]:
+                            if feature["geometry"]["type"] == "Point":
+                                continue
+        
+                            routing_api_obj.patch_feature(feature)
+                            if prep_feature_at is not None:
+                                prep_feature_at(from_index, to_index, feature)
+        
+                            features.append(feature)
+        
+                    to_index = to_index + 1
+                from_index = from_index + 1
+
+            with_failed_features_callback(failed_linestrings)
+            with_routes_callback(features)
+        
+            self.perform_routeplanning_button.setEnabled(True)
+            self.perform_routeplanning_button.setText("Perform routeplanning")
+
+        self.log("Requesting routes, isImpact? " + str(routing_api_obj.is_impact_backend))
+        
+        def onError(msg):
+            self.error_user(msg)
+            with_routes_callback(None)
+        
+        try:
+            routing_api_obj.request_all_routes(
+                from_coors, to_coors,
+                profile, routeplanning_many_to_many_done, self.error_user)
+        except Exception as e:
+            self.log("ERROR: "+repr(e))
+            self.error_user("Planning routes failed: "+str(e))
+            
+
+        return
+
+
     def run_routeplanning(self):
         self.perform_routeplanning_button.setEnabled(False)
         self.perform_routeplanning_button.setText("Planning routes, please stand by...")
@@ -302,108 +415,134 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         source_index = self.toolbox_origin_destination_or_movement.currentIndex()
         from_coordinate = None
         to_coordinates = None
+        timestr = time.strftime("%Y%m%d_%H%M%S")
+
+        name = "Routeplanned_hist_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
+
 
         if source_index == 0:
+            
+            # We have to do a matrix call, resulting in n*m features
+            
             from_layer = self.departure_layer_picker.currentLayer()
             to_layer = self.arrival_layer_picker.currentLayer()
 
             from_coordinates = extract_valid_geometries(self.iface, transform_layer_to_WGS84(from_layer))
             to_coordinates = extract_valid_geometries(self.iface, transform_layer_to_WGS84(to_layer))
+
+
+            from_coors = extract_coordinates_array(from_coordinates, True)
+            to_coors = extract_coordinates_array(to_coordinates, True)
+            
+            def add_count(i, j, feature):
+                self.log("Prepping "+str(i)+", "+str(j)+", "+str(feature))
+                try:
+                    feature['properties']['count'] = from_coordinates[i].attribute('count')
+                except:
+                    pass
+
+            def with_routes_callback(features):
+                self.perform_routeplanning_button.setEnabled(True)
+                self.perform_routeplanning_button.setText("Perform routeplanning again")
+                
+                # If there is a count on the departure coordinate, this count is copied to the correspondig feature
+                
+                self.createHistLayer(features, name, profile, scenario_index)
+              
+
+            def with_failed(failed):
+                self.createFailLayer(failed, name, profile, scenario_index)
+
+            self.perform_many_to_many_routeplanning(routing_api_obj, profile, from_coors, to_coors, scenario, scenario_index, with_routes_callback, with_failed, add_count)
         else:
+            
+            # We have to calculate 'N' classical routes
+            
+            
             line_layer = self.movement_pairs_layer_picker.currentLayer()
             line_features = extract_valid_geometries(self.iface, transform_layer_to_WGS84(line_layer))
+            name = "Routeplanned_hist_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
+            name_failed = "Failed_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
 
             # as_point_array: [from, to][]
             as_point_array = list(map(lambda lf: lf.geometry().asPolyline(), line_features))
             for array in as_point_array:
                 if len(array) != 2:
-                    self.error_user(
-                        "Some lines in " + line_layer.name() + " have intermediate points. This is not supported and might result in bugs")
+                    self.log(
+                        "Some lines in " + line_layer.name() + " have intermediate points. This is not supported and might result in bugs. Only keeping the origin and the destination")
+                    while len(array) > 2:
+                        del array[1]
 
-            from_coordinates = map(lambda array: array[0], as_point_array)
-            to_coordinates = map(lambda array: array[1], as_point_array)
+            
+            # UP next: we have a whole bunch of lines, which might have a common departure- or endpoint, so we merge those together
+            
+            grouped_per_departure_coordinate = {}
+            grouped_per_arrival_coordinate = {}
 
-        def routeplanning_done(routes):
-            # routes: featureCollection[][]
-            features = []
-            failed_linestrings = []
+            for line in as_point_array:
+                
+                departure = [line[0].y(), line[0].x()]
+                arrival = [line[1].y(), line[1].x()]
 
-            # Only used if something went wrong:
-            from_coors = extract_coordinates_array(from_coordinates)
-            to_coors = extract_coordinates_array(to_coordinates)
+                departure_str = str(departure)
+                arr_str = str(arrival)
+                
+                if departure_str in grouped_per_departure_coordinate:
+                    grouped_per_departure_coordinate[departure_str].append(arrival)
+                else:
+                    grouped_per_departure_coordinate[departure_str] = [arrival]
 
-            from_index = 0
-            for route_list in routes["routes"]:
-                to_index = 0
-                for route in route_list:
+                if arr_str in grouped_per_arrival_coordinate:
+                    grouped_per_arrival_coordinate[arr_str].append(departure)
+                else:
+                    grouped_per_arrival_coordinate[arr_str] = [departure]
 
-                    if "error" in route:
-                        # Something went wrong here
-                        failed_linestrings.append({
-                            "type": "Feature",
-                            "properties": {"error_message": (route["error_message"]),
-                                           "guid": str(from_coors[from_index]) + "," + str(
-                                               to_coors[to_index])},
-                            "geometry": {
-                                "type": "LineString",
-                                "coordinates": [from_coors[from_index], to_coors[to_index]]
-                            }
-                        })
-                    else:
-                        for feature in route["features"]:
-                            if feature["geometry"]["type"] == "Point":
-                                continue
-                                
-                            routing_api_obj.patch_feature(feature)
-                                
-                            features.append(feature)
+            # We can now pick _either_ of them calculate it. Every key in a dict means one network call, so we pick the one with the least keys
+            # What still needs to be done is appended in this list typed as: [ ([departurePOints], [arrivalPoints]) ]    
+            toDo = []
+            
+            if len(grouped_per_departure_coordinate.keys()) < len(grouped_per_arrival_coordinate.keys()):
+                # We work with one departure coordinate --> many arrivals
+                target_count = len(grouped_per_departure_coordinate.keys())
+                for (departure, arrivals) in grouped_per_departure_coordinate.items():
+                    departure = json.loads(departure) # TOtally cheating 
+                    toDo.append(([departure], arrivals))
+            else:
+                target_count = len(grouped_per_arrival_coordinate.keys())
+                for (arrival, departures) in grouped_per_arrival_coordinate.items():
+                    arrival = json.loads(arrival)
+                    toDo.append((departures, [arrival]))
 
-                    to_index = to_index + 1
-                from_index = from_index + 1
 
-            if len(features) > 0:
-                histogram = feature_histogram.feature_histogram(features)
-                geojson = histogram.to_geojson()
-                timestr = time.strftime("%Y%m%d_%H%M%S")
-                name = "Routeplanned_hist_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
-                filename = self.path + "/" + name + ".geojson"
-                f = open(filename, "w+")
-                f.write(json.dumps(geojson))
-                f.close()
+            # Allright: this is another bit of cheating.
+            # Requesting everythin at once would crash QGIS
+            # So, instead, we run the routeplanning. The callback for this routeplanning will gather the results in 'results' and trigger of a new routeplanning
+            results = list()
+            failed = list()
+            
+            def append_failed(failed_features):
+                failed.extend(failed_features)
+                self.log("Extended the failed list with "+str(len(failed_features))+" up to "+str(len(failed)))
+            
+            def register_result_and_run_next(features):
+                if features is not None:
+                    results.extend(features)
+                self.perform_routeplanning_button.setText("Performing routeplanning, "+str(len(toDo))+" left...")
+    
+                # self.createHistLayer(features , name, profile, scenario_index)
+                if len(toDo) == 0:
+                    self.log("Got all the features, merging them together")
+                    self.perform_routeplanning_button.setEnabled(True)
+                    self.perform_routeplanning_button.setText("Perform routeplanning again")
+                    self.createHistLayer(results , name, profile, scenario_index)
+                    self.log("Creating a fail-layer with "+str(len(failed)))
+                    self.createFailLayer(failed, name_failed, profile, scenario_index)
+                else:
+                    (departures, arrivals) = toDo.pop()
+                    self.perform_many_to_many_routeplanning(routing_api_obj, profile, departures, arrivals, scenario, scenario_index, register_result_and_run_next, append_failed)
 
-                lyr = QgsVectorLayer(filename, name, "ogr")
-                QgsProject.instance().addMapLayer(lyr)
-                self.layer_styling.style_routeplanning_layer(lyr, profile, scenario_index)
+            register_result_and_run_next(None)
 
-            if len(failed_linestrings) > 0:
-                self.error_user(
-                    "Not every requested route could be calculated; " + str(
-                        len(failed_linestrings)) + " routes failed. A layer with failed requests has been created")
-                histogram = feature_histogram.feature_histogram(failed_linestrings)
-                geojson = histogram.to_geojson()
-                timestr = time.strftime("%Y%m%d_%H%M%S")
-                name = "Routeplanned_failed_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
-                filename = self.path + "/" + name + ".geojson"
-                f = open(filename, "w+")
-                f.write(json.dumps(geojson))
-                f.close()
-
-                lyr = QgsVectorLayer(filename, name, "ogr")
-                QgsProject.instance().addMapLayer(lyr)
-                self.layer_styling.style_routeplanning_layer(lyr, "FAILED", scenario_index)
-
-            self.perform_routeplanning_button.setEnabled(True)
-            self.perform_routeplanning_button.setText("Perform routeplanning")
-
-        self.log("Requesting routes, isImpact? " + str(routing_api_obj.is_impact_backend))
-
-        try:
-            routing_api_obj.request_all_routes(
-                extract_coordinates_array(from_coordinates, True),
-                extract_coordinates_array(to_coordinates, True),
-                profile, routeplanning_done, self.error_user)
-        except:
-            self.error_user("Planning routes failed")
 
     def calculate_traffic_diff(self):
         zero_layer = self.zero_situation_picker.currentLayer()

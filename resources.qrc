@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/plugins/anyways_impact_toolbox">
+    <qresource prefix="/plugins/ImPact_toolbox">
         <file>icon.png</file>
     </qresource>
 </RCC>
