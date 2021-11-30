@@ -464,28 +464,39 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             name = "Routeplanned_hist_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
             name_failed = "Failed_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
 
-            # as_point_array: [from, to][]
-            as_point_array = list(map(lambda lf: lf.geometry().asPolyline(), line_features))
-            for array in as_point_array:
-                if len(array) != 2:
-                    self.log(
-                        "Some lines in " + line_layer.name() + " have intermediate points. This is not supported and might result in bugs. Only keeping the origin and the destination")
-                    while len(array) > 2:
-                        del array[1]
 
-            
+
             # UP next: we have a whole bunch of lines, which might have a common departure- or endpoint, so we merge those together
-            
+
             grouped_per_departure_coordinate = {}
             grouped_per_arrival_coordinate = {}
 
-            for line in as_point_array:
+            # Keeps track of the counts: { "departure"  {"arrival" --> count}}
+            counts = dict()
+
+            for line_feature in line_features:
+                line = line_feature.geometry().asPolyline();
+
+                if len(line) != 2:
+                    self.log(
+                        "Some lines in " + line_layer.name() + " have intermediate points. This is not supported and might result in bugs. Only keeping the origin and the destination")
+                    while len(line) > 2:
+                        del line[1]
                 
                 departure = [line[0].y(), line[0].x()]
                 arrival = [line[1].y(), line[1].x()]
 
                 departure_str = str(departure)
                 arr_str = str(arrival)
+                
+                try:
+                    count = line_feature.attribute('count')
+                    if departure_str not in counts:
+                        counts[departure_str ] = dict()
+                    counts[departure_str][arr_str] = count
+                except:
+                    # KeyError: key count not found...
+                    pass
                 
                 if departure_str in grouped_per_departure_coordinate:
                     grouped_per_departure_coordinate[departure_str].append(arrival)
@@ -498,7 +509,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                     grouped_per_arrival_coordinate[arr_str] = [departure]
 
             # We can now pick _either_ of them calculate it. Every key in a dict means one network call, so we pick the one with the least keys
-            # What still needs to be done is appended in this list typed as: [ ([departurePOints], [arrivalPoints]) ]    
+            # What still needs to be done is appended in this list typed as: [ ([departurePoints], [arrivalPoints]) ]    
             toDo = []
             
             if len(grouped_per_departure_coordinate.keys()) < len(grouped_per_arrival_coordinate.keys()):
@@ -519,7 +530,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             # So, instead, we run the routeplanning. The callback for this routeplanning will gather the results in 'results' and trigger of a new routeplanning
             results = list()
             failed = list()
-            
+
             def append_failed(failed_features):
                 failed.extend(failed_features)
                 self.log("Extended the failed list with "+str(len(failed_features))+" up to "+str(len(failed)))
@@ -531,15 +542,24 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
     
                 # self.createHistLayer(features , name, profile, scenario_index)
                 if len(toDo) == 0:
-                    self.log("Got all the features, merging them together")
                     self.perform_routeplanning_button.setEnabled(True)
                     self.perform_routeplanning_button.setText("Perform routeplanning again")
                     self.createHistLayer(results , name, profile, scenario_index)
-                    self.log("Creating a fail-layer with "+str(len(failed)))
-                    self.createFailLayer(failed, name_failed, profile, scenario_index)
+                    if (len(failed) > 0):
+                        self.log("Creating a fail-layer with "+str(len(failed)))
+                        self.createFailLayer(failed, name_failed, profile, scenario_index)
                 else:
                     (departures, arrivals) = toDo.pop()
-                    self.perform_many_to_many_routeplanning(routing_api_obj, profile, departures, arrivals, scenario, scenario_index, register_result_and_run_next, append_failed)
+                    def add_count(i, j, feature):
+                        dep_str = str(departures[i])
+                        arr_str = str(arrivals[i])
+                        if dep_str not in counts:
+                            return
+                        if arr_str not in counts[dep_str]:
+                            return
+                        feature['properties']['count'] = counts[dep_str][arr_str]
+                        
+                    self.perform_many_to_many_routeplanning(routing_api_obj, profile, departures, arrivals, scenario, scenario_index, register_result_and_run_next, append_failed, add_count)
 
             register_result_and_run_next(None)
 
