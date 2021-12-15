@@ -65,6 +65,8 @@ class feature_histogram(object):
 
         def standard_deviation(ls):
             n = len(ls)
+            if n == 0:
+                return 0
             mean = sum(ls) / n
             var = sum((x - mean)**2 for x in ls) / n
             std_dev = var ** 0.5
@@ -76,6 +78,10 @@ class feature_histogram(object):
         all_counts_abs = []
         for key in self.histogram:
             all_counts_abs.append(abs(self.histogram[key]["properties"]["count"]))
+        
+        if bin_count_target > len(all_counts_abs):
+            # There are more target bins then actual features: we tone done the expectation here
+            bin_count_target = len(all_counts_abs)
         
         count_hist = {}
         for c in all_counts_abs:
