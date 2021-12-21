@@ -27,19 +27,19 @@ For development purposes:
 
 ### In QGIS:
 
-- The 'plugin reloader' didn't work for me
 - Use 'First Aid' plugin for better debugging
+
+`sudo pip3 install pb_tool` 
 
 Convert ui to python
 
-`pyuic5 --import-from=. -o ImPact_toolbox_dialog_base.py ImPact_toolbox_dialog_base.ui`
+` pyrcc5 -o resources.py resources.qrc` to create 'resources.py'
 
-OR
+In combination with the plugin reloader: configure the plugin reloader with the following script
 
-`cd src && pyuic5 ImPact_toolbox_dialog_base.ui -o ImPact_toolbox_dialog_base.py && cd -`
-
-Build plugin:
-Install pb_tool:
-
-`sudo pip3 install pb_tool` or alternatively, just zip 'src' together
-  
+```
+cd <write home location here>/anyways-open/impact-qgis-plugin
+pb_tool compile
+pb_tool zip
+pb_tool deploy --no-confirm
+```

@@ -32,6 +32,7 @@ from qgis.PyQt.QtWidgets import QAction
 from .ImPact_toolbox_dialog import ToolBoxDialog
 from .impact import routing_api
 from qgis.core import *
+from .resources import *
 
 
 class ToolBox:
