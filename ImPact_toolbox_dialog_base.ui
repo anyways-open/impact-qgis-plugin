@@ -60,7 +60,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>3</number>
    </property>
    <widget class="QWidget" name="settings_tab">
     <attribute name="title">
@@ -109,10 +109,7 @@
       <item row="11" column="1">
        <widget class="QLabel" name="label_5">
         <property name="text">
-         <string>The URL of one of your impact instances. Copy and paste the URL of any
-                                        instance here, the tool will figure out which instances exist. You can pick any
-                                        later on
-                                    </string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The URL of one of your impact instances. Copy and paste the URL of any instance here, the tool will figure out which instances exist. You can pick any later on.&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -145,9 +142,7 @@
       <item row="14" column="1">
        <widget class="QLabel" name="label_6">
         <property name="text">
-         <string>This is the path of the current project. All intermediate files (output from
-                                        routeplanning, ...) will be saved here as geoJson.
-                                    </string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This is the path of the current project. All intermediate files (output from routeplanning, ...) will be saved here as geoJson.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="scaledContents">
          <bool>false</bool>
@@ -264,9 +259,7 @@
       <item row="2" column="1">
        <widget class="QLabel" name="label_22">
         <property name="text">
-         <string>A polygon marking the boundaries where the commuters live. Note that all
-                                        commuters are bundled to the centerpoint of the municipality
-                                    </string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A polygon marking the boundaries where the commuters live. Note that all commuters are bundled to the centerpoint of the municipality.&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -351,9 +344,7 @@
       <item row="7" column="1">
        <widget class="QLabel" name="label_28">
         <property name="text">
-         <string>Make sure this area is big enough. Only works in Belgium; can be the same as
-                                        locations of departure
-                                    </string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Make sure this area is big enough. Only works in Belgium; can be the same as locations of departure.&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -400,9 +391,7 @@
       <item row="1" column="1">
        <widget class="QLabel" name="label_15">
         <property name="text">
-         <string>Calculate routes between multiple departure points and multiple arrival
-                                        points
-                                    </string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Calculate routes between multiple departure points and multiple arrival points&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
       </item>
@@ -450,9 +439,7 @@
       <item row="8" column="1">
        <widget class="QLabel" name="label_10">
         <property name="text">
-         <string>Select which vehicle to plan and it behaves. Read below how the profile
-                                        behaves
-                                    </string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select which vehicle to plan and it behaves. Read below how the profile behaves&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
       </item>
@@ -514,9 +501,7 @@
            <item row="1" column="1">
             <widget class="QLabel" name="label_12">
              <property name="text">
-              <string>Every point in this layer will be considered a departure
-                                                            point
-                                                        </string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Every point in this layer will be considered a departure point.&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
             </widget>
            </item>
@@ -533,9 +518,7 @@
            <item row="3" column="1">
             <widget class="QLabel" name="label_14">
              <property name="text">
-              <string>Every point in this layer will be used as arrival point.
-                                                            To do matrix routing, select the same as departure
-                                                        </string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Every point in this layer will be used as arrival point.&lt;/p&gt;&lt;p&gt;To do matrix routing, select the same as departure&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
             </widget>
            </item>
@@ -641,9 +624,7 @@
       <item row="0" column="1">
        <widget class="QLabel" name="label_32">
         <property name="text">
-         <string>Compare two layers of weighted segments to calculate a traffic shift. These
-                                        can be constructed in the routeplanning tab
-                                    </string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Compare two layers of weighted segments to calculate a traffic shift. These can be constructed in the routeplanning tab.&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>

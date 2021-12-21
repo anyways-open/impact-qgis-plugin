@@ -103,7 +103,7 @@ class Ui_APIRequestDialogBase(object):
         self.movement_pairs_tab = QtWidgets.QWidget()
         self.movement_pairs_tab.setObjectName("movement_pairs_tab")
         self.formLayoutWidget_5 = QtWidgets.QWidget(self.movement_pairs_tab)
-        self.formLayoutWidget_5.setGeometry(QtCore.QRect(10, 0, 1131, 661))
+        self.formLayoutWidget_5.setGeometry(QtCore.QRect(10, 0, 1131, 678))
         self.formLayoutWidget_5.setObjectName("formLayoutWidget_5")
         self.movement_pairs_form = QtWidgets.QFormLayout(self.formLayoutWidget_5)
         self.movement_pairs_form.setContentsMargins(0, 0, 0, 0)
@@ -169,7 +169,7 @@ class Ui_APIRequestDialogBase(object):
         self.routeplanning_tab = QtWidgets.QWidget()
         self.routeplanning_tab.setObjectName("routeplanning_tab")
         self.formLayoutWidget_2 = QtWidgets.QWidget(self.routeplanning_tab)
-        self.formLayoutWidget_2.setGeometry(QtCore.QRect(0, 20, 1181, 591))
+        self.formLayoutWidget_2.setGeometry(QtCore.QRect(0, 20, 1181, 613))
         self.formLayoutWidget_2.setObjectName("formLayoutWidget_2")
         self.routeplanning_form = QtWidgets.QFormLayout(self.formLayoutWidget_2)
         self.routeplanning_form.setContentsMargins(0, 0, 0, 0)
@@ -219,7 +219,7 @@ class Ui_APIRequestDialogBase(object):
         self.tab1 = QtWidgets.QWidget()
         self.tab1.setObjectName("tab1")
         self.formLayoutWidget_4 = QtWidgets.QWidget(self.tab1)
-        self.formLayoutWidget_4.setGeometry(QtCore.QRect(0, 10, 1091, 161))
+        self.formLayoutWidget_4.setGeometry(QtCore.QRect(0, 10, 1091, 260))
         self.formLayoutWidget_4.setObjectName("formLayoutWidget_4")
         self.formLayout_3 = QtWidgets.QFormLayout(self.formLayoutWidget_4)
         self.formLayout_3.setContentsMargins(0, 0, 0, 0)
@@ -246,7 +246,7 @@ class Ui_APIRequestDialogBase(object):
         self.tab_2 = QtWidgets.QWidget()
         self.tab_2.setObjectName("tab_2")
         self.formLayoutWidget_3 = QtWidgets.QWidget(self.tab_2)
-        self.formLayoutWidget_3.setGeometry(QtCore.QRect(0, 10, 1141, 131))
+        self.formLayoutWidget_3.setGeometry(QtCore.QRect(0, 10, 1141, 154))
         self.formLayoutWidget_3.setObjectName("formLayoutWidget_3")
         self.formLayout_2 = QtWidgets.QFormLayout(self.formLayoutWidget_3)
         self.formLayout_2.setContentsMargins(0, 0, 0, 0)
@@ -309,7 +309,7 @@ class Ui_APIRequestDialogBase(object):
         self.main_tab.addTab(self.traffic_diff_tab, "")
 
         self.retranslateUi(APIRequestDialogBase)
-        self.main_tab.setCurrentIndex(0)
+        self.main_tab.setCurrentIndex(3)
         self.toolbox_origin_destination_or_movement.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(APIRequestDialogBase)
 
@@ -321,27 +321,17 @@ class Ui_APIRequestDialogBase(object):
 "                "))
         self.label.setText(_translate("APIRequestDialogBase", "Api-Key"))
         self.label_2.setText(_translate("APIRequestDialogBase", "A personal string which acts as key, provided to you by ANYWAYS BV."))
-        self.label_5.setText(_translate("APIRequestDialogBase", "The URL of one of your impact instances. Copy and paste the URL of any\n"
-"                                        instance here, the tool will figure out which instances exist. You can pick any\n"
-"                                        later on\n"
-"                                    "))
+        self.label_5.setText(_translate("APIRequestDialogBase", "<html><head/><body><p>The URL of one of your impact instances. Copy and paste the URL of any instance here, the tool will figure out which instances exist. You can pick any later on.</p><p/></body></html>"))
         self.label_4.setText(_translate("APIRequestDialogBase", "Project directory"))
-        self.label_6.setText(_translate("APIRequestDialogBase", "This is the path of the current project. All intermediate files (output from\n"
-"                                        routeplanning, ...) will be saved here as geoJson.\n"
-"                                    "))
+        self.label_6.setText(_translate("APIRequestDialogBase", "<html><head/><body><p>This is the path of the current project. All intermediate files (output from routeplanning, ...) will be saved here as geoJson.</p></body></html>"))
         self.label_3.setText(_translate("APIRequestDialogBase", "ImPact URL"))
         self.save_settings_button.setText(_translate("APIRequestDialogBase", "Save settings"))
         self.save_area_outline.setText(_translate("APIRequestDialogBase", "Save the outline of this Impact instance as a layer"))
         self.save_impact_url_button.setText(_translate("APIRequestDialogBase", "Save impact instance"))
         self.main_tab.setTabText(self.main_tab.indexOf(self.settings_tab), _translate("APIRequestDialogBase", "Settings"))
-        self.label_19.setText(_translate("APIRequestDialogBase", "The FOD Mobiliteit did a survey in 2017 collecting how people moved from\n"
-"                                        their home to their work. This open data set can be queried to construct a\n"
-"                                        movement pair layer.\n"
-"                                    "))
+        self.label_19.setText(_translate("APIRequestDialogBase", "The FOD Mobiliteit did a survey in 2017 collecting how people moved from their home to their work. This open data set can be queried to construct a movement pair layer.  For more information, see https://mobilit.belgium.be/nl/mobiliteit/woon_werkverkeer 2017"))
         self.label_21.setText(_translate("APIRequestDialogBase", "Home area"))
-        self.label_22.setText(_translate("APIRequestDialogBase", "A polygon marking the boundaries where the commuters live. Note that all\n"
-"                                        commuters are bundled to the centerpoint of the municipality\n"
-"                                    "))
+        self.label_22.setText(_translate("APIRequestDialogBase", "<html><head/><body><p>A polygon marking the boundaries where the commuters live. Note that all commuters are bundled to the centerpoint of the municipality.</p><p/></body></html>"))
         self.label_23.setText(_translate("APIRequestDialogBase", "Work locations"))
         self.label_24.setText(_translate("APIRequestDialogBase", "The locations where the commuters work"))
         self.include_cyclists.setText(_translate("APIRequestDialogBase", "Include cyclist counts"))
@@ -350,30 +340,20 @@ class Ui_APIRequestDialogBase(object):
         self.include_public_transport.setText(_translate("APIRequestDialogBase", "Include public transport counts"))
         self.label_25.setText(_translate("APIRequestDialogBase", "Transport modes to count"))
         self.label_27.setText(_translate("APIRequestDialogBase", "Make sure this area is big enough. Only works in Belgium"))
-        self.label_28.setText(_translate("APIRequestDialogBase", "Make sure this area is big enough. Only works in Belgium; can be the same as\n"
-"                                        locations of departure\n"
-"                                    "))
+        self.label_28.setText(_translate("APIRequestDialogBase", "<html><head/><body><p>Make sure this area is big enough. Only works in Belgium; can be the same as locations of departure.</p><p/></body></html>"))
         self.query_movement_pairs_button.setText(_translate("APIRequestDialogBase", "Query movement pairs"))
         self.main_tab.setTabText(self.main_tab.indexOf(self.movement_pairs_tab), _translate("APIRequestDialogBase", "Load movement pairs"))
-        self.label_15.setText(_translate("APIRequestDialogBase", "Calculate routes between multiple departure points and multiple arrival\n"
-"                                        points\n"
-"                                    "))
+        self.label_15.setText(_translate("APIRequestDialogBase", "<html><head/><body><p>Calculate routes between multiple departure points and multiple arrival points</p><p/></body></html>"))
         self.label_29.setText(_translate("APIRequestDialogBase", "All individual road segments will be grouped and counted"))
         self.label_7.setText(_translate("APIRequestDialogBase", "Scenario"))
         self.label_8.setText(_translate("APIRequestDialogBase", "Use real-life routeplanning or a scenario from your ImPact instance"))
         self.label_9.setText(_translate("APIRequestDialogBase", "Profile"))
-        self.label_10.setText(_translate("APIRequestDialogBase", "Select which vehicle to plan and it behaves. Read below how the profile\n"
-"                                        behaves\n"
-"                                    "))
+        self.label_10.setText(_translate("APIRequestDialogBase", "<html><head/><body><p>Select which vehicle to plan and it behaves. Read below how the profile behaves</p><p/></body></html>"))
         self.profile_explanation.setText(_translate("APIRequestDialogBase", "(Select a profile first. The profile info will be shown here)"))
         self.label_11.setText(_translate("APIRequestDialogBase", "Departure"))
-        self.label_12.setText(_translate("APIRequestDialogBase", "Every point in this layer will be considered a departure\n"
-"                                                            point\n"
-"                                                        "))
+        self.label_12.setText(_translate("APIRequestDialogBase", "<html><head/><body><p>Every point in this layer will be considered a departure point.</p><p/></body></html>"))
         self.label_13.setText(_translate("APIRequestDialogBase", "Arrival"))
-        self.label_14.setText(_translate("APIRequestDialogBase", "Every point in this layer will be used as arrival point.\n"
-"                                                            To do matrix routing, select the same as departure\n"
-"                                                        "))
+        self.label_14.setText(_translate("APIRequestDialogBase", "<html><head/><body><p>Every point in this layer will be used as arrival point.</p><p>To do matrix routing, select the same as departure</p><p/></body></html>"))
         self.toolbox_origin_destination_or_movement.setTabText(self.toolbox_origin_destination_or_movement.indexOf(self.tab1), _translate("APIRequestDialogBase", "Plan routes between point layers"))
         self.label_17.setText(_translate("APIRequestDialogBase", "Select a movement layer"))
         self.label_18.setText(_translate("APIRequestDialogBase", "Use a layer with movement data (e.g. loaded from file or\n"
@@ -385,9 +365,7 @@ class Ui_APIRequestDialogBase(object):
         self.main_tab.setTabText(self.main_tab.indexOf(self.routeplanning_tab), _translate("APIRequestDialogBase", "Routeplanning"))
         self.label_30.setText(_translate("APIRequestDialogBase", "Zero situation"))
         self.label_31.setText(_translate("APIRequestDialogBase", "The weighted segment layer of the original, zero situation."))
-        self.label_32.setText(_translate("APIRequestDialogBase", "Compare two layers of weighted segments to calculate a traffic shift. These\n"
-"                                        can be constructed in the routeplanning tab\n"
-"                                    "))
+        self.label_32.setText(_translate("APIRequestDialogBase", "<html><head/><body><p>Compare two layers of weighted segments to calculate a traffic shift. These can be constructed in the routeplanning tab.</p><p/></body></html>"))
         self.label_33.setText(_translate("APIRequestDialogBase", "New situation"))
         self.label_34.setText(_translate("APIRequestDialogBase", "The weighted segment layer of the new (hypothetical) situation."))
         self.calculate_traffic_shift_button.setText(_translate("APIRequestDialogBase", "Calculate traffic shift"))

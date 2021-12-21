@@ -27,7 +27,7 @@ import os
 import time
 from qgis.PyQt import (QtWidgets, uic)
 from qgis.core import *
-
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 
 from .impact import fod_api, impact_api, transform_layer_to_WGS84, extract_valid_geometries, routing_api, \
     feature_histogram, layer_as_geojson_features, previous_state_tracker, create_layer_from_file, \
@@ -51,6 +51,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         # self.<objectname>, and you can use autoconnect slots - see
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
+
+       # QCoreApplication.installTranslator("")
         self.setupUi(self)
 
         self.iface = iface
