@@ -33,7 +33,8 @@ For development purposes:
 
 Convert ui to python
 
-` pyrcc5 -o resources.py resources.qrc` to create 'resources.py'
+` pyrcc5 -o resources.py resources.qrc` to create 'resources.py' (needed if e.g. the icon changes)
+`cd i18n && lrelease *.ts` to regenerate the compiled translations (needed if translations are added)
 
 In combination with the plugin reloader: configure the plugin reloader with the following script
 

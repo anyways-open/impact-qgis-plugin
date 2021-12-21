@@ -32,6 +32,7 @@ from qgis.PyQt.QtWidgets import QAction
 from .ImPact_toolbox_dialog import ToolBoxDialog
 from .impact import routing_api
 from qgis.core import *
+# The import 'from .resources import *' is needed to load the resources (e.g. the icon)
 from .resources import *
 
 
@@ -55,7 +56,7 @@ class ToolBox:
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
-            'ToolBox_{}.qm'.format(locale))
+            'ImPact_toolbox_{}.qm'.format(locale))
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
