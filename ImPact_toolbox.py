@@ -168,7 +168,7 @@ class ToolBox:
         icon_path = ':/plugins/anyways_impact_toolbox/icon.png'
         self.add_action(
             icon_path,
-            text=self.tr(u'ImPact ToolBox 0.6.1'),
+            text=self.tr(u'ImPact ToolBox'),
             callback=self.open_dialog,
             parent=self.iface.mainWindow())
 
