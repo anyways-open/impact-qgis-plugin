@@ -35,6 +35,7 @@ Convert ui to python
 
 ` pyrcc5 -o resources.py resources.qrc` to create 'resources.py' (needed if e.g. the icon changes)
 `cd i18n && lrelease *.ts` to regenerate the compiled translations (needed if translations are added)
+`pylupdate5 -verbose ImPact_toolbox_dialog.py ImPact_toolbox.py -ts i18n/ImPact_toolbox_dynamic_nl.ts i18n/ImPact_toolbox_dynamic_en.ts`
 
 In combination with the plugin reloader: configure the plugin reloader with the following script
 
@@ -44,3 +45,19 @@ pb_tool compile
 pb_tool zip
 pb_tool deploy --no-confirm
 ```
+
+## Translations
+
+[Preliminary reading](https://doc.qt.io/qt-5/linguist-overview.html)
+
+Dynamic strings are strings wrapped in `self.tr("text to translate")` in `ImPact_toolbox_dialog.py`
+To extract them into the translation files, run:
+
+```
+pylupdate5 -verbose ImPact_toolbox_dialog.py ImPact_toolbox.py -ts i18n/ImPact_toolbox_dynamic_nl.ts i18n/ImPact_toolbox_dynamic_en.ts
+```
+
+lupdate *.ui *.py -ts i18n/test_en.ts i18n/ImPact_toolbox_dialog_nl
+
+
+At last, run `cd i18n && lrelease *.ts` to convert the `.ts` files into `.qm`-files. The `.qm`-files are actually used by the application.
