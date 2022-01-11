@@ -48,16 +48,36 @@ pb_tool deploy --no-confirm
 
 ## Translations
 
-[Preliminary reading](https://doc.qt.io/qt-5/linguist-overview.html)
+All string on the UI can be translated:
 
-Dynamic strings are strings wrapped in `self.tr("text to translate")` in `ImPact_toolbox_dialog.py`
-To extract them into the translation files, run:
+- The strings in .ui-files are translatable automatically
+- In the source code, translatable strings are strings wrapped in `self.tr("text to translate")` in `ImPact_toolbox_dialog.py`.
 
-```
-pylupdate5 -verbose ImPact_toolbox_dialog.py ImPact_toolbox.py -ts i18n/ImPact_toolbox_dynamic_nl.ts i18n/ImPact_toolbox_dynamic_en.ts
-```
+The process in a nutshell:
 
-lupdate *.ui *.py -ts i18n/test_en.ts i18n/ImPact_toolbox_dialog_nl
+1. Extract them into intermediate .ts-files
+2. Add translations with QtLinguist 
+3. Convert the .ts-files into .qm files
+4. Recompile the plugin
+
+[Extra reading](https://doc.qt.io/qt-5/linguist-overview.html)
 
 
-At last, run `cd i18n && lrelease *.ts` to convert the `.ts` files into `.qm`-files. The `.qm`-files are actually used by the application.
+### 1. Extract ts files
+
+To extract the translatable string into the translation files, run:
+
+```pylupdate5 -verbose *.ui *.py -ts i18n/ImPact_toolbox_en.ts i18n/ImPact_toolbox_nl.ts```
+
+This will not overwrite earlier translation work, it'll only append new strings to translate.
+
+
+### 2. Translate files
+
+QT Linguist is available on the package repos.
+The [windows installer can be found here](https://download.qt.io/linguist_releases/qtlinguistinstaller-5.12.2.exe.mirrorlist)
+
+### 3.
+
+To compile the message files, run `cd i18n && lrelease *.ts`
+

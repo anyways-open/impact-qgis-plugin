@@ -134,22 +134,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.save_impact_url()  # TODO this should not be needed when login works
 
-    # noinspection PyMethodMayBeStatic
-    def tr(self, message):
-        """Get the translation for a string using Qt translation API.
-
-        We implement this ourselves since we do not inherit QObject.
-
-        :param message: String for translation.
-        :type message: str, QString
-
-        :returns: Translated version of message.
-        :rtype: QString
-        """
-        # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
-        return QCoreApplication.translate('ToolBox', message)
-
-
     def remove_auth_components(self):
         self.label.hide()
         self.api_key_field.hide()
@@ -161,7 +145,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
     def update_instance_picker(self, projects):
         self.log("Got " + str(len(projects)) + " projects!")
         if (len(projects) == 0):
-            self.error_user("Could not load any project file")
+            self.error_user(self.tr("Could not load any project file"))
             return
 
         clean_parts = map(lambda p: p["clientId"] + "/" + p["id"], projects)
@@ -269,7 +253,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self.query_movement_pairs_button.setEnabled(True)
 
         def onError(err):
-            self.error_user("Could not query the FOD-API: " + err)
+            self.error_user(self.tr("Could not query the FOD-API: ") + err)
             self.query_movement_pairs_button.setEnabled(True)
 
         d = fod.request(from_features, to_features, withData, onError, mode)
@@ -290,10 +274,10 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
         if len(mode) == 0:
             self.query_movement_pairs_button.setEnabled(False)
-            self.query_movement_pairs_button.setText("Please select at least one mode to query movement pairs")
+            self.query_movement_pairs_button.setText(self.tr("Please select at least one mode to query movement pairs"))
         else:
             self.query_movement_pairs_button.setEnabled(True)
-            self.query_movement_pairs_button.setText("Query movement pairs")
+            self.query_movement_pairs_button.setText(self.tr("Query movement pairs"))
 
 
     def createHistLayer(self, features, name, profile, scenario_index):
@@ -313,8 +297,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
     def createFailLayer(self, failed_linestrings, name, profile, scenario_index):
         if len(failed_linestrings) > 0:
             self.error_user(
-                "Not every requested route could be calculated; " + str(
-                    len(failed_linestrings)) + " routes failed. A layer with failed requests has been created")
+                self.tr("Not every requested route could be calculated; ") + str(
+                    len(failed_linestrings)) + self.tr(" routes failed. A layer with failed requests has been created"))
             histogram = feature_histogram.feature_histogram(failed_linestrings)
             geojson = histogram.to_geojson()
             timestr = time.strftime("%Y%m%d_%H%M%S")
@@ -388,7 +372,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             with_routes_callback(features)
         
             self.perform_routeplanning_button.setEnabled(True)
-            self.perform_routeplanning_button.setText("Perform routeplanning")
+            self.perform_routeplanning_button.setText(self.tr("Perform routeplanning"))
 
         self.log("Requesting routes, isImpact? " + str(routing_api_obj.is_impact_backend))
         
@@ -402,7 +386,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 profile, routeplanning_many_to_many_done, self.error_user)
         except Exception as e:
             self.log("ERROR: "+repr(e))
-            self.error_user("Planning routes failed: "+str(e))
+            self.error_user(self.tr("Planning routes failed: ")+str(e))
             
 
         return
@@ -410,7 +394,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def run_routeplanning(self):
         self.perform_routeplanning_button.setEnabled(False)
-        self.perform_routeplanning_button.setText("Planning routes, please stand by...")
+        self.perform_routeplanning_button.setText(self.tr("Planning routes, please stand by..."))
 
         key = self.api_key_field.text()
         profile = self.profile_picker.currentText()
@@ -461,7 +445,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
             def with_routes_callback(features):
                 self.perform_routeplanning_button.setEnabled(True)
-                self.perform_routeplanning_button.setText("Perform routeplanning again")
+                self.perform_routeplanning_button.setText(self.tr("Perform routeplanning again"))
                 
                 # If there is a count on the departure coordinate, this count is copied to the correspondig feature
                 
@@ -561,7 +545,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 # self.createHistLayer(features , name, profile, scenario_index)
                 if len(toDo) == 0:
                     self.perform_routeplanning_button.setEnabled(True)
-                    self.perform_routeplanning_button.setText("Perform routeplanning again")
+                    self.perform_routeplanning_button.setText(self.tr("Perform routeplanning again"))
                     self.createHistLayer(results , name, profile, scenario_index)
                     if (len(failed) > 0):
                         self.log("Creating a fail-layer with "+str(len(failed)))
@@ -587,7 +571,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         new_layer = self.new_situation_picker.currentLayer()
 
         if zero_layer == new_layer:
-            self.error_user("The selected layers are the same - not much traffic shift to calculate")
+            self.error_user(self.tr("The selected layers are the same - not much traffic shift to calculate"))
             return
 
         geo_features = layer_as_geojson_features(self.iface, zero_layer)
@@ -624,7 +608,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
             picker.clear()
 
-            picker.addItem("Plan with a recent version of OpenStreetMap")
+            picker.addItem(self.tr("Plan with a recent version of OpenStreetMap"))
 
             for item in scenarios:
                 key = instance_name + " " + item
@@ -666,7 +650,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         explanations = self.profile_descriptions
         if (explanations is None):
             return
-        explanation = "Select a profile above. What the profile does will be shown here..."
+        explanation = self.tr("Select a profile above. What the profile does will be shown here...")
         if current_profile in explanations:
             explanation = explanations[current_profile]
         self.profile_explanation.setText(explanation)
