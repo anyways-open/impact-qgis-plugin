@@ -82,7 +82,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.path = prjpath
 
         # Set routing api options
-        self.scenario_picker.addItem("Plan with a recent version of OpenStreetMap")
+        self.scenario_picker.addItem(self.tr("Plan with a recent version of OpenStreetMap"))
         self.profile_picker.addItems(self.profile_keys)
 
         # Set layer filters
@@ -133,6 +133,22 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.remove_auth_components()
 
         self.save_impact_url()  # TODO this should not be needed when login works
+
+    # noinspection PyMethodMayBeStatic
+    def tr(self, message):
+        """Get the translation for a string using Qt translation API.
+
+        We implement this ourselves since we do not inherit QObject.
+
+        :param message: String for translation.
+        :type message: str, QString
+
+        :returns: Translated version of message.
+        :rtype: QString
+        """
+        # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
+        return QCoreApplication.translate('ToolBox', message)
+
 
     def remove_auth_components(self):
         self.label.hide()
