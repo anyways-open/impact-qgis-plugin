@@ -14,7 +14,7 @@ jobs:
     - name: "Detect correct zip file"
       run: |
         FILE=`ls anyways-impact-toolbox-[0-9.]*.zip`
-        VERSION=`echo $FILE | sed "s/.*\([0-9.]*[0-9]\).zip/\1/"`
+        VERSION=`echo $FILE | sed "s/anyways-impact-toolbox-\([0-9.]*[0-9]\).zip/\1/"`
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "FILE=$FILE" >> $GITHUB_ENV
     - name: "print zipfile"
