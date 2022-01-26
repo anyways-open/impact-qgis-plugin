@@ -26,4 +26,4 @@ jobs:
           LICENSE
           *.zip
     - name: Publish To QGIS repo.
-      run: python ./deployment/plugin_upload.py -u xivk -w ${{ secrets.QGIS_REPO_SECRET }} ${{ env.FILE}}
+      run: python ./deployment/plugin_upload.py -u xivk -w ${{ secrets.QGIS_REPO_SECRET }} ${{ env.FILE }}
