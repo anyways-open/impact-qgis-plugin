@@ -1,9 +1,8 @@
-name: production
+name: staging
 on:
   push:
     branches:
-      - develop
-      - feature/new-version
+      - master
 jobs:
   build:
     runs-on: ubuntu-latest
