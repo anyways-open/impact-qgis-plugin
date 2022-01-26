@@ -22,7 +22,7 @@ jobs:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         automatic_release_tag: "latest"
         prerelease: true
-        title: "v$VERSION-dev"
+        title: "v${{ env.VERSION }}-dev"
         files: |
           LICENSE
           *.zip
