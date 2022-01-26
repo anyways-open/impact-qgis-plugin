@@ -1,4 +1,4 @@
- name: "build plugin"
+name: "build plugin"
 description: "Builds the plugin and the needed resources"
 runs:
   using: "composite"
