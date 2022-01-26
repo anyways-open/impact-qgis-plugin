@@ -1,4 +1,4 @@
-name: staging
+name: production
 on:
   push:
     branches:
