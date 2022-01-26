@@ -18,6 +18,8 @@ Installation and user documentation
 
 The documentation for users can be found [here](https://docs.anyways.eu/qgis-plugin/)
 
+The source of the user documentation is kept [in the anyways/docs repo](https://github.com/anyways-open/docs/tree/develop/src/qgis-plugin)
+
 The rest of this document contains technical instructions for developers.
 
 Development hints
