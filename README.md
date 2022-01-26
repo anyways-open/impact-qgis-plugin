@@ -20,6 +20,9 @@ The documentation for users can be found [here](https://docs.anyways.eu/qgis-plu
 
 The source of the user documentation is kept [in the anyways/docs repo](https://github.com/anyways-open/docs/tree/develop/src/qgis-plugin)
 
+This plugin should be installed via the QGIS plugin manager. The plugin is in [the QGIS Python Plugins repository](https://plugins.qgis.org/plugins/anyways_impact_toolbox/)
+The latest unstable version can be found [here](https://github.com/anyways-open/impact-qgis-plugin/releases)
+
 The rest of this document contains technical instructions for developers.
 
 Development hints
