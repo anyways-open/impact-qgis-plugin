@@ -11,5 +11,9 @@ jobs:
     - uses: actions/checkout@v2
     - name: "Build"
       uses: "./.github/actions/build-plugin"
-    - name: "Print zip name"
-      run: "echo 'If this were production, we'd now be publishing anyways-impact-toolbox-${{ steps.regex-match.outputs.group1 }}.zip && ls"
+    - name: "Detect correct zip file"
+      run |
+        FILE=`ls anyways-impact-toolbox-[0-9.]*.zip`
+        echo {FILE}={$FILE} >> $GITHUB_ENV
+    - name: "print zipfile"
+      run: "echo If this were a production build, we WOULD be pulishing $FILE"
