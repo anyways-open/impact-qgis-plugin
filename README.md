@@ -13,7 +13,14 @@ This plugin has been developed to automate accessing the [ANYWAYS](https://www.a
 - **Impact analysis** (e.g., traffic shift due to the closure of a level crossing)
 - etc.
 
+Installation and user documentation
+-----------------------------------
 
+The documentation for users can be found [here](https://docs.anyways.eu/qgis-plugin/)
+
+The source of the user documentation is kept [in the anyways/docs repo](https://github.com/anyways-open/docs/tree/develop/src/qgis-plugin)
+
+The rest of this document contains technical instructions for developers.
 
 Development hints
 -----------------
