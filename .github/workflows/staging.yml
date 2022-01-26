@@ -14,6 +14,6 @@ jobs:
     - name: "Detect correct zip file"
       run: |
         FILE=`ls anyways-impact-toolbox-[0-9.]*.zip`
-        echo {FILE}={$FILE} >> $GITHUB_ENV
+        echo "FILE=$FILE" >> $GITHUB_ENV
     - name: "print zipfile"
       run: "echo If this were a production build, we WOULD be pulishing $FILE"
