@@ -133,6 +133,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.remove_auth_components()
 
         self.save_impact_url()  # TODO this should not be needed when login works
+        self.log("version 2022-01-26 14:19")
 
     def remove_auth_components(self):
         self.label.hide()
@@ -334,6 +335,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             failed_linestrings = []
         
             from_index = 0
+            self.log("Routeplanning finished and JSON parsed; inspecting the routes now")
             for route_list in routes["routes"]:
                 to_index = 0
                 for route in route_list:
@@ -368,9 +370,12 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                     to_index = to_index + 1
                 from_index = from_index + 1
 
+            self.log("First parsing or routeplanned routes finished, calling callbacks")
+
             with_failed_features_callback(failed_linestrings)
             with_routes_callback(features)
-        
+            self.log("Routeplanning callbacks have run callbacks")
+    
             self.perform_routeplanning_button.setEnabled(True)
             self.perform_routeplanning_button.setText(self.tr("Perform routeplanning"))
 
@@ -410,7 +415,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             index = label[1 + label.index(" "):]
             scenario = label[:label.index(" ")].replace("/", "_") + index
             instance_url = self.impact_api.routing_url_for_instance(instance, index)
-            self.log("Running routeplanning against " + instance_url)
+            self.log("Initing routeplanning against " + instance_url)
             routing_api_obj = routing_api.routing_api(key, instance_url, True, self.api_key_field.text())
 
         features = None
@@ -422,6 +427,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         name = "Routeplanned_hist_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
 
 
+        # Which input sources do we have to use?
         if source_index == 0:
             
             # We have to do a matrix call, resulting in n*m features
@@ -437,8 +443,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             to_coors = extract_coordinates_array(to_coordinates, True)
             
             def add_count(i, j, feature):
-                self.log("Prepping "+str(i)+", "+str(j)+", "+str(feature))
                 try:
+                    # If the origin point had had a 'count'-attribute, this is applied onto the feature
                     feature['properties']['count'] = from_coordinates[i].attribute('count')
                 except:
                     pass

@@ -72,15 +72,15 @@ def fetch_non_blocking(url, callback, onerror, postData=None, headers=None):
         if "Content-Type" not in headers:
             headers["Content-Type"] = "application/json"
         QgsMessageLog.logMessage(
-            "POST-request to " + url + " with headers " + json.dumps(headers) + " and data" + json.dumps(postData),
+            "POST-request to " + url + " with headers " + json.dumps(headers),
             'ImPact Toolbox', level=Qgis.Info)
-        print(
-            "POST-request to " + url + " with headers " + json.dumps(headers) + " and data" + json.dumps(postData))
 
         req = request.Request(url, data=json.dumps(postData).encode('UTF-8'),
                               headers=headers)  # this will make the method "POST"
         resp = request.urlopen(req)
         raw = resp.read().decode("UTF-8")
+        QgsMessageLog.logMessage(
+            "POST-request to " + url + "finished")
         callback(raw)
         return
 
