@@ -12,7 +12,7 @@ jobs:
     - name: "Build"
       uses: "./.github/actions/build-plugin"
     - name: "Detect correct zip file"
-      run |
+      run: |
         FILE=`ls anyways-impact-toolbox-[0-9.]*.zip`
         echo {FILE}={$FILE} >> $GITHUB_ENV
     - name: "print zipfile"
