@@ -330,17 +330,25 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         
         
         def routeplanning_many_to_many_done(routes):
+            self.log(str(from_coors))
+            self.log(str(to_coors))
+
             # routes: featureCollection[][]
             features = []
             failed_linestrings = []
         
             from_index = 0
             self.log("Routeplanning finished and JSON parsed; inspecting the routes now")
+            self.log(str(len(routes["routes"])))
             for route_list in routes["routes"]:
+                self.log(str(len(route_list)))
                 to_index = 0
                 for route in route_list:
         
+                    
                     if "error" in route:
+                        self.log("from_index" + str(from_index))
+                        self.log("to_index" + str(to_index))
                         err_msg = route["error_message"]
                         self.log("Route failed because of "+err_msg)
                         fromC = list(reversed(from_coors[from_index]))
@@ -391,9 +399,15 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 profile, routeplanning_many_to_many_done, self.error_user)
         except Exception as e:
             self.log("ERROR: "+repr(e))
-            self.error_user(self.tr("Planning routes failed: ")+str(e))
+            self.log("Trying again after routing error.")
+            try:
+                routing_api_obj.request_all_routes(
+                    from_coors, to_coors,
+                    profile, routeplanning_many_to_many_done, self.error_user)
+            except Exception as e:
+                self.log("ERROR: "+repr(e))
+                self.error_user(self.tr("Planning routes failed: ")+str(e))
             
-
         return
 
 
@@ -560,7 +574,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                     (departures, arrivals) = toDo.pop()
                     def add_count(i, j, feature):
                         dep_str = str(departures[i])
-                        arr_str = str(arrivals[i])
+                        arr_str = str(arrivals[j])
                         if dep_str not in counts:
                             return
                         if arr_str not in counts[dep_str]:
