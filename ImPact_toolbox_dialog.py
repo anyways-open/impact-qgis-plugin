@@ -82,7 +82,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.path = prjpath
 
         # Set routing api options
-        self.scenario_picker.addItem(self.tr("Plan with a recent version of OpenStreetMap"))
+        self.scenario_picker.addItem(self.tr("Plan with a recent version of OpenStreetMap"), "routing-api")
         self.profile_picker.addItems(self.profile_keys)
 
         # Set layer filters
@@ -410,11 +410,11 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             # Plan against the routing api
             routing_api_obj = routing_api.routing_api(key)
         else:
-            instance = self.impact_instance_selector.currentText()
             label = self.scenario_picker.currentText()
+            branch = self.scenario_picker.currentData()
             index = label[1 + label.index(" "):]
             scenario = label[:label.index(" ")].replace("/", "_") + index
-            instance_url = self.impact_api.routing_url_for_instance(instance, index)
+            instance_url = self.impact_api.routing_url_for_instance(branch)
             self.log("Initing routeplanning against " + instance_url)
             routing_api_obj = routing_api.routing_api(key, instance_url, True, self.api_key_field.text())
 
@@ -607,20 +607,20 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.log("Current instance name: " + instance_name)
 
         def withScenarioList(scenarios):
-            self.log("Found scenarios " + ", ".join(scenarios))
-
             picker = self.scenario_picker
             self.state_tracker.pause_loading()
 
             picker.clear()
 
-            picker.addItem(self.tr("Plan with a recent version of OpenStreetMap"))
+            picker.addItem(self.tr("Plan with a recent version of OpenStreetMap"), "routing-api")
 
             for item in scenarios:
-                key = instance_name + " " + item
+                name = item[0]
+                branch = item[1]
+                key = instance_name + " " + name
                 if picker.findText(key) < 0:
                     # Item hasn't been added previously
-                    picker.addItem(key)
+                    picker.addItem(key, branch)
             self.state_tracker.resume_loading()
 
         found_instances = self.impact_api.detect_instances(instance_name, withScenarioList)

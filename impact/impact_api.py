@@ -10,7 +10,8 @@ from . import fetch_non_blocking, staging_mode
 BASE_URL_IMPACT =  "https://www.anyways.eu/impact/"
 BASE_URL_IMPACT_STAGING = "https://staging.anyways.eu/impact/"
 BASE_URL_IMPACT_META = "https://www.anyways.eu/impact/"  if not staging_mode else "https://staging.anyways.eu/impact/"
-API_PATH = "publish/"
+API_PATH = "https://api.anyways.eu/publish/"
+IMPACT_API_PATH = "https://api.anyways.eu/impact/canary/"
 
 SUPPORTED_PROFILES = ["car", "car.shortest", "car.opa", "car.default", "car.classifications",
                       "car.classifications_aggressive", "pedestrian", "pedestrian.shortest", "pedestrian.default",
@@ -72,7 +73,10 @@ class impact_api(object):
             # Then we know there is an instance there
             return reply.errorString().endswith("Internal Server Error")
 
-    def routing_url_for_instance(self, instancename, scenario_name):
+    def routing_url_for_instance(self, branch):
+        return API_PATH + branch
+
+    def routing_url_for_instance_legacy(self, instancename, scenario_name):
         base = BASE_URL_IMPACT
         if staging_mode:
             base = BASE_URL_IMPACT_STAGING
@@ -85,22 +89,23 @@ class impact_api(object):
         """
 
         if self.oauth_token == None:
-            # No auth-token given, revert to old testing
+            # No auth-token given, use plugin call.
 
-            def test_scenario(scenario):
-                return self._test_url(self.routing_url_for_instance(instance_name, scenario) + "/routing/many-to-many")
+            def handleScenarios(scenarios):
+                QgsMessageLog.logMessage("scenarios:" + str(scenarios), 'ImPact Toolbox', level=Qgis.Info)
+                found = []
+                for scenario in scenarios:
+                    name = scenario["name"]
+                    if name == None or len(name) == 0:
+                        name = "Scenario " + scenario["functionalName"]
 
-            found = []
-            if test_scenario("0"):
-                found.append("0")
-            i = 1
-            while i < 100:
-                if test_scenario(str(i)):
-                    found.append(str(i))
-                else:
-                    break
-                i = i + 1
-            callback(found)
+                    branchId = scenario["branchId"]
+                    if branchId.startswith("opa/"):
+                        branchId = branchId[4:]
+                    found.append((name, branchId))
+                callback(found)
+
+            self.load_project(instance_name, handleScenarios, print)
             return
 
         def handleProjects(allProjects):
@@ -166,4 +171,47 @@ class impact_api(object):
         fetch_non_blocking(url, withData, onError, postData=None, headers={
             "Accept": "*/*",
             "Authorization": self.oauth_token
+        })
+
+    def load_project(self, path, callback, onError):
+        """
+        Fetches the project details from an enpoint that doesn't require authentication.
+        
+        https://api.anyways.eu/impact/swagger/index.html#/Plugin/Plugin_GetProject
+        
+        :param callback: 
+        :return: 
+        """
+
+        QgsMessageLog.logMessage("current path in load_project:" + path, 'ImPact Toolbox', level=Qgis.Info)
+
+        parts = path.split("/")
+        QgsMessageLog.logMessage(str(len(parts)), 'ImPact Toolbox', level=Qgis.Info)
+        if len(parts) < 2:
+            QgsMessageLog.logMessage("parts not ok", 'ImPact Toolbox', level=Qgis.Info)
+            callback([])
+            return
+        
+        
+        organizationFunctionalName = parts[0]
+        functionalName = parts[1]
+
+        def withData(response):
+            if response == "":
+                onError("empty result, probably invalid token")
+                return
+            # try:
+            QgsMessageLog.logMessage("repsonse ok", 'ImPact Toolbox', level=Qgis.Info)
+            project = json.loads(response)
+            QgsMessageLog.logMessage("project:" + str(project), 'ImPact Toolbox', level=Qgis.Info)
+            scenarios = project["scenarios"]
+            callback(scenarios)
+            # except Exception:
+            #     QgsMessageLog.logMessage("failed"), 'ImPact Toolbox', level=Qgis.Info)
+            #     onError("Invalid response, probably a wrong token")
+
+        url = IMPACT_API_PATH + "plugin/project/" + organizationFunctionalName + "/" + functionalName
+        QgsMessageLog.logMessage("fetching:" + url, 'ImPact Toolbox', level=Qgis.Info)
+        fetch_non_blocking(url, withData, onError, postData=None, headers={
+            "Accept": "*/*",
         })
