@@ -82,7 +82,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.path = prjpath
 
         # Set routing api options
-        self.scenario_picker.addItem(self.tr("Plan with a recent version of OpenStreetMap"))
+        self.scenario_picker.addItem(self.tr("Plan with a recent version of OpenStreetMap"), "routing-api")
         self.profile_picker.addItems(self.profile_keys)
         
         # Set mergemode options
@@ -336,17 +336,25 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         
         
         def routeplanning_many_to_many_done(routes):
+            self.log(str(from_coors))
+            self.log(str(to_coors))
+
             # routes: featureCollection[][]
             features = []
             failed_linestrings = []
         
             from_index = 0
             self.log("Routeplanning finished and JSON parsed; inspecting the routes now")
+            self.log(str(len(routes["routes"])))
             for route_list in routes["routes"]:
+                self.log(str(len(route_list)))
                 to_index = 0
                 for route in route_list:
         
+                    
                     if "error" in route:
+                        self.log("from_index" + str(from_index))
+                        self.log("to_index" + str(to_index))
                         err_msg = route["error_message"]
                         self.log("Route failed because of "+err_msg)
                         fromC = list(reversed(from_coors[from_index]))
@@ -397,9 +405,15 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 profile, routeplanning_many_to_many_done, self.error_user)
         except Exception as e:
             self.log("ERROR: "+repr(e))
-            self.error_user(self.tr("Planning routes failed: ")+str(e))
+            self.log("Trying again after routing error.")
+            try:
+                routing_api_obj.request_all_routes(
+                    from_coors, to_coors,
+                    profile, routeplanning_many_to_many_done, self.error_user)
+            except Exception as e:
+                self.log("ERROR: "+repr(e))
+                self.error_user(self.tr("Planning routes failed: ")+str(e))
             
-
         return
 
 
@@ -420,11 +434,11 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             # Plan against the routing api
             routing_api_obj = routing_api.routing_api(key)
         else:
-            instance = self.impact_instance_selector.currentText()
             label = self.scenario_picker.currentText()
+            branch = self.scenario_picker.currentData()
             index = label[1 + label.index(" "):]
             scenario = label[:label.index(" ")].replace("/", "_") + index
-            instance_url = self.impact_api.routing_url_for_instance(instance, index)
+            instance_url = self.impact_api.routing_url_for_instance(branch)
             self.log("Initing routeplanning against " + instance_url)
             routing_api_obj = routing_api.routing_api(key, instance_url, True, self.api_key_field.text())
 
@@ -570,7 +584,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                     (departures, arrivals) = toDo.pop()
                     def add_count(i, j, feature):
                         dep_str = str(departures[i])
-                        arr_str = str(arrivals[i])
+                        arr_str = str(arrivals[j])
                         if dep_str not in counts:
                             return
                         if arr_str not in counts[dep_str]:
@@ -617,20 +631,20 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.log("Current instance name: " + instance_name)
 
         def withScenarioList(scenarios):
-            self.log("Found scenarios " + ", ".join(scenarios))
-
             picker = self.scenario_picker
             self.state_tracker.pause_loading()
 
             picker.clear()
 
-            picker.addItem(self.tr("Plan with a recent version of OpenStreetMap"))
+            picker.addItem(self.tr("Plan with a recent version of OpenStreetMap"), "routing-api")
 
             for item in scenarios:
-                key = instance_name + " " + item
+                name = item[0]
+                branch = item[1]
+                key = instance_name + " " + name
                 if picker.findText(key) < 0:
                     # Item hasn't been added previously
-                    picker.addItem(key)
+                    picker.addItem(key, branch)
             self.state_tracker.resume_loading()
 
         found_instances = self.impact_api.detect_instances(instance_name, withScenarioList)
