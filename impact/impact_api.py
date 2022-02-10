@@ -7,7 +7,7 @@ from qgis.core import Qgis, QgsMessageLog, QgsBlockingNetworkRequest
 
 from . import fetch_non_blocking, staging_mode
 
-BASE_URL_IMPACT =  "https://www.anyways.eu/impact/"
+BASE_URL_IMPACT =  "https://api.anyways.eu/"
 BASE_URL_IMPACT_STAGING = "https://staging.anyways.eu/impact/"
 BASE_URL_IMPACT_META = "https://www.anyways.eu/impact/"  if not staging_mode else "https://staging.anyways.eu/impact/"
 API_PATH = "publish/"
@@ -72,11 +72,11 @@ class impact_api(object):
             # Then we know there is an instance there
             return reply.errorString().endswith("Internal Server Error")
 
-    def routing_url_for_instance(self, instancename, scenario_name):
+    def routing_url_for_instance(self, token, instance = ""):
         base = BASE_URL_IMPACT
         if staging_mode:
             base = BASE_URL_IMPACT_STAGING
-        return base + API_PATH + instancename + "/" + scenario_name
+        return base + API_PATH + token + "/" + instance
 
     def detect_instances(self, instance_name, callback):
         """

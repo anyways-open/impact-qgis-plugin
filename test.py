@@ -91,7 +91,7 @@ def test_impact():
     assert ("labo/herentals" == clean)
     clean_url = imp.routing_url_for_instance(clean, "1")
     print(clean_url)
-    assert ("https://staging.anyways.eu/impact/publish/labo/herentals/1" == clean_url)
+    assert ("https://api.anyways.eu/publish/labo/herentals/1" == clean_url)
 
 
 def test_profiles():
@@ -103,17 +103,16 @@ def test_profiles():
 
 
 def test_routing_matrix():
-    impact_api.BASE_URL_IMPACT = "https://staging.anyways.eu/impact/"
+    impact_api.BASE_URL_IMPACT = "https://staging.anyways.eu/api/impact/"
     impact = impact_api.impact_api()
-    routing = routing_api.routing_api(testkey, impact.routing_url_for_instance("wechel", "1"), True)
+    routing = routing_api.routing_api(testkey, impact.routing_url_for_instance("99142096-ff71-47ee-b267-c85ab97c8dc8"), True)
 
     def withRoutes(routes):
         print("Got a response!")
 
     routes = routing.request_all_routes(
-        [[4.786241054534912, 51.266909567178125], [4.782700538635254, 51.26288161430283]],
-        [[4.789180755615234, 51.26488220835512]],
-        "bicycle.shortest", withRoutes, print)
+        [[4.77929 ,51.26195]], [[4.78835,51.26484]],
+        "bicycle.short", withRoutes, print)
 
 
 def test_impact_get_projects():
@@ -146,12 +145,12 @@ def test_boundaries():
 
 def test_all():
     print("Testing all")
+    test_impact()
     test_boundaries()
     test_profiles()
     test_routing_matrix()
     test_routeplanning()
     test_hist_diff()
-    test_impact()
     test_fod_api()
     test_traffic_shift()
     # test_impact_get_projects()

@@ -84,7 +84,10 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         # Set routing api options
         self.scenario_picker.addItem(self.tr("Plan with a recent version of OpenStreetMap"))
         self.profile_picker.addItems(self.profile_keys)
-
+        
+        # Set mergemode options
+        self.mergemode.addItem(self.tr("Create segments and count the number of routes going over them"))
+        self.mergemode.addItem(self.tr("Create one line for every route"))
         # Set layer filters
 
         self.departure_layer_picker.setFilters(QgsMapLayerProxyModel.PointLayer)
@@ -128,6 +131,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         state_tracker.init_and_connect("profile_picker", self.profile_picker, self.scenario_picker)
         state_tracker.init_and_connect("zero_situation_picker", self.zero_situation_picker)
         state_tracker.init_and_connect("new_situation_picker", self.new_situation_picker)
+        state_tracker.init_and_connect("routeplanning_mode", self.mergemode)
         state_tracker.init_and_connect_textfield("impact_url", self.impact_url_textfield)
         # disable components for the next version which require auth
         self.remove_auth_components()
@@ -316,6 +320,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
     def perform_many_to_many_routeplanning(self, routing_api_obj, profile, from_coors, to_coors, scenario, scenario_index, with_routes_callback, with_failed_features_callback, prep_feature_at = None):
         """
         
+        Helper method
+        
         :param routing_api_obj: 
         :param profile: 
         :param from_coors: 
@@ -398,6 +404,10 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
 
     def run_routeplanning(self):
+        """
+        THe main handler of the "perform routeplanning button"
+        :return: 
+        """
         self.perform_routeplanning_button.setEnabled(False)
         self.perform_routeplanning_button.setText(self.tr("Planning routes, please stand by..."))
 
