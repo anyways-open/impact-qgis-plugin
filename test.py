@@ -89,7 +89,7 @@ def test_impact():
     clean = impact.impact_api.extract_instance_name(url)
     print(clean)
     assert ("labo/herentals" == clean)
-    clean_url = imp.routing_url_for_instance(clean, "1")
+    clean_url = imp.routing_url_for_instance_legacy(clean, "1")
     print(clean_url)
     assert ("https://api.anyways.eu/publish/labo/herentals/1" == clean_url)
 

@@ -85,9 +85,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.scenario_picker.addItem(self.tr("Plan with a recent version of OpenStreetMap"), "routing-api")
         self.profile_picker.addItems(self.profile_keys)
         
-        # Set mergemode options
-        self.mergemode.addItem(self.tr("Create segments and count the number of routes going over them"))
-        self.mergemode.addItem(self.tr("Create one line for every route"))
         # Set layer filters
 
         self.departure_layer_picker.setFilters(QgsMapLayerProxyModel.PointLayer)
@@ -286,18 +283,80 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
 
     def createHistLayer(self, features, name, profile, scenario_index):
-        if len(features) > 0:
-            histogram = feature_histogram.feature_histogram(features)
-            geojson = histogram.to_geojson()
-            filename = self.path + "/" + name + ".geojson"
-            f = open(filename, "w+")
-            f.write(json.dumps(geojson))
-            f.close()
+        if len(features) <= 0:
+            return
+        
+        histogram = feature_histogram.feature_histogram(features)
+        geojson = histogram.to_geojson()
+        filename = self.path + "/" + name + ".geojson"
+        f = open(filename, "w+")
+        f.write(json.dumps(geojson))
+        f.close()
 
-            lyr = QgsVectorLayer(filename, name, "ogr")
-            QgsProject.instance().addMapLayer(lyr)
-            self.layer_styling.style_routeplanning_layer(lyr, profile, scenario_index)
+        lyr = QgsVectorLayer(filename, name, "ogr")
+        QgsProject.instance().addMapLayer(lyr)
+        self.layer_styling.style_routeplanning_layer(lyr, profile, scenario_index)
 
+    def createLineLayer(self, features, name, profile, scenario_index):
+        """
+        
+        :param features: feature[][]
+        :param name: 
+        :param profile: 
+        :param scenario_index: 
+        :return: 
+        """
+        
+        if len(features) <= 0:
+            return
+        
+        lines = list()
+        for segments in features:
+            coordinates = list()
+            for segment in segments:
+                if segment["geometry"]["type"] != "LineString":
+                    continue
+                
+                coordinates.extend(segment["geometry"]["coordinates"][:-1])
+                
+            coordinates.append(segments[-1]["geometry"]["coordinates"][-1])
+            
+            propertiesLastSegment = segments[-1]["properties"]
+            
+            properties = {}
+            def copyProp(key):
+                if key in propertiesLastSegment:
+                    properties[key] = propertiesLastSegment[key]
+
+            copyProp("time")
+            copyProp("count")
+            copyProp("distance")
+            copyProp("profile")
+
+            lines.append(
+                {
+                    "type":"Feature",
+                    "properties":properties,
+                    "geometry":{
+                        "type":"LineString",
+                        "coordinates": coordinates
+                    }
+                }
+            )
+        
+        self.log(json.dumps(lines))
+        timestr = time.strftime("%Y%m%d_%H%M%S")
+        filename = self.path + "/" + name + ".geojson"
+        f = open(filename, "w+")
+        f.write(json.dumps({
+            "type": "FeatureCollection",
+            "features":lines
+        }))
+        f.close()
+
+        lyr = QgsVectorLayer(filename, name, "ogr")
+        QgsProject.instance().addMapLayer(lyr)
+        self.layer_styling.style_routeplanning_layer(lyr, profile, scenario_index)
 
     def createFailLayer(self, failed_linestrings, name, profile, scenario_index):
         if len(failed_linestrings) > 0:
@@ -398,11 +457,12 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         def onError(msg):
             self.error_user(msg)
             with_routes_callback(None)
-        
+
         try:
             routing_api_obj.request_all_routes(
                 from_coors, to_coors,
                 profile, routeplanning_many_to_many_done, self.error_user)
+        
         except Exception as e:
             self.log("ERROR: "+repr(e))
             self.log("Trying again after routing error.")
@@ -412,14 +472,14 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                     profile, routeplanning_many_to_many_done, self.error_user)
             except Exception as e:
                 self.log("ERROR: "+repr(e))
-                self.error_user(self.tr("Planning routes failed: ")+str(e))
+                self.error_user(self.tr("Planning routes failed:")+" "+str(e))
+                
             
-        return
 
 
     def run_routeplanning(self):
         """
-        THe main handler of the "perform routeplanning button"
+        The main handler of the "perform routeplanning button"
         :return: 
         """
         self.perform_routeplanning_button.setEnabled(False)
@@ -442,6 +502,10 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self.log("Initing routeplanning against " + instance_url)
             routing_api_obj = routing_api.routing_api(key, instance_url, True, self.api_key_field.text())
 
+        # If 0: create a histogram (default
+        # If 1: create a single linestring for every feature
+        mergemode = self.mergemode.currentIndex()
+    
         features = None
         source_index = self.toolbox_origin_destination_or_movement.currentIndex()
         from_coordinate = None
@@ -458,6 +522,13 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             
             from_layer = self.departure_layer_picker.currentLayer()
             to_layer = self.arrival_layer_picker.currentLayer()
+            
+            if from_layer is None or to_layer is None:
+                self.error_user(self.tr("Select two point layers first"))
+                self.perform_routeplanning_button.setEnabled(True)
+                self.perform_routeplanning_button.setText(self.tr("Perform routeplanning"))
+                
+                return
 
             from_coordinates = extract_valid_geometries(self.iface, transform_layer_to_WGS84(from_layer))
             to_coordinates = extract_valid_geometries(self.iface, transform_layer_to_WGS84(to_layer))
@@ -479,8 +550,10 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 
                 # If there is a count on the departure coordinate, this count is copied to the correspondig feature
                 
-                self.createHistLayer(features, name, profile, scenario_index)
-              
+                if mergemode == 0:
+                    self.createHistLayer(features, name, profile, scenario_index)
+                else:
+                    self.createLineLayer(features, name, profile, scenario_index)
 
             def with_failed(failed):
                 self.createFailLayer(failed, name, profile, scenario_index)
@@ -558,9 +631,9 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
 
             # Allright: this is another bit of cheating.
-            # Requesting everythin at once would crash QGIS
+            # Requesting everything at once would crash QGIS
             # So, instead, we run the routeplanning. The callback for this routeplanning will gather the results in 'results' and trigger of a new routeplanning
-            results = list()
+            results = list() # : feature[][]
             failed = list()
 
             def append_failed(failed_features):
@@ -569,14 +642,24 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             
             def register_result_and_run_next(features):
                 if features is not None:
-                    results.extend(features)
+                    results.append(features)
                 self.perform_routeplanning_button.setText("Performing routeplanning, "+str(len(toDo))+" left...")
     
                 # self.createHistLayer(features , name, profile, scenario_index)
                 if len(toDo) == 0:
                     self.perform_routeplanning_button.setEnabled(True)
                     self.perform_routeplanning_button.setText(self.tr("Perform routeplanning again"))
-                    self.createHistLayer(results , name, profile, scenario_index)
+                    
+                    if mergemode == 0:
+                        # THe 'hist layer' expects a flattened list of segments
+                        flattened = list()
+                        for element in results:
+                            flattened.extend(element)
+                        self.createHistLayer(flattened , name, profile, scenario_index)
+                    else:
+                        self.createLineLayer(results , name, profile, scenario_index)
+                    
+                    
                     if (len(failed) > 0):
                         self.log("Creating a fail-layer with "+str(len(failed)))
                         self.createFailLayer(failed, name_failed, profile, scenario_index)

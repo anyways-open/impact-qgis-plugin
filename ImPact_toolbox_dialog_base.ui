@@ -426,14 +426,14 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
+      <item row="6" column="1">
        <widget class="QLabel" name="label_16">
         <property name="text">
          <string/>
         </property>
        </widget>
       </item>
-      <item row="6" column="1">
+      <item row="8" column="1">
        <widget class="QTabWidget" name="toolbox_origin_destination_or_movement">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
@@ -543,24 +543,24 @@
         </widget>
        </widget>
       </item>
-      <item row="7" column="0">
+      <item row="9" column="0">
        <widget class="QLabel" name="label_9">
         <property name="text">
          <string>Profile</string>
         </property>
        </widget>
       </item>
-      <item row="7" column="1">
+      <item row="9" column="1">
        <widget class="QComboBox" name="profile_picker"/>
       </item>
-      <item row="8" column="1">
+      <item row="10" column="1">
        <widget class="QLabel" name="label_10">
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select which vehicle to plan and it behaves. Read below how the profile behaves&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
       </item>
-      <item row="9" column="1">
+      <item row="11" column="1">
        <widget class="QLabel" name="profile_explanation">
         <property name="font">
          <font>
@@ -574,13 +574,24 @@
         </property>
        </widget>
       </item>
-      <item row="10" column="1">
-       <widget class="QComboBox" name="mergemode"/>
+      <item row="5" column="1">
+       <widget class="QComboBox" name="mergemode">
+        <item>
+         <property name="text">
+          <string>Create one line per segments and count sum the number of routes going over them</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Create one line for every route</string>
+         </property>
+        </item>
+       </widget>
       </item>
-      <item row="10" column="0">
+      <item row="5" column="0">
        <widget class="QLabel" name="label_26">
         <property name="text">
-         <string>Merge</string>
+         <string>Merging?</string>
         </property>
        </widget>
       </item>
