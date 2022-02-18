@@ -167,7 +167,10 @@ class impact_api(object):
             for element in parsed:
                 type = element["type"]
                 profile = element["name"]
-                profiles.append(type+"."+profile)
+                if name == "":
+                    profiles.append(type)
+                else:
+                    profiles.append(type+"."+profile)
             self.supported_profiles[path] = profiles
             self.log("Got supported profiles from "+url+": "+", ".join(profiles))
             callback(profiles)
