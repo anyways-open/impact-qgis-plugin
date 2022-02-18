@@ -32,7 +32,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 
 from .impact import fod_api, impact_api, transform_layer_to_WGS84, extract_valid_geometries, routing_api, \
     feature_histogram, layer_as_geojson_features, previous_state_tracker, create_layer_from_file, \
-    extract_coordinates_array, default_layer_styling
+    extract_coordinates_array, default_layer_styling, staging_mode
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -55,6 +55,11 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
        # QCoreApplication.installTranslator("")
         self.setupUi(self)
+        
+        if staging_mode:
+            self.warn("Debug build using ANYWAYS testing server")
+            
+        self.log("Staging mode: "+str(staging_mode))
 
         self.iface = iface
         self.impact_api = None
@@ -754,8 +759,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def update_scenario_picker(self):
         instance_name = self.impact_instance_selector.currentText()
-        self.log("Current instance name: " + instance_name)
-
         def withScenarioList(scenarios):
             picker = self.scenario_picker
             self.state_tracker.pause_loading()
@@ -773,7 +776,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                     picker.addItem(key, branch)
             self.state_tracker.resume_loading()
 
-        found_instances = self.impact_api.detect_instances(instance_name, withScenarioList)
+        self.impact_api.detect_scenarios(instance_name, withScenarioList)
 
     def update_profile_picker(self):
         """
@@ -787,13 +790,18 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
         index = self.scenario_picker.currentIndex()
         if (index == 0):
-            # This is the live API
+            # This is the live API; these profiles were loaded in 'profile_keys'
             self.log("Setting profiles: " + ",".join(self.profile_keys))
             self.profile_picker.addItems(self.profile_keys)
         else:
             # An impact instance
-            text = self.scenario_picker.currentText()
-            self.profile_picker.addItems(impact_api.SUPPORTED_PROFILES)
+            index = self.scenario_picker.currentIndex() - 1
+            instance_name = self.impact_instance_selector.currentText()
+            if instance_name != "":
+                def callback(profiles):
+                    self.profile_picker.addItems(profiles)
+                self.impact_api.get_supported_profiles(instance_name, index, callback)
+                 
         self.state_tracker.resume_loading()
 
     def update_profile_explanation(self):
@@ -809,6 +817,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         explanation = self.tr("Select a profile above. What the profile does will be shown here...")
         if current_profile in explanations:
             explanation = explanations[current_profile]
+        else:
+            explanation = self.tr("No explanation is available for this profile")
         self.profile_explanation.setText(explanation)
 
     def log(self, msg):

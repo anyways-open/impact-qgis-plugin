@@ -141,10 +141,15 @@ def test_boundaries():
     boundaries = hist.natural_boundaries()
     print(boundaries)
 
-
+def test_fetch_impact_profiles():
+    api = impact_api.impact_api()
+    def callback(profiles):
+        
+    api.get_supported_profiles("6d5f8c0e-2027-427c-abc7-5450ec3e4a68", print)
 
 def test_all():
     print("Testing all")
+    test_fetch_impact_profiles()
     test_impact()
     test_boundaries()
     test_profiles()

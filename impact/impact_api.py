@@ -7,8 +7,8 @@ from qgis.core import Qgis, QgsMessageLog, QgsBlockingNetworkRequest
 
 from . import fetch_non_blocking, staging_mode
 
-BASE_URL_IMPACT =  "https://api.anyways.eu/"
 BASE_URL_IMPACT_STAGING = "https://staging.anyways.eu/impact/"
+BASE_URL_IMPACT =  "https://api.anyways.eu/" if not staging_mode else BASE_URL_IMPACT_STAGING
 BASE_URL_IMPACT_META = "https://www.anyways.eu/impact/"  if not staging_mode else "https://staging.anyways.eu/impact/"
 API_PATH = "https://api.anyways.eu/publish/"
 IMPACT_API_PATH = "https://api.anyways.eu/impact/canary/"
@@ -41,6 +41,8 @@ def extract_instance_name(url):
 
 
 class impact_api(object):
+    
+    
 
     def __init__(self, oauth_token=None):
         """
@@ -51,7 +53,15 @@ class impact_api(object):
             self.oauth_token = None
         else:
             self.oauth_token = oauth_token.strip().strip("\n")
+        # Cache for the available projects
         self.available_projects = None
+        
+        # Cache for scenarios in every project
+        self.available_scenarios = dict()
+
+        # Cache for supported profiles per token, dict {token --> string[]}
+        self.supported_profiles = {}
+        
 
     def log(self, msg):
         QgsMessageLog.logMessage(msg, 'ImPact Toolbox', level=Qgis.Info)
@@ -80,19 +90,23 @@ class impact_api(object):
         base = BASE_URL_IMPACT
         if staging_mode:
             base = BASE_URL_IMPACT_STAGING
-        return base + API_PATH + token + "/" + instance
+        return API_PATH + token + "/" + instance
 
-    def detect_instances(self, instance_name, callback):
+    def detect_scenarios(self, instance_name, callback):
         """
         Constructs all base URLS that are supported by this instance.
-        :return: (via callback) a list of subparts where routeplanning was found, e.g. ["0", "1", "2", "3"]
+        :return: (via callback) a list of subparts where routeplanning was found + their token, e.g. [("0", "abcdef..."), ("1","qsdfqsdf"), ("2",...), ...]
         """
+
+        if instance_name in self.available_scenarios :
+            # Already cached
+            callback(self.available_scenarios[instance_name])
 
         if self.oauth_token == None:
             # No auth-token given, use plugin call.
 
             def handleScenarios(scenarios):
-                QgsMessageLog.logMessage("scenarios:" + str(scenarios), 'ImPact Toolbox', level=Qgis.Info)
+                QgsMessageLog.logMessage("Got scenarios via legacy call:" + str(scenarios), 'ImPact Toolbox', level=Qgis.Info)
                 found = []
                 for scenario in scenarios:
                     name = scenario["name"]
@@ -103,9 +117,10 @@ class impact_api(object):
                     if branchId.startswith("opa/"):
                         branchId = branchId[4:]
                     found.append((name, branchId))
+                self.available_scenarios[instance_name] = found
                 callback(found)
 
-            self.load_project(instance_name, handleScenarios, print)
+            self.__load_project(instance_name, handleScenarios, print)
             return
 
         def handleProjects(allProjects):
@@ -114,10 +129,57 @@ class impact_api(object):
                 if project_name != instance_name:
                     continue
 
+                self.available_scenarios[instance_name] = project["scenarioIds"]
                 # Project found!
                 callback(project["scenarioIds"])
 
         self.load_available_projects(handleProjects, print)
+
+
+
+    def get_supported_profiles(self, instance_name, index, callback):
+        def _callback(scenarios):
+            scenario_path = scenarios[index]
+            if(type(scenario_path) is tuple):
+                scenario_path = scenario_path[1]
+            self.__get_supported_profiles(scenario_path, callback)
+        self.detect_scenarios(instance_name, _callback)
+        
+        
+    def __get_supported_profiles(self, path, callback):
+        """
+        Fetches the supported profiles for the project from https://staging.anyways.eu/api/impact/publish/<token>/profiles
+        
+        If the call fails, the default list is reteruned
+        
+        :param index: the number of the scenario 
+        :param callback: 
+        :return: "type.profile"[]
+        """
+
+        if path in self.supported_profiles:
+            callback(self.supported_profiles[path])
+        url = BASE_URL_IMPACT + "/publish/"+path+"/profiles"
+        
+        def withData(data):
+            profiles = []
+            parsed = json.loads(data)["profiles"]
+            for element in parsed:
+                type = element["type"]
+                profile = element["name"]
+                profiles.append(type+"."+profile)
+            self.supported_profiles[path] = profiles
+            self.log("Got supported profiles from "+url+": "+", ".join(profiles))
+            callback(profiles)
+            
+        def onError():
+            callback(SUPPORTED_PROFILES)
+
+        self.log("Fetching supported profiles for "+url)
+        fetch_non_blocking(url, withData, onError, postData=None, headers={
+            "Accept": "*/*",
+        })
+
 
     def get_outline(self, instance_name, with_geojson):
         """
@@ -149,6 +211,8 @@ class impact_api(object):
           name: string, descrition: string (user generated names and descriptions, often empty)
           area: outline of the impact instance, geojson polygon}[]
         
+        This method is cached, so the network request will only be made once
+        
         :param callback: 
         :return: 
         """
@@ -173,9 +237,9 @@ class impact_api(object):
             "Authorization": self.oauth_token
         })
 
-    def load_project(self, path, callback, onError):
+    def __load_project(self, path, callback, onError):
         """
-        Fetches the project details from an enpoint that doesn't require authentication.
+        Fetches the project details from an endpoint that doesn't require authentication.
         
         https://api.anyways.eu/impact/swagger/index.html#/Plugin/Plugin_GetProject
         
@@ -203,7 +267,7 @@ class impact_api(object):
             # try:
             QgsMessageLog.logMessage("repsonse ok", 'ImPact Toolbox', level=Qgis.Info)
             project = json.loads(response)
-            QgsMessageLog.logMessage("project:" + str(project), 'ImPact Toolbox', level=Qgis.Info)
+            QgsMessageLog.logMessage("data for this project (impact instance):" + str(project), 'ImPact Toolbox', level=Qgis.Info)
             scenarios = project["scenarios"]
             callback(scenarios)
             # except Exception:
@@ -215,3 +279,5 @@ class impact_api(object):
         fetch_non_blocking(url, withData, onError, postData=None, headers={
             "Accept": "*/*",
         })
+        
+        
