@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: "Set experimental flag"
+      run: sed "s/experimental=False/experimental=True" 
     - name: "Build"
       uses: "./.github/actions/build-plugin"
     - name: "Detect correct zip file"
@@ -26,6 +28,5 @@ jobs:
         files: |
           LICENSE
           *.zip
-    - name: "print zipfile"
-      run: |
-        echo "If this were a production build, we WOULD be pulishing $FILE (version number is $VERSION)"
+    - name: Publish To QGIS repo.
+      run: python ./deployment/plugin_upload.py -u xivk -w ${{ secrets.QGIS_REPO_SECRET }} ${{ env.FILE }}
