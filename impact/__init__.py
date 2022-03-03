@@ -68,46 +68,52 @@ def fetch_non_blocking(url, callback, onerror, postData=None, headers=None):
     if callback is None:
         raise Exception("No callback given for fetch_non_blocking")
 
-    if postData is not None:
-        if "Content-Type" not in headers:
-            headers["Content-Type"] = "application/json"
-        QgsMessageLog.logMessage(
-            "POST-request to " + url + " with headers " + json.dumps(headers),
-            'ImPact Toolbox', level=Qgis.Info)
-
-        req = request.Request(url, data=json.dumps(postData).encode('UTF-8'),
-                              headers=headers)  # this will make the method "POST"
-        resp = request.urlopen(req)
-        raw = resp.read().decode("UTF-8")
-        QgsMessageLog.logMessage(
-            "POST-request to " + url + "finished")
-        callback(raw)
-        return
-
-    if standalone_mode:
-        req = request.Request(url, headers=headers)
-        text = request.urlopen(req).read().decode("UTF-8")
-        callback(text)
-        return
-
-    fetcher = QgsNetworkContentFetcher()
-
-    def onFinished(self_function):
-        content = fetcher.contentAsString()
-        callback(content)
-        all_callbacks.remove(callback)
-        all_callbacks.remove(self_function)
-
-    all_callbacks.add(callback)
-    all_callbacks.add(onFinished)
-    fetcher.finished.connect(lambda: onFinished(onFinished))
-
-    req = QNetworkRequest(QUrl(url))
-    for header in headers.items():
-        req.setRawHeader(bytes(header[0], "UTF-8"), bytes(header[1], "UTF-8"))
-
-    fetcher.fetchContent(req)
-
+    try:
+        if postData is not None:
+            if "Content-Type" not in headers:
+                headers["Content-Type"] = "application/json"
+            QgsMessageLog.logMessage(
+                "POST-request to " + url + " with headers " + json.dumps(headers),
+                'ImPact Toolbox', level=Qgis.Info)
+    
+            req = request.Request(url, data=json.dumps(postData).encode('UTF-8'),
+                                  headers=headers)  # this will make the method "POST"
+            resp = request.urlopen(req)
+            raw = resp.read().decode("UTF-8")
+            QgsMessageLog.logMessage(
+                "POST-request to " + url + "finished")
+            callback(raw)
+            return
+    
+        if standalone_mode:
+            req = request.Request(url, headers=headers)
+            text = request.urlopen(req).read().decode("UTF-8")
+            callback(text)
+            return
+    
+        fetcher = QgsNetworkContentFetcher()
+    
+        def onFinished(self_function):
+            try:
+                content = fetcher.contentAsString()
+                callback(content)
+                all_callbacks.remove(callback)
+                all_callbacks.remove(self_function)
+            except Exception:
+                onerror()
+    
+        all_callbacks.add(callback)
+        all_callbacks.add(onFinished)
+        
+        fetcher.finished.connect(lambda: onFinished(onFinished))
+    
+        req = QNetworkRequest(QUrl(url))
+        for header in headers.items():
+            req.setRawHeader(bytes(header[0], "UTF-8"), bytes(header[1], "UTF-8"))
+    
+        fetcher.fetchContent(req)
+    except Exception:
+        onerror()
 
 def extract_valid_geometries(iface, features, warning='The selected layer has some entries where the geometry is Null'):
     """check if a list of feature has empty geometries. 

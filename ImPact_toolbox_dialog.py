@@ -23,6 +23,7 @@
 """
 import json
 import os
+import traceback
 
 import time
 from qgis.PyQt import (QtWidgets, uic)
@@ -31,7 +32,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 
 from .impact import fod_api, impact_api, transform_layer_to_WGS84, extract_valid_geometries, routing_api, \
     feature_histogram, layer_as_geojson_features, previous_state_tracker, create_layer_from_file, \
-    extract_coordinates_array, default_layer_styling
+    extract_coordinates_array, default_layer_styling, staging_mode
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -54,6 +55,11 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
        # QCoreApplication.installTranslator("")
         self.setupUi(self)
+        
+        if staging_mode:
+            self.warn("Debug build using ANYWAYS testing server")
+            
+        self.log("Staging mode: "+str(staging_mode))
 
         self.iface = iface
         self.impact_api = None
@@ -84,7 +90,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         # Set routing api options
         self.scenario_picker.addItem(self.tr("Plan with a recent version of OpenStreetMap"), "routing-api")
         self.profile_picker.addItems(self.profile_keys)
-
+        
         # Set layer filters
 
         self.departure_layer_picker.setFilters(QgsMapLayerProxyModel.PointLayer)
@@ -128,6 +134,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         state_tracker.init_and_connect("profile_picker", self.profile_picker, self.scenario_picker)
         state_tracker.init_and_connect("zero_situation_picker", self.zero_situation_picker)
         state_tracker.init_and_connect("new_situation_picker", self.new_situation_picker)
+        state_tracker.init_and_connect("routeplanning_mode", self.mergemode)
         state_tracker.init_and_connect_textfield("impact_url", self.impact_url_textfield)
         # disable components for the next version which require auth
         self.remove_auth_components()
@@ -282,18 +289,92 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
 
     def createHistLayer(self, features, name, profile, scenario_index):
-        if len(features) > 0:
-            histogram = feature_histogram.feature_histogram(features)
-            geojson = histogram.to_geojson()
-            filename = self.path + "/" + name + ".geojson"
-            f = open(filename, "w+")
-            f.write(json.dumps(geojson))
-            f.close()
+        """
+        Count the segments
+        :param features: segment[]
+        :param name: 
+        :param profile: 
+        :param scenario_index: 
+        :return: 
+        """
+        if len(features) <= 0:
+            return
+        
+        histogram = feature_histogram.feature_histogram(features)
+        geojson = histogram.to_geojson()
+        filename = self.path + "/" + name + ".geojson"
+        f = open(filename, "w+")
+        f.write(json.dumps(geojson))
+        f.close()
 
-            lyr = QgsVectorLayer(filename, name, "ogr")
-            QgsProject.instance().addMapLayer(lyr)
-            self.layer_styling.style_routeplanning_layer(lyr, profile, scenario_index)
+        lyr = QgsVectorLayer(filename, name, "ogr")
+        QgsProject.instance().addMapLayer(lyr)
+        self.layer_styling.style_routeplanning_layer(lyr, profile, scenario_index)
 
+    def createLineLayer(self, features, name, profile, scenario_index):
+        """
+        Creates a lineLayer based on a list of segments
+        :param features: segment[][]; features[originDestinationPairIndex][segmentIndex]
+        :param name: 
+        :param profile: 
+        :param scenario_index: 
+        :return: 
+        """
+        
+        if len(features) <= 0:
+            return
+        self.log("All features for linelayer "+json.dumps(features))
+        lines = list()
+        for segments in features:
+            coordinates = list()
+            
+            if(len(segments) == 0):
+                continue
+            
+            for segment in segments:
+                if segment["geometry"]["type"] != "LineString":
+                    continue
+                
+                coordinates.extend(segment["geometry"]["coordinates"][:-1])
+                
+            coordinates.append(segments[-1]["geometry"]["coordinates"][-1])
+            
+            propertiesLastSegment = segments[-1]["properties"]
+            
+            properties = {}
+            def copyProp(key):
+                if key in propertiesLastSegment:
+                    properties[key] = propertiesLastSegment[key]
+
+            copyProp("time")
+            copyProp("count")
+            copyProp("distance")
+            copyProp("profile")
+
+            lines.append(
+                {
+                    "type":"Feature",
+                    "properties":properties,
+                    "geometry":{
+                        "type":"LineString",
+                        "coordinates": coordinates
+                    }
+                }
+            )
+        
+        self.log(json.dumps(lines))
+        timestr = time.strftime("%Y%m%d_%H%M%S")
+        filename = self.path + "/" + name + ".geojson"
+        f = open(filename, "w+")
+        f.write(json.dumps({
+            "type": "FeatureCollection",
+            "features":lines
+        }))
+        f.close()
+
+        lyr = QgsVectorLayer(filename, name, "ogr")
+        QgsProject.instance().addMapLayer(lyr)
+        self.layer_styling.style_routeplanning_layer(lyr, profile, scenario_index)
 
     def createFailLayer(self, failed_linestrings, name, profile, scenario_index):
         if len(failed_linestrings) > 0:
@@ -313,8 +394,61 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self.layer_styling.style_routeplanning_layer(lyr, "FAILED", scenario_index)    
 
 
+    def createRouteplannedLayer(self, features, failed, profile, scenario_index):
+        """
+        Generates the appropriate layer, based on routeplanning and the selected mergeMode
+        :param features: segment[][][], with features[originIndex][notReallyDestinationIndex][segmentIndex]
+        :return: 
+        """
+        # If 0: create a histogram (default
+        # If 1: create a single linestring for every feature
+        mergemode = self.mergemode.currentIndex()
+
+        scenario = "live"
+        if (scenario_index > 0):
+            label = self.scenario_picker.currentText()
+            branch = self.scenario_picker.currentData()
+            index = label[1 + label.index(" "):]
+            scenario = label[:label.index(" ")].replace("/", "_") + index
+
+
+        timestr = time.strftime("%Y%m%d_%H%M%S")
+       
+
+
+        if mergemode == 0:
+            name = "Routeplanned_hist_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
+            # THe 'hist layer' expects a flattened list of only segments
+            flattened = list()
+            for perOrigin in features:
+                # results: segment[][][]
+                for perDestination in perOrigin:
+                    for segment in perDestination:
+                        flattened.append(segment)
+            self.createHistLayer(flattened , name, profile, scenario_index)
+        else:
+            name = "Routeplanned_lines_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
+            # The line layer expects a list of trips (where trips are a list of segments)
+            flattened = list()
+            for perOrigin in features:
+                # results: segment[][][]
+                for perDestination in perOrigin:
+                    flattened.append(perDestination)
+            self.createLineLayer(flattened , name, profile, scenario_index)
+        
+    
+        if (len(failed) > 0):
+            
+            name_failed = "Failed_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
+            self.log("Creating a fail-layer with "+str(len(failed)))
+            self.createFailLayer(failed, name_failed, profile, scenario_index)
+
+
+
     def perform_many_to_many_routeplanning(self, routing_api_obj, profile, from_coors, to_coors, scenario, scenario_index, with_routes_callback, with_failed_features_callback, prep_feature_at = None):
         """
+        
+        Helper method
         
         :param routing_api_obj: 
         :param profile: 
@@ -322,7 +456,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         :param to_coors: 
         :param scenario: 
         :param scenario_index: 
-        :param with_routes_callback: 
+        :param with_routes_callback: Takes list of type 'features : segment[][][]', with indexing features[originIndex][destinationIndexIfNoFails][segmentIndex]
         :param with_failed_features_callback: 
         :param prep_feature_at: (i: number, j: number, feature: geojson) => void. This is used e.g. to set a count on featuers at a certain position in the returned matrix
         :return: 
@@ -330,22 +464,23 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         
         
         def routeplanning_many_to_many_done(routes):
-            self.log(str(from_coors))
-            self.log(str(to_coors))
-
-            # routes: featureCollection[][]
+            # features[originIndex][successFulldestinationIndex][segmentIndex]
             features = []
             failed_linestrings = []
         
             from_index = 0
-            self.log("Routeplanning finished and JSON parsed; inspecting the routes now")
-            self.log(str(len(routes["routes"])))
+            self.log("Routeplanning finished and JSON parsed; got " + str(len(routes["routes"])) + " routes")
+            self.log("All routes a line layer for "+json.dumps(routes))
+
+            # routes["routes"] has type featureCollection[][]
+            # this is a collection of features for every pair of origin/destination
             for route_list in routes["routes"]:
-                self.log(str(len(route_list)))
                 to_index = 0
+                perOrigin = list()
+                features.append(perOrigin)
                 for route in route_list:
-        
-                    
+                    perDestination = list()
+                    perOrigin.append(perDestination)
                     if "error" in route:
                         self.log("from_index" + str(from_index))
                         self.log("to_index" + str(to_index))
@@ -373,15 +508,15 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                             if prep_feature_at is not None:
                                 prep_feature_at(from_index, to_index, feature)
         
-                            features.append(feature)
+                            perDestination.append(feature)
         
                     to_index = to_index + 1
                 from_index = from_index + 1
 
             self.log("First parsing or routeplanned routes finished, calling callbacks")
 
-            with_failed_features_callback(failed_linestrings)
             with_routes_callback(features)
+            with_failed_features_callback(failed_linestrings)
             self.log("Routeplanning callbacks have run callbacks")
     
             self.perform_routeplanning_button.setEnabled(True)
@@ -392,26 +527,31 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         def onError(msg):
             self.error_user(msg)
             with_routes_callback(None)
-        
+
         try:
             routing_api_obj.request_all_routes(
                 from_coors, to_coors,
                 profile, routeplanning_many_to_many_done, self.error_user)
+        
         except Exception as e:
-            self.log("ERROR: "+repr(e))
+            tb = ''.join(traceback.format_exception(None, e, e.__traceback__))
+            self.log("ERROR: "+repr(e)+" stack trace: "+tb)
             self.log("Trying again after routing error.")
             try:
                 routing_api_obj.request_all_routes(
                     from_coors, to_coors,
                     profile, routeplanning_many_to_many_done, self.error_user)
             except Exception as e:
-                self.log("ERROR: "+repr(e))
-                self.error_user(self.tr("Planning routes failed: ")+str(e))
+                tb = ''.join(traceback.format_exception(None, e, e.__traceback__))
+                self.log("ERROR: "+repr(e)+" stack trace: "+tb)
+                self.error_user(self.tr("Planning routes failed:")+" "+str(e))
+                
             
-        return
-
-
     def run_routeplanning(self):
+        """
+        The main handler of the "perform routeplanning button"
+        :return: 
+        """
         self.perform_routeplanning_button.setEnabled(False)
         self.perform_routeplanning_button.setText(self.tr("Planning routes, please stand by..."))
 
@@ -436,18 +576,22 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         source_index = self.toolbox_origin_destination_or_movement.currentIndex()
         from_coordinate = None
         to_coordinates = None
-        timestr = time.strftime("%Y%m%d_%H%M%S")
-
-        name = "Routeplanned_hist_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
-
+        
 
         # Which input sources do we have to use?
         if source_index == 0:
             
-            # We have to do a matrix call, resulting in n*m features
+            # We have to do a matrix call based on an origin and a destination point layer, resulting in n*m features
             
             from_layer = self.departure_layer_picker.currentLayer()
             to_layer = self.arrival_layer_picker.currentLayer()
+            
+            if from_layer is None or to_layer is None:
+                self.error_user(self.tr("Select two point layers first"))
+                self.perform_routeplanning_button.setEnabled(True)
+                self.perform_routeplanning_button.setText(self.tr("Perform routeplanning"))
+                
+                return
 
             from_coordinates = extract_valid_geometries(self.iface, transform_layer_to_WGS84(from_layer))
             to_coordinates = extract_valid_geometries(self.iface, transform_layer_to_WGS84(to_layer))
@@ -464,16 +608,17 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                     pass
 
             def with_routes_callback(features):
+                # features : segment[][][]
                 self.perform_routeplanning_button.setEnabled(True)
                 self.perform_routeplanning_button.setText(self.tr("Perform routeplanning again"))
                 
                 # If there is a count on the departure coordinate, this count is copied to the correspondig feature
                 
-                self.createHistLayer(features, name, profile, scenario_index)
-              
+                self.createRouteplannedLayer(features, [], profile, scenario_index )
 
             def with_failed(failed):
-                self.createFailLayer(failed, name, profile, scenario_index)
+                name_failed = "Failed_" + profile + "_" + str(scenario_index)
+                self.createFailLayer(failed, name_failed, profile, scenario_index)
 
             self.perform_many_to_many_routeplanning(routing_api_obj, profile, from_coors, to_coors, scenario, scenario_index, with_routes_callback, with_failed, add_count)
         else:
@@ -483,10 +628,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             
             line_layer = self.movement_pairs_layer_picker.currentLayer()
             line_features = extract_valid_geometries(self.iface, transform_layer_to_WGS84(line_layer))
-            name = "Routeplanned_hist_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
-            name_failed = "Failed_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
-
-
 
             # UP next: we have a whole bunch of lines, which might have a common departure- or endpoint, so we merge those together
 
@@ -548,9 +689,9 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
 
             # Allright: this is another bit of cheating.
-            # Requesting everythin at once would crash QGIS
+            # Requesting everything at once would crash QGIS
             # So, instead, we run the routeplanning. The callback for this routeplanning will gather the results in 'results' and trigger of a new routeplanning
-            results = list()
+            results = list() # : feature[][][]
             failed = list()
 
             def append_failed(failed_features):
@@ -558,18 +699,18 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.log("Extended the failed list with "+str(len(failed_features))+" up to "+str(len(failed)))
             
             def register_result_and_run_next(features):
+                # features: segment[][][]; features[originIndex][destinationIndex][segmentIndex]
                 if features is not None:
                     results.extend(features)
                 self.perform_routeplanning_button.setText("Performing routeplanning, "+str(len(toDo))+" left...")
     
-                # self.createHistLayer(features , name, profile, scenario_index)
                 if len(toDo) == 0:
+                    # We're done! Time to wrap it up and to create the layers
                     self.perform_routeplanning_button.setEnabled(True)
                     self.perform_routeplanning_button.setText(self.tr("Perform routeplanning again"))
-                    self.createHistLayer(results , name, profile, scenario_index)
-                    if (len(failed) > 0):
-                        self.log("Creating a fail-layer with "+str(len(failed)))
-                        self.createFailLayer(failed, name_failed, profile, scenario_index)
+                    
+                    self.createRouteplannedLayer(results, failed, profile, scenario_index)
+
                 else:
                     (departures, arrivals) = toDo.pop()
                     def add_count(i, j, feature):
@@ -618,8 +759,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def update_scenario_picker(self):
         instance_name = self.impact_instance_selector.currentText()
-        self.log("Current instance name: " + instance_name)
-
         def withScenarioList(scenarios):
             picker = self.scenario_picker
             self.state_tracker.pause_loading()
@@ -637,7 +776,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                     picker.addItem(key, branch)
             self.state_tracker.resume_loading()
 
-        found_instances = self.impact_api.detect_instances(instance_name, withScenarioList)
+        self.impact_api.detect_scenarios(instance_name, withScenarioList)
 
     def update_profile_picker(self):
         """
@@ -651,13 +790,20 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
         index = self.scenario_picker.currentIndex()
         if (index == 0):
-            # This is the live API
+            # This is the live API; these profiles were loaded in 'profile_keys'
             self.log("Setting profiles: " + ",".join(self.profile_keys))
+            self.profile_picker.clear()
             self.profile_picker.addItems(self.profile_keys)
         else:
             # An impact instance
-            text = self.scenario_picker.currentText()
-            self.profile_picker.addItems(impact_api.SUPPORTED_PROFILES)
+            index = self.scenario_picker.currentIndex() - 1
+            instance_name = self.impact_instance_selector.currentText()
+            if instance_name != "":
+                def callback(profiles):
+                    self.profile_picker.clear()
+                    self.profile_picker.addItems(profiles)
+                self.impact_api.get_supported_profiles(instance_name, index, callback)
+                 
         self.state_tracker.resume_loading()
 
     def update_profile_explanation(self):
@@ -673,6 +819,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         explanation = self.tr("Select a profile above. What the profile does will be shown here...")
         if current_profile in explanations:
             explanation = explanations[current_profile]
+        else:
+            explanation = self.tr("No explanation is available for this profile")
         self.profile_explanation.setText(explanation)
 
     def log(self, msg):

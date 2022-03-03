@@ -54,13 +54,13 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>10</y>
+     <y>0</y>
      <width>1191</width>
      <height>721</height>
     </rect>
    </property>
    <property name="currentIndex">
-    <number>3</number>
+    <number>2</number>
    </property>
    <widget class="QWidget" name="settings_tab">
     <attribute name="title">
@@ -426,38 +426,14 @@
         </property>
        </widget>
       </item>
-      <item row="7" column="0">
-       <widget class="QLabel" name="label_9">
+      <item row="6" column="1">
+       <widget class="QLabel" name="label_16">
         <property name="text">
-         <string>Profile</string>
+         <string/>
         </property>
        </widget>
-      </item>
-      <item row="7" column="1">
-       <widget class="QComboBox" name="profile_picker"/>
       </item>
       <item row="8" column="1">
-       <widget class="QLabel" name="label_10">
-        <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select which vehicle to plan and it behaves. Read below how the profile behaves&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-       </widget>
-      </item>
-      <item row="9" column="1">
-       <widget class="QLabel" name="profile_explanation">
-        <property name="font">
-         <font>
-          <weight>75</weight>
-          <italic>true</italic>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>(Select a profile first. The profile info will be shown here)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="1">
        <widget class="QTabWidget" name="toolbox_origin_destination_or_movement">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
@@ -567,10 +543,55 @@
         </widget>
        </widget>
       </item>
-      <item row="5" column="1">
-       <widget class="QLabel" name="label_16">
+      <item row="9" column="0">
+       <widget class="QLabel" name="label_9">
         <property name="text">
-         <string/>
+         <string>Profile</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="1">
+       <widget class="QComboBox" name="profile_picker"/>
+      </item>
+      <item row="10" column="1">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select which vehicle to plan and it behaves. Read below how the profile behaves&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="11" column="1">
+       <widget class="QLabel" name="profile_explanation">
+        <property name="font">
+         <font>
+          <weight>75</weight>
+          <italic>true</italic>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>(Select a profile first. The profile info will be shown here)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QComboBox" name="mergemode">
+        <item>
+         <property name="text">
+          <string>Create one line per segments and count sum the number of routes going over them</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Create one line for every route</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_26">
+        <property name="text">
+         <string>Merging?</string>
         </property>
        </widget>
       </item>

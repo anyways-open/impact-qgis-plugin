@@ -41,7 +41,9 @@ For development purposes:
 
 `sudo pip3 install pb_tool` 
 
-Convert ui to python
+### Compilation
+
+Convert ui to python with `pyuic5 --import-from=. -o ImPact_toolbox_dialog_base.py ImPact_toolbox_dialog_base.ui`. Do this if the UI file is changed
 
 ` pyrcc5 -o resources.py resources.qrc` to create 'resources.py' (needed if e.g. the icon changes)
 `cd i18n && lrelease *.ts` to regenerate the compiled translations (needed if translations are added)
