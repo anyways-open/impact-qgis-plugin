@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: "Set experimental flag"
-      run: sed "s/experimental=False/experimental=True" 
+      run: sed -i "s/experimental=False/experimental=True/" metadata.txt
     - name: "Build"
       uses: "./.github/actions/build-plugin"
     - name: "Detect correct zip file"
