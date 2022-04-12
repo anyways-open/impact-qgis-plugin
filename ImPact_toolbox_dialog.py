@@ -32,7 +32,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 
 from .impact import fod_api, impact_api, transform_layer_to_WGS84, extract_valid_geometries, routing_api, \
     feature_histogram, layer_as_geojson_features, previous_state_tracker, create_layer_from_file, \
-    extract_coordinates_array, default_layer_styling, staging_mode
+    extract_coordinates_array, default_layer_styling, staging_mode, patch_feature
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -504,7 +504,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                             if feature["geometry"]["type"] == "Point":
                                 continue
         
-                            routing_api_obj.patch_feature(feature)
+                            patch_feature(feature)
                             if prep_feature_at is not None:
                                 prep_feature_at(from_index, to_index, feature)
         
@@ -738,7 +738,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         geo_features = layer_as_geojson_features(self.iface, zero_layer)
         zero_hist = feature_histogram.feature_histogram(geo_features)
         new_hist = feature_histogram.feature_histogram(layer_as_geojson_features(self.iface, new_layer))
-
         diff = new_hist.subtract(zero_hist)
 
         geojson = diff.to_geojson()
