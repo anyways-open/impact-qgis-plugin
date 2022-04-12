@@ -11,7 +11,7 @@ BASE_URL_IMPACT_STAGING = "https://staging.anyways.eu/impact/"
 BASE_URL_IMPACT =  "https://api.anyways.eu/" if not staging_mode else BASE_URL_IMPACT_STAGING
 BASE_URL_IMPACT_META = "https://www.anyways.eu/impact/"  if not staging_mode else "https://staging.anyways.eu/impact/"
 API_PATH = "https://api.anyways.eu/publish/"
-IMPACT_API_PATH = "https://api.anyways.eu/impact/canary/"
+IMPACT_API_PATH = "https://api.anyways.eu/impact/"
 
 SUPPORTED_PROFILES = ["car", "car.shortest", "car.opa", "car.default", "car.classifications",
                       "car.classifications_aggressive", "pedestrian", "pedestrian.shortest", "pedestrian.default",
@@ -87,9 +87,6 @@ class impact_api(object):
         return API_PATH + branch
 
     def routing_url_for_instance_legacy(self, token, instance = ""):
-        base = BASE_URL_IMPACT
-        if staging_mode:
-            base = BASE_URL_IMPACT_STAGING
         return API_PATH + token + "/" + instance
 
     def detect_scenarios(self, instance_name, callback):
@@ -162,12 +159,17 @@ class impact_api(object):
         url = BASE_URL_IMPACT + "/publish/"+path+"/profiles"
         
         def withData(data):
+            self.log("Got supported profiles from "+url)
             profiles = []
             parsed = json.loads(data)["profiles"]
             for element in parsed:
                 type = element["type"]
                 profile = element["name"]
-                if name == "":
+
+                self.log(type)
+                self.log(profile)
+
+                if profile == "":
                     profiles.append(type)
                 else:
                     profiles.append(type+"."+profile)
@@ -175,7 +177,8 @@ class impact_api(object):
             self.log("Got supported profiles from "+url+": "+", ".join(profiles))
             callback(profiles)
             
-        def onError():
+        def onError(e):
+            self.log(e)
             callback(SUPPORTED_PROFILES)
 
         self.log("Fetching supported profiles for "+url)

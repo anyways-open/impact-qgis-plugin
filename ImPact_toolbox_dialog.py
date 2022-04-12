@@ -792,6 +792,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         if (index == 0):
             # This is the live API; these profiles were loaded in 'profile_keys'
             self.log("Setting profiles: " + ",".join(self.profile_keys))
+            self.profile_picker.clear()
             self.profile_picker.addItems(self.profile_keys)
         else:
             # An impact instance
@@ -799,6 +800,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             instance_name = self.impact_instance_selector.currentText()
             if instance_name != "":
                 def callback(profiles):
+                    self.profile_picker.clear()
                     self.profile_picker.addItems(profiles)
                 self.impact_api.get_supported_profiles(instance_name, index, callback)
                  
