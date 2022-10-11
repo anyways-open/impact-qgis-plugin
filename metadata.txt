@@ -6,7 +6,7 @@
 name=Impact toolbox
 qgisMinimumVersion=3.0
 description=This plugin automates access to the ANYWAYS API
-version=0.7.7
+version=0.7.7-dev
 author=ANYWAYS BV
 email=support@anyways.eu
 
@@ -31,7 +31,7 @@ homepage=https://www.anyways.eu/
 category=Plugins
 icon=icon.png
 # experimental flag
-# experimental=True
+experimental=True
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
