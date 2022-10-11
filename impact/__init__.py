@@ -1,4 +1,6 @@
 import json
+import traceback
+import sys
 from urllib import request
 
 from PyQt5.QtCore import QUrl
@@ -99,8 +101,15 @@ def fetch_non_blocking(url, callback, onerror, postData=None, headers=None):
                 callback(content)
                 all_callbacks.remove(callback)
                 all_callbacks.remove(self_function)
-            except Exception:
-                onerror()
+            except Exception as e:
+                stack = "".join(traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
+                QgsMessageLog.logMessage("Handling the response failed due to "+str(e)+"\n"+stack, 'ImPact Toolbox', level=Qgis.Warning)
+                QgsMessageLog.logMessage("The failed URL is "+url, 'ImPact Toolbox', level=Qgis.Warning)
+                if postData is not None:
+                    QgsMessageLog.logMessage("The failed Post-Data is "+json.dumps(postData), 'ImPact Toolbox', level=Qgis.Warning)
+                onerror(str(e))
+                if str(e) == "FIRST AID!":
+                    raise e
     
         all_callbacks.add(callback)
         all_callbacks.add(onFinished)
@@ -112,8 +121,12 @@ def fetch_non_blocking(url, callback, onerror, postData=None, headers=None):
             req.setRawHeader(bytes(header[0], "UTF-8"), bytes(header[1], "UTF-8"))
     
         fetcher.fetchContent(req)
-    except Exception:
-        onerror()
+    except Exception as e:
+        stack = "".join(traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
+        QgsMessageLog.logMessage("Handling the response failed due to "+str(e)+"\n"+stack, 'ImPact Toolbox', level=Qgis.Warning)
+        onerror(str(e))
+        if str(e) == "FIRST AID!":
+            raise e
 
 def extract_valid_geometries(iface, features, warning='The selected layer has some entries where the geometry is Null'):
     """check if a list of feature has empty geometries. 
