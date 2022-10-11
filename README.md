@@ -37,7 +37,7 @@ For development purposes:
 
 ### In QGIS:
 
-- Use 'First Aid' plugin for better debugging
+- Use 'First Aid' plugin for better debugging. Note that some exception blocks will rethrow the error if the message is `FIRST AID!` in order to open the debugger.
 
 `sudo pip3 install pb_tool` 
 
@@ -53,9 +53,7 @@ In combination with the plugin reloader: configure the plugin reloader with the 
 
 ```
 cd <write home location here>/anyways-open/impact-qgis-plugin
-pb_tool compile
-pb_tool zip
-pb_tool deploy --no-confirm
+pb_tool compile && pb_tool zip && pb_tool deploy --no-confirm
 ```
 
 ## Translations
