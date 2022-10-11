@@ -638,12 +638,11 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             counts = dict()
 
             for line_feature in line_features:
-                if (line_feature.isMultiPart()) {
+                if line_feature.isMultiPart(): 
                     for part in line_feature.parts():
-                        line = part.geometry().asPolyline();
-                } else {
-                    line = line_feature.geometry().asPolyline();
-                }
+                        line = part.geometry().asPolyline()
+                else:
+                    line = line_feature.geometry().asPolyline()
 
                 if len(line) != 2:
                     self.log(
