@@ -24,6 +24,7 @@
 import json
 import os
 import traceback
+import sys
 
 import time
 from qgis.PyQt import (QtWidgets, uic)
@@ -323,12 +324,11 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         
         if len(features) <= 0:
             return
-        self.log("All features for linelayer "+json.dumps(features))
         lines = list()
         for segments in features:
             coordinates = list()
             
-            if(len(segments) == 0):
+            if len(segments) == 0:
                 continue
             
             for segment in segments:
@@ -344,12 +344,18 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             properties = {}
             def copyProp(key):
                 if key in propertiesLastSegment:
-                    properties[key] = propertiesLastSegment[key]
+                    if propertiesLastSegment[key] == NULL:
+                        properties[key] = 0
+                    else:
+                        properties[key] = propertiesLastSegment[key]
 
             copyProp("time")
             copyProp("count")
             copyProp("distance")
             copyProp("profile")
+            
+            if properties["count"] == 0:
+                continue
 
             lines.append(
                 {
@@ -363,7 +369,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             )
         
         self.log(json.dumps(lines))
-        timestr = time.strftime("%Y%m%d_%H%M%S")
         filename = self.path + "/" + name + ".geojson"
         f = open(filename, "w+")
         f.write(json.dumps({
@@ -383,7 +388,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                     len(failed_linestrings)) + self.tr(" routes failed. A layer with failed requests has been created"))
             histogram = feature_histogram.feature_histogram(failed_linestrings)
             geojson = histogram.to_geojson()
-            timestr = time.strftime("%Y%m%d_%H%M%S")
             filename = self.path + "/" + name + ".geojson"
             f = open(filename, "w+")
             f.write(json.dumps(geojson))
@@ -407,7 +411,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         scenario = "live"
         if (scenario_index > 0):
             label = self.scenario_picker.currentText()
-            branch = self.scenario_picker.currentData()
             index = label[1 + label.index(" "):]
             scenario = label[:label.index(" ")].replace("/", "_") + index
 
@@ -545,6 +548,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 tb = ''.join(traceback.format_exception(None, e, e.__traceback__))
                 self.log("ERROR: "+repr(e)+" stack trace: "+tb)
                 self.error_user(self.tr("Planning routes failed:")+" "+str(e))
+                if str(e) == "FIRST AID!":
+                    raise e
                 
             
     def run_routeplanning(self):
@@ -835,3 +840,5 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def error_user(self, msg, duration=60):
         self.iface.messageBar().pushMessage(u'ImPact_toolbox Error', msg, level=Qgis.Critical, duration=duration)
+        stack = "".join(traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
+        self.warn("Attempt to get the traceback from the latest error by error_user: "+stack)
