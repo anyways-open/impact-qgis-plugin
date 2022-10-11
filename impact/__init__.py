@@ -246,6 +246,41 @@ def extract_coordinates(features, latlonformat=False):
         result.append(coor)
     return result
 
+def patch_feature(feature):
+        """
+        Input: a single geojson feature
+        Adds a determnistic GUID to the feature
+        This will modify the passed object
+        @:return None
+        """
+
+        props = feature['properties']
+        if feature["geometry"]["type"] != "LineString":
+            # Not a linestring: we don't set a GUID
+            return
+    
+        if "guid" in props:
+            # GUID already set, nothing to do anymore
+            return
+
+        def clean_coord(coord):
+            """
+            Converts the coordinates to a standardized string. This is only used as input for the GUID
+            :param coord: 
+            :return: 
+            """
+            
+            # Only keep the first two coordinates; a height might be provided too, but this breaks the GUID
+            coord = coord[0:2]
+            return ",".join(map(lambda c: str(round(c, 8)), coord))
+
+        coords = feature["geometry"]["coordinates"]
+        # Get a clean version of the coordinates
+        startp = clean_coord(coords[0])
+        endp = clean_coord(coords[1])
+        # ... and use them as guid
+        props["guid"] = startp + ";" + endp
+
 
 def layer_as_geojson_features(iface, lyr):
     line_features = extract_valid_geometries(iface, transform_layer_to_WGS84(lyr))
@@ -262,14 +297,16 @@ def layer_as_geojson_features(iface, lyr):
             props[fieldName] = val
         gqisPoints = qgsFeature.geometry().asPolyline()
         coordinates = list(map(lambda qgisPoint: [qgisPoint[0], qgisPoint[1]], gqisPoints))
-        features.append({
+        feature = {
             "type": "Feature",
             "properties": props,
             "geometry": {
                 "type": "LineString",
                 "coordinates": coordinates
             }
-        })
+        }
+        patch_feature(feature)
+        features.append(feature)
     return features
 
 

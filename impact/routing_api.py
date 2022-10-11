@@ -76,23 +76,6 @@ class routing_api(object):
         url = self._baseurl + "/v1/profiles"
         fetch_non_blocking(url, callback, lambda err: print("Could not load profiles due to" + err))
 
-    def patch_feature(self, feature):
-        """
-        Adds a determnistic GUID to the feature
-        """
-
-        def clean_coord(coord):
-            # Only keep the first two coordinates; a height might be provided too, but this breaks the GUID
-            coord = coord[0:2]
-            return ",".join(map(lambda c: str(round(c, 8)), coord))
-
-        props = feature['properties']
-        if feature["geometry"]["type"] == "LineString":
-            coords = feature["geometry"]["coordinates"]
-            startp = clean_coord(coords[0])
-            endp = clean_coord(coords[1])
-            props["guid"] = startp + ";" + endp
-
     def request_all_routes(self, fromCoors, toCoors, profile, withRoutes, onError):
         """
         Reqeusts a matrix call

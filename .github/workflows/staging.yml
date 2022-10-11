@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: "Set experimental flag"
+      run: sed -i "s/experimental=False/experimental=True/" metadata.txt
     - name: "Build"
       uses: "./.github/actions/build-plugin"
     - name: "Detect correct zip file"
@@ -27,7 +29,5 @@ jobs:
         files: |
           LICENSE
           *.zip
-
     - name: Publish experimental version to QGIS repo.
       run: python ./deployment/plugin_upload.py -u xivk -w ${{ secrets.QGIS_REPO_SECRET }} ${{ env.FILE }}
-
