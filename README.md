@@ -41,6 +41,8 @@ For development purposes:
 
 `sudo pip3 install pb_tool` 
 
+Note: `print`-statements will end up in the 'python console' (plugins > Python Console), log messages in the logbook (view > panels > Log Messages)
+
 ### Compilation
 
 Convert ui to python with `pyuic5 --import-from=. -o ImPact_toolbox_dialog_base.py ImPact_toolbox_dialog_base.ui`. Do this if the UI file is changed
