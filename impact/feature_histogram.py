@@ -1,4 +1,5 @@
 import copy
+from qgis.core import *
 
 from . import route_meta
 
