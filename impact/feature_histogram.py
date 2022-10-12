@@ -30,6 +30,8 @@ class feature_histogram(object):
         count = 1
         if 'count' in feature["properties"]:
             count = feature["properties"]["count"]
+        if count == NULL:
+            count = 0
         if key in hist:
             hist[key]["properties"]["count"] += count
         else:
