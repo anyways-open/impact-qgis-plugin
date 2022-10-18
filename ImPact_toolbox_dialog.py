@@ -404,7 +404,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         :param features: segment[][][], with features[originIndex][notReallyDestinationIndex][segmentIndex]
         :return: 
         """
-        # If 0: create a histogram (default
+        # If 0: create a histogram (default)
         # If 1: create a single linestring for every feature
         mergemode = self.mergemode.currentIndex()
 
