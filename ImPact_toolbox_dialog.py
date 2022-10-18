@@ -31,9 +31,9 @@ from qgis.PyQt import (QtWidgets, uic)
 from qgis.core import *
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 
-from .impact import fod_api, impact_api, transform_layer_to_WGS84, extract_valid_geometries, routing_api, \
+from .impact import fod_api, impact_api, transform_layer_to_WGS84, extract_valid_geometries, add_reverse_lines, routing_api, \
     feature_histogram, layer_as_geojson_features, previous_state_tracker, create_layer_from_file, \
-    extract_coordinates_array, default_layer_styling, staging_mode, patch_feature
+    extract_coordinates_array, default_layer_styling, staging_mode, patch_feature, generate_layer_report
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -111,6 +111,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.impact_instance_selector.currentIndexChanged.connect(self.update_scenario_picker)
         self.save_area_outline.clicked.connect(self.save_outline_as_layer)
         self.save_impact_url_button.clicked.connect(self.save_impact_url)
+        
         # Attach mode check for FOD
         self.include_cyclists.clicked.connect(self.check_fod_modes)
         self.include_car.clicked.connect(self.check_fod_modes)
@@ -123,6 +124,10 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.scenario_picker.currentIndexChanged.connect(self.update_profile_picker)
         self.update_scenario_picker()
         self.update_profile_explanation()
+        
+        # Update the selected layer information
+        self.movement_pairs_layer_picker.currentIndexChanged.connect(self.update_selected_layer_explanation)
+        self.update_selected_layer_explanation()
 
         # Keep track of the last selected state of qcomboboxes
         state_tracker.init_and_connect("home_locations", self.home_locations)
@@ -141,7 +146,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.remove_auth_components()
 
         self.save_impact_url()  # TODO this should not be needed when login works
-        self.log("version 2022-01-26 14:19")
 
     def remove_auth_components(self):
         self.label.hide()
@@ -551,6 +555,11 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 if str(e) == "FIRST AID!":
                     raise e
                 
+    def update_selected_layer_explanation(self):
+        line_layer = self.movement_pairs_layer_picker.currentLayer()
+        line_features = extract_valid_geometries(self.iface, transform_layer_to_WGS84(line_layer))
+        report = generate_layer_report(line_features)
+        self.selected_layer_report.setText(report)
             
     def run_routeplanning(self):
         """
@@ -577,11 +586,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self.log("Initing routeplanning against " + instance_url)
             routing_api_obj = routing_api.routing_api(key, instance_url, True, self.api_key_field.text())
 
-        features = None
         source_index = self.toolbox_origin_destination_or_movement.currentIndex()
-        from_coordinate = None
-        to_coordinates = None
-        
 
         # Which input sources do we have to use?
         if source_index == 0:
@@ -628,13 +633,13 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self.perform_many_to_many_routeplanning(routing_api_obj, profile, from_coors, to_coors, scenario, scenario_index, with_routes_callback, with_failed, add_count)
         else:
             
-            # We have to calculate 'N' classical routes
+            # We have to calculate 'N' classical routes based on a line layer
             
             
             line_layer = self.movement_pairs_layer_picker.currentLayer()
             line_features = extract_valid_geometries(self.iface, transform_layer_to_WGS84(line_layer))
-
-            # UP next: we have a whole bunch of lines, which might have a common departure- or endpoint, so we merge those together
+            line_features = add_reverse_lines(line_features)
+            # Up next: we have a whole bunch of lines, which might have a common departure- or endpoint, so we merge those together
 
             grouped_per_departure_coordinate = {}
             grouped_per_arrival_coordinate = {}

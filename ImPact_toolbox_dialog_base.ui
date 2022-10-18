@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1213</width>
-    <height>806</height>
+    <width>1201</width>
+    <height>809</height>
    </rect>
   </property>
   <property name="contextMenuPolicy">
@@ -384,7 +384,7 @@
        <x>0</x>
        <y>20</y>
        <width>1181</width>
-       <height>613</height>
+       <height>661</height>
       </rect>
      </property>
      <layout class="QFormLayout" name="routeplanning_form">
@@ -448,7 +448,7 @@
          </size>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tab1">
          <attribute name="title">
@@ -509,29 +509,52 @@
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>10</y>
-            <width>1141</width>
-            <height>154</height>
+            <y>0</y>
+            <width>1081</width>
+            <height>297</height>
            </rect>
           </property>
           <layout class="QFormLayout" name="formLayout_2">
-           <item row="0" column="1">
+           <item row="1" column="1">
             <widget class="QgsMapLayerComboBox" name="movement_pairs_layer_picker"/>
            </item>
-           <item row="0" column="0">
+           <item row="1" column="0">
             <widget class="QLabel" name="label_17">
              <property name="text">
               <string>Select a movement layer</string>
              </property>
             </widget>
            </item>
-           <item row="1" column="1">
+           <item row="0" column="1">
             <widget class="QLabel" name="label_18">
              <property name="text">
-              <string>Use a layer with movement data (e.g. loaded from file or
-                                                            from the FOD). Routeplanning will be performed on every
-                                                            origin-destination pair, which will be weighted
-                                                        </string>
+              <string>Use a layer with movement data (e.g. loaded from file or from the FOD). Routeplanning will be performed on every origin-destination pair, which will be weighted                                        </string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLabel" name="selected_layer_report">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>No layer selected. Select a layer to show information about it.
+
+
+
+
+
+
+
+
+
+</string>
              </property>
              <property name="wordWrap">
               <bool>true</bool>
@@ -543,34 +566,20 @@
         </widget>
        </widget>
       </item>
-      <item row="9" column="0">
+      <item row="10" column="0">
        <widget class="QLabel" name="label_9">
         <property name="text">
          <string>Profile</string>
         </property>
        </widget>
       </item>
-      <item row="9" column="1">
+      <item row="10" column="1">
        <widget class="QComboBox" name="profile_picker"/>
       </item>
-      <item row="10" column="1">
+      <item row="11" column="1">
        <widget class="QLabel" name="label_10">
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select which vehicle to plan and it behaves. Read below how the profile behaves&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-       </widget>
-      </item>
-      <item row="11" column="1">
-       <widget class="QLabel" name="profile_explanation">
-        <property name="font">
-         <font>
-          <weight>75</weight>
-          <italic>true</italic>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>(Select a profile first. The profile info will be shown here)</string>
         </property>
        </widget>
       </item>
@@ -595,20 +604,28 @@
         </property>
        </widget>
       </item>
+      <item row="12" column="1">
+       <widget class="QLabel" name="profile_explanation">
+        <property name="font">
+         <font>
+          <weight>75</weight>
+          <italic>true</italic>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>(Select a profile first. The profile info will be shown here)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="13" column="1">
+       <widget class="QPushButton" name="perform_routeplanning_button">
+        <property name="text">
+         <string>Perform routeplanning</string>
+        </property>
+       </widget>
+      </item>
      </layout>
-    </widget>
-    <widget class="QPushButton" name="perform_routeplanning_button">
-     <property name="geometry">
-      <rect>
-       <x>730</x>
-       <y>620</y>
-       <width>441</width>
-       <height>51</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Perform routeplanning</string>
-     </property>
     </widget>
    </widget>
    <widget class="QWidget" name="traffic_diff_tab">

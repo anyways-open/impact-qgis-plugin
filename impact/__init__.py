@@ -1,15 +1,15 @@
 import json
-import traceback
 import sys
-from urllib import request
-
+import traceback
 from PyQt5.QtCore import QUrl
 from PyQt5.QtGui import QColor
 from PyQt5.QtNetwork import QNetworkReply, QNetworkRequest
 from qgis.core import *
+from urllib import request
 
 standalone_mode = False
 staging_mode = False
+
 
 def setStandalone():
     """
@@ -77,7 +77,7 @@ def fetch_non_blocking(url, callback, onerror, postData=None, headers=None):
             QgsMessageLog.logMessage(
                 "POST-request to " + url + " with headers " + json.dumps(headers),
                 'ImPact Toolbox', level=Qgis.Info)
-    
+
             req = request.Request(url, data=json.dumps(postData).encode('UTF-8'),
                                   headers=headers)  # this will make the method "POST"
             resp = request.urlopen(req)
@@ -86,15 +86,15 @@ def fetch_non_blocking(url, callback, onerror, postData=None, headers=None):
                 "POST-request to " + url + "finished")
             callback(raw)
             return
-    
+
         if standalone_mode:
             req = request.Request(url, headers=headers)
             text = request.urlopen(req).read().decode("UTF-8")
             callback(text)
             return
-    
+
         fetcher = QgsNetworkContentFetcher()
-    
+
         def onFinished(self_function):
             try:
                 content = fetcher.contentAsString()
@@ -103,39 +103,41 @@ def fetch_non_blocking(url, callback, onerror, postData=None, headers=None):
                 all_callbacks.remove(self_function)
             except Exception as e:
                 stack = "".join(traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
-                QgsMessageLog.logMessage("Handling the response failed due to "+str(e)+"\n"+stack, 'ImPact Toolbox', level=Qgis.Warning)
-                QgsMessageLog.logMessage("The failed URL is "+url, 'ImPact Toolbox', level=Qgis.Warning)
+                QgsMessageLog.logMessage("Handling the response failed due to " + str(e) + "\n" + stack,
+                                         'ImPact Toolbox', level=Qgis.Warning)
+                QgsMessageLog.logMessage("The failed URL is " + url, 'ImPact Toolbox', level=Qgis.Warning)
                 if postData is not None:
-                    QgsMessageLog.logMessage("The failed Post-Data is "+json.dumps(postData), 'ImPact Toolbox', level=Qgis.Warning)
+                    QgsMessageLog.logMessage("The failed Post-Data is " + json.dumps(postData), 'ImPact Toolbox',
+                                             level=Qgis.Warning)
                 onerror(str(e))
                 if str(e) == "FIRST AID!":
                     raise e
-    
+
         all_callbacks.add(callback)
         all_callbacks.add(onFinished)
-        
+
         fetcher.finished.connect(lambda: onFinished(onFinished))
-    
+
         req = QNetworkRequest(QUrl(url))
         for header in headers.items():
             req.setRawHeader(bytes(header[0], "UTF-8"), bytes(header[1], "UTF-8"))
-    
+
         fetcher.fetchContent(req)
     except Exception as e:
         stack = "".join(traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
-        QgsMessageLog.logMessage("Handling the response failed due to "+str(e)+"\n"+stack, 'ImPact Toolbox', level=Qgis.Warning)
+        QgsMessageLog.logMessage("Handling the response failed due to " + str(e) + "\n" + stack, 'ImPact Toolbox',
+                                 level=Qgis.Warning)
         onerror(str(e))
         if str(e) == "FIRST AID!":
             raise e
 
+
 def extract_valid_geometries(iface, features, warning='The selected layer has some entries where the geometry is Null'):
     """check if a list of feature has empty geometries. 
-    Args:
-        iface (QgisInterface): the interface with the mainWindow
-        featureLayer (QgsVectorLayer): the layer to check
-        warning (string, optional): a optional message to give to user if a null-geometry is found
-    Returns:
-        (features[]): all the features for which the geometry is valid
+    :param iface (QgisInterface): the interface with the mainWindow
+    :param featureLayer (QgsVectorLayer): the layer to check
+    :param    warning (string, optional): a optional message to give to user if a null-geometry is found
+    :return (features[]): all the features for which the geometry is valid
     """
     valid_features = []
     fautly_features_count = 0
@@ -151,11 +153,94 @@ def extract_valid_geometries(iface, features, warning='The selected layer has so
     return valid_features
 
 
+def add_reverse_lines(features):
+    """
+    Creates a list with both forward and backward features with `count` set correctly
+    Creates list of geometries containing the original features and, for the features where rev_count > 0, a reversed feature with count=rev_count.
+    
+    :param features: a list of Line-features
+    :return: features: a list of line-features, which contain the original features (if count > 0) and the reversed features (if count_rev > 0)
+    """
+    new_features = list()
+    for f in features:
+        new_features.append(f)
+        count_rev = f["count_rev"]
+        if count_rev == NULL:
+            continue
+        if count_rev <= 0:
+            continue
+        geom = f.geometry()
+        nodes = geom.asPolyline()
+        nodes.reverse()
+        newgeom = QgsGeometry.fromPolylineXY(nodes)
+        new_feature = QgsFeature(f.fields())
+        new_feature.setGeometry(newgeom)
+        new_feature["count"] = count_rev
+        new_features.append(new_feature)
+
+    return new_features
+
+
+def generate_layer_report(features):
+    """
+    Creates a small piece of text giving some details about the (properties of) the features
+    :param features: a list of Line-features
+    """
+
+    has_count = 0
+    has_count_rev = 0
+    count_is_null = 0
+    count_is_zero = 0
+    total_count = 0
+    total_count_rev = 0
+    for f in features:
+        try:
+            c = f["count"]
+            if c == NULL:
+                count_is_null += 1
+            elif c == 0:
+                count_is_zero += 1
+            else:
+                total_count += c
+                has_count += 1
+        except:
+            pass
+
+        try:
+            rc = f["count_rev"]
+            if rc == NULL:
+                pass
+            elif rc == 0:
+                pass
+            else:
+                total_count_rev += rc
+                has_count_rev += 1
+        except:
+            pass
+        
+    if (has_count + has_count_rev ) == 0:
+        return "No lines have a field 'count' or 'count_rev' set. Nothing will be routeplanned. Select a different layer or add the appropriate values"
+
+    total_str ="This layer contains " + str(        len(features)) + " lines. "
+    forward_count_str = str( has_count) + " of these lines have the field 'count' set for a total sum of " + str(
+        total_count)
+    backward_count_str = "No lines have 'count_rev' set."
+    if(has_count_rev > 0):
+        backward_count_str =  str(has_count_rev) + " of the lines have the field 'count_rev' set for a total of " + str( total_count_rev)   
+    count_rev_expl_str = "Use 'count_rev' to generate planned routes in the reverse direction of the line"
+    
+    has_null_str = ""
+    if count_is_null > 0:
+        has_null_str = "\n"+ str(count_is_null)+" of the lines have NULL as count. They will be routeplanned, but their count will be interpreted as 0"
+    
+    return "\n".join([total_str , forward_count_str + has_null_str, "", backward_count_str,count_rev_expl_str])
+
+
 def transform_layer_to_WGS84(layer):
     """
      Cheking and transforming layers' CRS to EPSG: 4326
     :param layer: A qgis layer
-    :return: A list of features
+    :return A list of features
     """
     if layer.crs() == 4326:
         features = layer.getFeatures()
@@ -259,40 +344,41 @@ def extract_coordinates(features, latlonformat=False):
         result.append(coor)
     return result
 
+
 def patch_feature(feature):
+    """
+    Input: a single geojson feature
+    Adds a determnistic GUID to the feature
+    This will modify the passed object
+    @:return None
+    """
+
+    props = feature['properties']
+    if feature["geometry"]["type"] != "LineString":
+        # Not a linestring: we don't set a GUID
+        return
+
+    if "guid" in props:
+        # GUID already set, nothing to do anymore
+        return
+
+    def clean_coord(coord):
         """
-        Input: a single geojson feature
-        Adds a determnistic GUID to the feature
-        This will modify the passed object
-        @:return None
+        Converts the coordinates to a standardized string. This is only used as input for the GUID
+        :param coord: 
+        :return: 
         """
 
-        props = feature['properties']
-        if feature["geometry"]["type"] != "LineString":
-            # Not a linestring: we don't set a GUID
-            return
-    
-        if "guid" in props:
-            # GUID already set, nothing to do anymore
-            return
+        # Only keep the first two coordinates; a height might be provided too, but this breaks the GUID
+        coord = coord[0:2]
+        return ",".join(map(lambda c: str(round(c, 8)), coord))
 
-        def clean_coord(coord):
-            """
-            Converts the coordinates to a standardized string. This is only used as input for the GUID
-            :param coord: 
-            :return: 
-            """
-            
-            # Only keep the first two coordinates; a height might be provided too, but this breaks the GUID
-            coord = coord[0:2]
-            return ",".join(map(lambda c: str(round(c, 8)), coord))
-
-        coords = feature["geometry"]["coordinates"]
-        # Get a clean version of the coordinates
-        startp = clean_coord(coords[0])
-        endp = clean_coord(coords[1])
-        # ... and use them as guid
-        props["guid"] = startp + ";" + endp
+    coords = feature["geometry"]["coordinates"]
+    # Get a clean version of the coordinates
+    startp = clean_coord(coords[0])
+    endp = clean_coord(coords[1])
+    # ... and use them as guid
+    props["guid"] = startp + ";" + endp
 
 
 def layer_as_geojson_features(iface, lyr):
