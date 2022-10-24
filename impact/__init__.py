@@ -164,6 +164,9 @@ def add_reverse_lines(features):
     new_features = list()
     for f in features:
         new_features.append(f)
+        if f.fields().indexFromName("count_rev") == -1:
+            # No 'count_rev'
+            continue
         count_rev = f["count_rev"]
         if count_rev == NULL:
             continue
