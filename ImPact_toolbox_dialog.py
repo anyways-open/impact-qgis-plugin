@@ -557,6 +557,9 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 
     def update_selected_layer_explanation(self):
         line_layer = self.movement_pairs_layer_picker.currentLayer()
+        if line_layer is None:
+            self.selected_layer_report.setText("No layer selected")
+            return
         line_features = extract_valid_geometries(self.iface, transform_layer_to_WGS84(line_layer))
         report = generate_layer_report(line_features)
         self.selected_layer_report.setText(report)
