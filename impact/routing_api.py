@@ -24,7 +24,7 @@ class routing_api(object):
         
         if(baseurl == None):
             if staging_mode:
-                baseurl = "https://staging.anyways.eu/routing-api"
+                baseurl = "https://staging.anyways.eu/api/routing"
             else:
                 baseurl="https://routing.anyways.eu/api"
         
@@ -101,8 +101,9 @@ class routing_api(object):
             headers = {
                 "Authorization": self.auth_token
             }
-        fetch_non_blocking(url, callback, onError, postData={
+        postData = {
             "profile": profile,
             "from": fromCoors,
             "to": toCoors
-        }, headers=headers)
+        }
+        fetch_non_blocking(url, callback, onError, postData=postData, headers=headers)

@@ -8,7 +8,7 @@ from qgis.core import *
 from urllib import request
 
 standalone_mode = False
-staging_mode = False
+staging_mode = True
 
 
 def setStandalone():
@@ -74,9 +74,10 @@ def fetch_non_blocking(url, callback, onerror, postData=None, headers=None):
         if postData is not None:
             if "Content-Type" not in headers:
                 headers["Content-Type"] = "application/json"
-            QgsMessageLog.logMessage(
-                "POST-request to " + url + " with headers " + json.dumps(headers),
-                'ImPact Toolbox', level=Qgis.Info)
+            msg = "POST-request to " + url + " with headers " + json.dumps(headers)
+            if staging_mode:
+                msg += " and post-data "+json.dumps(postData)
+            QgsMessageLog.logMessage(msg, 'ImPact Toolbox', level=Qgis.Info)
 
             req = request.Request(url, data=json.dumps(postData).encode('UTF-8'),
                                   headers=headers)  # this will make the method "POST"
@@ -220,23 +221,25 @@ def generate_layer_report(features):
                 has_count_rev += 1
         except:
             pass
-        
-    if (has_count + has_count_rev ) == 0:
+
+    if (has_count + has_count_rev) == 0:
         return "No lines have a field 'count' or 'count_rev' set. Nothing will be routeplanned. Select a different layer or add the appropriate values"
 
-    total_str ="This layer contains " + str(        len(features)) + " lines. "
-    forward_count_str = str( has_count) + " of these lines have the field 'count' set for a total sum of " + str(
+    total_str = "This layer contains " + str(len(features)) + " lines. "
+    forward_count_str = str(has_count) + " of these lines have the field 'count' set for a total sum of " + str(
         total_count)
     backward_count_str = "No lines have 'count_rev' set."
-    if(has_count_rev > 0):
-        backward_count_str =  str(has_count_rev) + " of the lines have the field 'count_rev' set for a total of " + str( total_count_rev)   
+    if (has_count_rev > 0):
+        backward_count_str = str(has_count_rev) + " of the lines have the field 'count_rev' set for a total of " + str(
+            total_count_rev)
     count_rev_expl_str = "Use 'count_rev' to generate planned routes in the reverse direction of the line"
-    
+
     has_null_str = ""
     if count_is_null > 0:
-        has_null_str = "\n"+ str(count_is_null)+" of the lines have NULL as count. They will be routeplanned, but their count will be interpreted as 0"
-    
-    return "\n".join([total_str , forward_count_str + has_null_str, "", backward_count_str,count_rev_expl_str])
+        has_null_str = "\n" + str(
+            count_is_null) + " of the lines have NULL as count. They will be routeplanned, but their count will be interpreted as 0"
+
+    return "\n".join([total_str, forward_count_str + has_null_str, "", backward_count_str, count_rev_expl_str])
 
 
 def transform_layer_to_WGS84(layer):
