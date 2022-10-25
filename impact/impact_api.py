@@ -163,22 +163,18 @@ class impact_api(object):
         url = API_PATH + path + "/profiles"
         
         def withData(data):
-            self.log("Got supported profiles from "+url+":"+data)
             profiles = []
             parsed = json.loads(data)["profiles"]
             for element in parsed:
                 type = element["type"]
                 profile = element["name"]
 
-                self.log(type)
-                self.log(profile)
-
                 if profile == "":
                     profiles.append(type)
                 else:
                     profiles.append(type+"."+profile)
             self.supported_profiles[path] = profiles
-            self.log("Got supported profiles from "+url+": "+", ".join(profiles))
+            self.log("Got "+str(len(profiles))+" supported profiles from "+url)
             callback(profiles)
             
         def onError(e):
