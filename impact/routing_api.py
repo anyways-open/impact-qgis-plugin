@@ -23,10 +23,10 @@ class routing_api(object):
                  auth_token=None):
         
         if(baseurl == None):
+            baseurl="https://routing.anyways.eu/api"
             if staging_mode:
-                baseurl = "https://staging.anyways.eu/routing-api"
-            else:
-                baseurl="https://routing.anyways.eu/api"
+                # baseurl = "https://staging.anyways.eu/api/routing"
+                pass
         
         
         self._api_key = api_key
@@ -101,8 +101,15 @@ class routing_api(object):
             headers = {
                 "Authorization": self.auth_token
             }
-        fetch_non_blocking(url, callback, onError, postData={
+            
+        if not self.is_impact_backend:
+            # the old api.anyways.eu/routing takes 'lat,lon'
+            fromCoors = list(map(lambda c : list(reversed(c)), fromCoors))
+            toCoors = list(map(lambda c : list(reversed(c)), toCoors))
+            
+        postData = {
             "profile": profile,
             "from": fromCoors,
             "to": toCoors
-        }, headers=headers)
+        }
+        fetch_non_blocking(url, callback, onError, postData=postData, headers=headers)

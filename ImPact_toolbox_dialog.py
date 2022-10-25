@@ -358,7 +358,9 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             copyProp("distance")
             copyProp("profile")
             
-            if properties["count"] == 0:
+            if "count" not in properties:
+                properties["count"] = 1
+            elif properties["count"] == 0:
                 continue
 
             lines.append(
@@ -408,6 +410,10 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         :param features: segment[][][], with features[originIndex][notReallyDestinationIndex][segmentIndex]
         :return: 
         """
+        if features is None or len(features) == 0:
+            self.error_user("The requested routeplanning contained no trips", 30)
+            return
+        
         # If 0: create a histogram (default)
         # If 1: create a single linestring for every feature
         mergemode = self.mergemode.currentIndex()
@@ -425,7 +431,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
         if mergemode == 0:
             name = "Routeplanned_hist_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
-            # THe 'hist layer' expects a flattened list of only segments
+            # The 'hist layer' expects a flattened list of only segments
             flattened = list()
             for perOrigin in features:
                 # results: segment[][][]
@@ -452,15 +458,15 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
 
 
-    def perform_many_to_many_routeplanning(self, routing_api_obj, profile, from_coors, to_coors, scenario, scenario_index, with_routes_callback, with_failed_features_callback, prep_feature_at = None):
+    def perform_many_to_many_routeplanning(self, routing_api_obj, profile, from_coors, to_coors, with_routes_callback, with_failed_features_callback, prep_feature_at = None):
         """
         
         Helper method
         
         :param routing_api_obj: 
         :param profile: 
-        :param from_coors: 
-        :param to_coors: 
+        :param from_coors: a list of [lon,lat] coordinates
+        :param to_coors: a list of [lon,lat] coordinates
         :param scenario: 
         :param scenario_index: 
         :param with_routes_callback: Takes list of type 'features : segment[][][]', with indexing features[originIndex][destinationIndexIfNoFails][segmentIndex]
@@ -477,7 +483,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         
             from_index = 0
             self.log("Routeplanning finished and JSON parsed; got " + str(len(routes["routes"])) + " routes")
-            self.log("All routes a line layer for "+json.dumps(routes))
 
             # routes["routes"] has type featureCollection[][]
             # this is a collection of features for every pair of origin/destination
@@ -610,8 +615,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             to_coordinates = extract_valid_geometries(self.iface, transform_layer_to_WGS84(to_layer))
 
 
-            from_coors = extract_coordinates_array(from_coordinates, True)
-            to_coors = extract_coordinates_array(to_coordinates, True)
+            from_coors = extract_coordinates_array(from_coordinates)
+            to_coors = extract_coordinates_array(to_coordinates)
             
             def add_count(i, j, feature):
                 try:
@@ -633,7 +638,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 name_failed = "Failed_" + profile + "_" + str(scenario_index)
                 self.createFailLayer(failed, name_failed, profile, scenario_index)
 
-            self.perform_many_to_many_routeplanning(routing_api_obj, profile, from_coors, to_coors, scenario, scenario_index, with_routes_callback, with_failed, add_count)
+            self.perform_many_to_many_routeplanning(routing_api_obj, profile, from_coors, to_coors, with_routes_callback, with_failed, add_count)
         else:
             
             # We have to calculate 'N' classical routes based on a line layer
@@ -661,8 +666,9 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                     while len(line) > 2:
                         del line[1]
                 
-                departure = [line[0].y(), line[0].x()]
-                arrival = [line[1].y(), line[1].x()]
+                # [lon, lat]
+                departure = [line[0].x(), line[0].y()]
+                arrival = [line[1].x(), line[1].y()]
 
                 departure_str = str(departure)
                 arr_str = str(arrival)
@@ -737,7 +743,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                             return
                         feature['properties']['count'] = counts[dep_str][arr_str]
                         
-                    self.perform_many_to_many_routeplanning(routing_api_obj, profile, departures, arrivals, scenario, scenario_index, register_result_and_run_next, append_failed, add_count)
+                    self.perform_many_to_many_routeplanning(routing_api_obj, profile, departures, arrivals, register_result_and_run_next, append_failed, add_count)
 
             register_result_and_run_next(None)
 
