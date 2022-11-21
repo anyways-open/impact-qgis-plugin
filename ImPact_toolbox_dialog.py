@@ -133,7 +133,9 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         state_tracker.init_and_connect("home_locations", self.home_locations)
         state_tracker.init_and_connect("work_locations", self.work_locations)
         state_tracker.init_and_connect("impact_instance_selector", self.impact_instance_selector)
-        state_tracker.init_and_connect("scenario_picker", self.scenario_picker, self.impact_instance_selector)
+        state_tracker.init_and_connect("scenario_picker", self.scenario_picker)
+        state_tracker.init_and_connect("mergemode", self.mergemode)
+
         state_tracker.init_and_connect("departure_layer_picker", self.departure_layer_picker)
         state_tracker.init_and_connect("arrival_layer_picker", self.arrival_layer_picker)
         state_tracker.init_and_connect("movement_pairs_layer_picker", self.movement_pairs_layer_picker)
@@ -358,7 +360,9 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             copyProp("distance")
             copyProp("profile")
             
-            if properties["count"] == 0:
+            if "count" not in properties:
+                properties["count"] = 1
+            elif properties["count"] == 0:
                 continue
 
             lines.append(
@@ -372,7 +376,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 }
             )
         
-        self.log(json.dumps(lines))
         filename = self.path + "/" + name + ".geojson"
         f = open(filename, "w+")
         f.write(json.dumps({
@@ -399,7 +402,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
             lyr = QgsVectorLayer(filename, name, "ogr")
             QgsProject.instance().addMapLayer(lyr)
-            self.layer_styling.style_routeplanning_layer(lyr, "FAILED", scenario_index)    
+            self.layer_styling.style_routeplanning_layer(lyr, "FAILED", scenario_index)
 
 
     def createRouteplannedLayer(self, features, failed, profile, scenario_index):
@@ -408,6 +411,10 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         :param features: segment[][][], with features[originIndex][notReallyDestinationIndex][segmentIndex]
         :return: 
         """
+        if features is None or len(features) == 0:
+            self.error_user("The requested routeplanning contained no trips", 30)
+            return
+        
         # If 0: create a histogram (default)
         # If 1: create a single linestring for every feature
         mergemode = self.mergemode.currentIndex()
@@ -425,7 +432,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
         if mergemode == 0:
             name = "Routeplanned_hist_" + profile + "_" + scenario.replace("/", "_") + "_" + timestr
-            # THe 'hist layer' expects a flattened list of only segments
+            # The 'hist layer' expects a flattened list of only segments
             flattened = list()
             for perOrigin in features:
                 # results: segment[][][]
@@ -452,15 +459,15 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
 
 
-    def perform_many_to_many_routeplanning(self, routing_api_obj, profile, from_coors, to_coors, scenario, scenario_index, with_routes_callback, with_failed_features_callback, prep_feature_at = None):
+    def perform_many_to_many_routeplanning(self, routing_api_obj, profile, from_coors, to_coors, with_routes_callback, with_failed_features_callback, prep_feature_at = None):
         """
         
         Helper method
         
         :param routing_api_obj: 
         :param profile: 
-        :param from_coors: 
-        :param to_coors: 
+        :param from_coors: a list of [lon,lat] coordinates
+        :param to_coors: a list of [lon,lat] coordinates
         :param scenario: 
         :param scenario_index: 
         :param with_routes_callback: Takes list of type 'features : segment[][][]', with indexing features[originIndex][destinationIndexIfNoFails][segmentIndex]
@@ -477,7 +484,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         
             from_index = 0
             self.log("Routeplanning finished and JSON parsed; got " + str(len(routes["routes"])) + " routes")
-            self.log("All routes a line layer for "+json.dumps(routes))
 
             # routes["routes"] has type featureCollection[][]
             # this is a collection of features for every pair of origin/destination
@@ -493,14 +499,13 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                         self.log("to_index" + str(to_index))
                         err_msg = route["error_message"]
                         self.log("Route failed because of "+err_msg)
-                        fromC = list(reversed(from_coors[from_index]))
-                        toC = list(reversed(to_coors[to_index]))
+                        fromC = from_coors[from_index]
+                        toC = to_coors[to_index]
                         # Something went wrong here
                         failed_linestrings.append({
                             "type": "Feature",
                             "properties": {"error_message": err_msg,
-                                           "guid": str(from_coors[from_index]) + "," + str(
-                                               to_coors[to_index])},
+                                           "guid": str(fromC) + "," + str(toC)},
                             "geometry": {
                                 "type": "LineString",
                                 "coordinates": [ fromC, toC ]
@@ -522,9 +527,11 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
             self.log("First parsing or routeplanned routes finished, calling callbacks")
 
-            with_routes_callback(features)
+            # First the 'failed' layers, then the actual callback
+            # Often, the failed layers are collected and rendered along with the actual data
             with_failed_features_callback(failed_linestrings)
-            self.log("Routeplanning callbacks have run callbacks")
+            with_routes_callback(features)
+            self.log("Routeplanning: callbacks have been executed. There are "+str(len(features))+" succesfull features and "+str(len(failed_linestrings))+" failed features")
     
             self.perform_routeplanning_button.setEnabled(True)
             self.perform_routeplanning_button.setText(self.tr("Perform routeplanning"))
@@ -610,8 +617,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             to_coordinates = extract_valid_geometries(self.iface, transform_layer_to_WGS84(to_layer))
 
 
-            from_coors = extract_coordinates_array(from_coordinates, True)
-            to_coors = extract_coordinates_array(to_coordinates, True)
+            from_coors = extract_coordinates_array(from_coordinates)
+            to_coors = extract_coordinates_array(to_coordinates)
             
             def add_count(i, j, feature):
                 try:
@@ -633,7 +640,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 name_failed = "Failed_" + profile + "_" + str(scenario_index)
                 self.createFailLayer(failed, name_failed, profile, scenario_index)
 
-            self.perform_many_to_many_routeplanning(routing_api_obj, profile, from_coors, to_coors, scenario, scenario_index, with_routes_callback, with_failed, add_count)
+            self.perform_many_to_many_routeplanning(routing_api_obj, profile, from_coors, to_coors, with_routes_callback, with_failed, add_count)
         else:
             
             # We have to calculate 'N' classical routes based on a line layer
@@ -661,8 +668,9 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                     while len(line) > 2:
                         del line[1]
                 
-                departure = [line[0].y(), line[0].x()]
-                arrival = [line[1].y(), line[1].x()]
+                # [lon, lat]
+                departure = [line[0].x(), line[0].y()]
+                arrival = [line[1].x(), line[1].y()]
 
                 departure_str = str(departure)
                 arr_str = str(arrival)
@@ -715,16 +723,19 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             
             def register_result_and_run_next(features):
                 # features: segment[][][]; features[originIndex][destinationIndex][segmentIndex]
+                self.log("Performing routeplanning, "+str(len(toDo))+" left...")
                 if features is not None:
                     results.extend(features)
                 self.perform_routeplanning_button.setText("Performing routeplanning, "+str(len(toDo))+" left...")
-    
+
                 if len(toDo) == 0:
                     # We're done! Time to wrap it up and to create the layers
                     self.perform_routeplanning_button.setEnabled(True)
                     self.perform_routeplanning_button.setText(self.tr("Perform routeplanning again"))
                     
+                    self.log("Creating a routeplanned layer, there are "+str(len(failed))+" failed items")
                     self.createRouteplannedLayer(results, failed, profile, scenario_index)
+                    
 
                 else:
                     (departures, arrivals) = toDo.pop()
@@ -737,7 +748,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                             return
                         feature['properties']['count'] = counts[dep_str][arr_str]
                         
-                    self.perform_many_to_many_routeplanning(routing_api_obj, profile, departures, arrivals, scenario, scenario_index, register_result_and_run_next, append_failed, add_count)
+                    self.perform_many_to_many_routeplanning(routing_api_obj, profile, departures, arrivals, register_result_and_run_next, append_failed, add_count)
 
             register_result_and_run_next(None)
 

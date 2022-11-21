@@ -58,7 +58,6 @@ class previous_state_tracker(object):
             if extra_state_from is not None:
                 extra_key = extra_state_from.currentText()
             key = ("radiobutton_" + extra_key + "_" + id).replace("/", "_").replace(" ", "_")
-            self.log("Saving qcombox state " + key + " --> " + current_value)
             self.project_settings.writeEntry("anyways", key, current_value)
 
         def load_previous():
@@ -69,7 +68,6 @@ class previous_state_tracker(object):
             previous_value = self.project_settings.readEntry("anyways", key)[0]
             i = searchIndex(previous_value)
             if i is not None:
-                self.log("Reloaded value for key " + key + " --> " + previous_value)
                 qcombobox.setCurrentIndex(i)
 
         load_previous()

@@ -5,13 +5,14 @@ from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.core import Qgis, QgsMessageLog, QgsBlockingNetworkRequest
 
-from . import fetch_non_blocking, staging_mode
+from . import fetch_non_blocking, fetch_blocking, staging_mode
 
 BASE_URL_IMPACT_STAGING = "https://staging.anyways.eu/impact/"
 BASE_URL_IMPACT =  "https://api.anyways.eu/" if not staging_mode else BASE_URL_IMPACT_STAGING
 BASE_URL_IMPACT_META = "https://www.anyways.eu/impact/"  if not staging_mode else "https://staging.anyways.eu/impact/"
-API_PATH = "https://api.anyways.eu/publish/"
-IMPACT_API_PATH = "https://api.anyways.eu/impact/"
+API_PATH = "https://api.anyways.eu/publish/" if not staging_mode else "https://staging.anyways.eu/api/publish/prototype/"
+IMPACT_API_PATH = "https://api.anyways.eu/impact/" if not staging_mode else "https://staging.anyways.eu/api/impact/"
+EDIT_API_PATH = "https://api.anyways.eu/edit/" if not staging_mode else "https://staging.anyways.eu/api/edit/"
 
 SUPPORTED_PROFILES = ["car", "car.shortest", "car.opa", "car.default", "car.classifications",
                       "car.classifications_aggressive", "pedestrian", "pedestrian.shortest", "pedestrian.default",
@@ -84,7 +85,10 @@ class impact_api(object):
             return reply.errorString().endswith("Internal Server Error")
 
     def routing_url_for_instance(self, branch):
-        return API_PATH + branch
+        # https://github.com/anyways-open/impact-qgis-plugin/issues/29
+        metaurl = EDIT_API_PATH + "branch/" + branch
+        commit_id = json.loads(fetch_blocking(metaurl))["commit"]["id"]
+        return API_PATH + "commit/" + commit_id
 
     def routing_url_for_instance_legacy(self, token, instance = ""):
         return API_PATH + token + "/" + instance
@@ -156,25 +160,21 @@ class impact_api(object):
 
         if path in self.supported_profiles:
             callback(self.supported_profiles[path])
-        url = BASE_URL_IMPACT + "/publish/"+path+"/profiles"
+        url = API_PATH + path + "/profiles"
         
         def withData(data):
-            self.log("Got supported profiles from "+url)
             profiles = []
             parsed = json.loads(data)["profiles"]
             for element in parsed:
                 type = element["type"]
                 profile = element["name"]
 
-                self.log(type)
-                self.log(profile)
-
                 if profile == "":
                     profiles.append(type)
                 else:
                     profiles.append(type+"."+profile)
             self.supported_profiles[path] = profiles
-            self.log("Got supported profiles from "+url+": "+", ".join(profiles))
+            self.log("Got "+str(len(profiles))+" supported profiles from "+url)
             callback(profiles)
             
         def onError(e):
@@ -273,7 +273,6 @@ class impact_api(object):
             # try:
             QgsMessageLog.logMessage("repsonse ok", 'ImPact Toolbox', level=Qgis.Info)
             project = json.loads(response)
-            QgsMessageLog.logMessage("data for this project (impact instance):" + str(project), 'ImPact Toolbox', level=Qgis.Info)
             scenarios = project["scenarios"]
             callback(scenarios)
             # except Exception:
