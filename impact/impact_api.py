@@ -10,7 +10,7 @@ from . import fetch_non_blocking, fetch_blocking, staging_mode
 BASE_URL_IMPACT_STAGING = "https://staging.anyways.eu/impact/"
 BASE_URL_IMPACT =  "https://api.anyways.eu/" if not staging_mode else BASE_URL_IMPACT_STAGING
 BASE_URL_IMPACT_META = "https://www.anyways.eu/impact/"  if not staging_mode else "https://staging.anyways.eu/impact/"
-API_PATH = "https://api.anyways.eu/publish/prototype/" if not staging_mode else "https://staging.anyways.eu/api/publish/prototype/"
+API_PATH = "https://api.anyways.eu/publish/" if not staging_mode else "https://staging.anyways.eu/api/publish/prototype/"
 IMPACT_API_PATH = "https://api.anyways.eu/impact/" if not staging_mode else "https://staging.anyways.eu/api/impact/"
 EDIT_API_PATH = "https://api.anyways.eu/edit/" if not staging_mode else "https://staging.anyways.eu/api/edit/"
 
