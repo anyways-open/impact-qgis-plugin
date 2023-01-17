@@ -78,7 +78,7 @@ class routing_api(object):
 
     def request_all_routes(self, fromCoors, toCoors, profile, withRoutes, onError):
         """
-        Reqeusts a matrix call
+        Requests a matrix call
         :param fromCoors: [number,number][], containing coordinates in "lon,lat" format
         :param toCoors:  [number,number][], containing coordinates in "lon,lat" format
         :param profile: string, the name of the profile to use
@@ -86,16 +86,13 @@ class routing_api(object):
         :return: route_meta[][], where route_meta[x][y].fromCoor == fromCoors[x] and route_meta[x][y].toCoor == toCoors[y]
         """
 
-        def callback(raw):
-            data = json.loads(raw)
-            withRoutes(data)
-            print("Got data")
+
 
         if self.is_impact_backend:
             url = self._baseurl + "/routing/many-to-many"
         else:
             url = self._baseurl + "/v1.1/matrix"
-        print(url)
+        
         headers = {}
         if self.auth_token is not None:
             headers = {
@@ -106,10 +103,46 @@ class routing_api(object):
             # the old api.anyways.eu/routing takes 'lat,lon'
             fromCoors = list(map(lambda c : list(reversed(c)), fromCoors))
             toCoors = list(map(lambda c : list(reversed(c)), toCoors))
-            
-        postData = {
-            "profile": profile,
-            "from": fromCoors,
-            "to": toCoors
-        }
-        fetch_non_blocking(url, callback, onError, postData=postData, headers=headers)
+        
+        # More then 100 coordinates is deadly for the application - especially on slower internet - so we split them up
+        
+        # Result is the final result that will be sent if no toCoors are left
+        # We intersperse the 'data'-list later on
+        # Type: routemeta [][]
+        allresults = list()
+        while(len(toCoors) > 0):
+            sublistTo = toCoors[0:100]
+            toCoors = toCoors[100:]
+            fromCoorsClone = fromCoors
+            data = list()
+            def callbackIntermediate(raw):
+                data.extend(json.loads(raw)["routes"])
+                print("Appended data")
+                
+            def callbackFinal(raw):
+                data.extend(json.loads(raw)["routes"])
+                print("Got all data, calling callback")
+                # We have to fuse the 'data' list in the 'result'-list
+                if len(allresults) == 0:
+                    allresults.extend(data)
+                else:
+                    for i in range(0, len(data)):
+                        allresults[i].extend(data[i])
+                print("Fused lists, time to call withRoutes?", len(toCoors))
+                if len(toCoors) == 0:
+                    withRoutes({"routes": allresults})
+    
+            while(len(fromCoorsClone) > 0):
+                sublist = fromCoorsClone[0:100]
+                fromCoorsClone = fromCoorsClone[100:]
+                postData = {
+                    "profile": profile,
+                    "from": sublist,
+                    "to": sublistTo
+                }
+                
+                print("Requesting routes from "+url+" with "+str(len(sublist))+" from coordinates and "+str(len(sublistTo))+" to coordinates and profile "+profile)
+                print(str(len(fromCoors)) + "*" + str(len(toCoors))+" routes remaining after this batch", str(len(fromCoorsClone)) +"*"+ str(len(sublistTo)) +" routes remaining in this batch ")
+    
+                callback = callbackFinal if len(fromCoorsClone) == 0 else callbackIntermediate
+                fetch_non_blocking(url,  callback, onError, postData=postData, headers=headers)

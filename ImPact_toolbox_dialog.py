@@ -478,12 +478,12 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         
         
         def routeplanning_many_to_many_done(routes):
+            print("Routeplanning_many_to_many_done in ImPact_toolbox_dialog is being called")
             # features[originIndex][successFulldestinationIndex][segmentIndex]
             features = []
             failed_linestrings = []
         
             from_index = 0
-            self.log("Routeplanning finished and JSON parsed; got " + str(len(routes["routes"])) + " routes")
 
             # routes["routes"] has type featureCollection[][]
             # this is a collection of features for every pair of origin/destination
@@ -573,7 +573,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             
     def run_routeplanning(self):
         """
-        The main handler of the "perform routeplanning button"
+        The main handler of the "perform routeplanning button" which does the n*m routeplanning
         :return: 
         """
         self.perform_routeplanning_button.setEnabled(False)
