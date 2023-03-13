@@ -110,9 +110,12 @@ class impact_api(object):
                 QgsMessageLog.logMessage("Got scenarios via legacy call:" + str(scenarios), 'ImPact Toolbox', level=Qgis.Info)
                 found = []
                 for scenario in scenarios:
-                    name = scenario["name"]
+                    name = scenario["name"].replace("\n", " ").replace("<br>", " ").strip()
                     if name == None or len(name) == 0:
                         name = "Scenario " + scenario["functionalName"]
+
+                    if "description" in scenario:
+                        name = name + " ("+scenario["description"].replace("<br>"," ").strip()+")"
 
                     branchId = scenario["branchId"]
                     if branchId.startswith("opa/"):
