@@ -43,7 +43,6 @@ def extract_instance_name(url):
 
 class impact_api(object):
     
-    
 
     def __init__(self, oauth_token=None):
         """
@@ -110,11 +109,11 @@ class impact_api(object):
                 QgsMessageLog.logMessage("Got scenarios via legacy call:" + str(scenarios), 'ImPact Toolbox', level=Qgis.Info)
                 found = []
                 for scenario in scenarios:
-                    name = scenario["name"].replace("\n", " ").replace("<br>", " ").strip()
+                    name = scenario["name"]
                     if name == None or len(name) == 0:
                         name = "Scenario " + scenario["functionalName"]
-
-                    if "description" in scenario:
+                    name = name.replace("\n", " ").replace("<br>", " ").strip()
+                    if "description" in scenario and scenario["description"] is not None and scenario["description"] != "":
                         name = name + " ("+scenario["description"].replace("<br>"," ").strip()+")"
 
                     branchId = scenario["branchId"]
