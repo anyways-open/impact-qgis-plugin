@@ -38,7 +38,7 @@ def extract_instance_name(url):
     except:
         pass
 
-    return "/".join(parts)
+    return parts[-1]
 
 
 class impact_api(object):
@@ -245,7 +245,7 @@ class impact_api(object):
             "Authorization": self.oauth_token
         })
 
-    def __load_project(self, path, callback, onError):
+    def __load_project(self, projectId, callback, onError):
         """
         Fetches the project details from an endpoint that doesn't require authentication.
         
@@ -255,18 +255,7 @@ class impact_api(object):
         :return: 
         """
 
-        QgsMessageLog.logMessage("current path in load_project:" + path, 'ImPact Toolbox', level=Qgis.Info)
-
-        parts = path.split("/")
-        QgsMessageLog.logMessage(str(len(parts)), 'ImPact Toolbox', level=Qgis.Info)
-        if len(parts) < 2:
-            QgsMessageLog.logMessage("parts not ok", 'ImPact Toolbox', level=Qgis.Info)
-            callback([])
-            return
-        
-        
-        organizationFunctionalName = parts[0]
-        functionalName = parts[1]
+        QgsMessageLog.logMessage("current project in load_project:" + projectId, 'ImPact Toolbox', level=Qgis.Info)
 
         def withData(response):
             if response == "":
@@ -281,7 +270,7 @@ class impact_api(object):
             #     QgsMessageLog.logMessage("failed"), 'ImPact Toolbox', level=Qgis.Info)
             #     onError("Invalid response, probably a wrong token")
 
-        url = IMPACT_API_PATH + "plugin/project/" + organizationFunctionalName + "/" + functionalName
+        url = IMPACT_API_PATH + "plugin/project/" + projectId
         QgsMessageLog.logMessage("fetching:" + url, 'ImPact Toolbox', level=Qgis.Info)
         fetch_non_blocking(url, withData, onError, postData=None, headers={
             "Accept": "*/*",
