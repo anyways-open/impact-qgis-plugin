@@ -34,7 +34,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from .impact import fod_api, impact_api, transform_layer_to_WGS84, extract_valid_geometries, add_reverse_lines, routing_api, \
     feature_histogram, layer_as_geojson_features, previous_state_tracker, create_layer_from_file, \
     extract_coordinates_array, default_layer_styling, staging_mode, patch_feature, generate_layer_report
-
+import re
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'ImPact_toolbox_dialog_base.ui'))
@@ -167,11 +167,19 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         for clean_part in clean_parts:
             self.impact_instance_selector.addItem(clean_part)
 
+    def clean_name(self, name):
+        """
+        Removes weird characters from a name, in order to use this as filename
+        :param name: 
+        :return: 
+        """
+        return re.sub(r'[<>:"/\\|?*[\]()&;]', "_",  name)
+
     def save_outline_as_layer(self):
         instance = self.impact_instance_selector.currentText()
 
         def withGeoJsonFeature(obj):
-            filename = self.path + "/" + "outline_" + instance.replace("/", "_") + ".geojson"
+            filename = self.path + "/" + "outline_" + self.clean_name(instance) + ".geojson"
             f = open(filename, "w+")
             json.dump(
                 {
@@ -266,6 +274,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             QgsProject.instance().addMapLayer(lyr)
 
             self.query_movement_pairs_button.setEnabled(True)
+            # There is no need to return the filepath; QGis will remember this for us
 
         def onError(err):
             self.error_user(self.tr("Could not query the FOD-API: ") + err)
@@ -309,7 +318,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         
         histogram = feature_histogram.feature_histogram(features)
         geojson = histogram.to_geojson()
-        filename = self.path + "/" + name + ".geojson"
+        
+        filename = self.path + "/" + self.clean_name(name) + ".geojson"
         f = open(filename, "w+")
         f.write(json.dumps(geojson))
         f.close()
@@ -317,6 +327,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         lyr = QgsVectorLayer(filename, name, "ogr")
         QgsProject.instance().addMapLayer(lyr)
         self.layer_styling.style_routeplanning_layer(lyr, profile, scenario_index)
+        # There is no need to return the filepath; QGis will remember this for us
+
 
     def createLineLayer(self, features, name, profile, scenario_index):
         """
@@ -376,7 +388,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 }
             )
         
-        filename = self.path + "/" + name + ".geojson"
+        filename = self.path + "/" + self.clean_name(name) + ".geojson"
         f = open(filename, "w+")
         f.write(json.dumps({
             "type": "FeatureCollection",
@@ -395,7 +407,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                     len(failed_linestrings)) + self.tr(" routes failed. A layer with failed requests has been created"))
             histogram = feature_histogram.feature_histogram(failed_linestrings)
             geojson = histogram.to_geojson()
-            filename = self.path + "/" + name + ".geojson"
+            filename = self.path + "/" + self.clean_name(name) + ".geojson"
             f = open(filename, "w+")
             f.write(json.dumps(geojson))
             f.close()
@@ -768,7 +780,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
         geojson = diff.to_geojson()
         name = "traffic_shift_between_" + zero_layer.name() + "_and_" + new_layer.name()
-        filename = self.path + "/" + name.replace("/", "_") + ".geojson"
+
+        filename = self.path + "/" + self.clean_name(name) + ".geojson"
         f = open(filename, "w+")
         f.write(json.dumps(geojson))
         f.close()

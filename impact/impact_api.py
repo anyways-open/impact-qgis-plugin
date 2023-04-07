@@ -10,7 +10,7 @@ from . import fetch_non_blocking, fetch_blocking, staging_mode
 BASE_URL_IMPACT_STAGING = "https://staging.anyways.eu/impact/"
 BASE_URL_IMPACT =  "https://api.anyways.eu/" if not staging_mode else BASE_URL_IMPACT_STAGING
 BASE_URL_IMPACT_META = "https://www.anyways.eu/impact/"  if not staging_mode else "https://staging.anyways.eu/impact/"
-API_PATH = "https://api.anyways.eu/publish/" if not staging_mode else "https://staging.anyways.eu/api/publish/prototype/"
+API_PATH = "https://api.anyways.eu/publish/" if not staging_mode else "https://staging.anyways.eu/api/publish/"
 IMPACT_API_PATH = "https://api.anyways.eu/impact/" if not staging_mode else "https://staging.anyways.eu/api/impact/"
 EDIT_API_PATH = "https://api.anyways.eu/edit/" if not staging_mode else "https://staging.anyways.eu/api/edit/"
 
@@ -38,11 +38,10 @@ def extract_instance_name(url):
     except:
         pass
 
-    return "/".join(parts)
+    return parts[-1]
 
 
 class impact_api(object):
-    
     
 
     def __init__(self, oauth_token=None):
@@ -110,11 +109,11 @@ class impact_api(object):
                 QgsMessageLog.logMessage("Got scenarios via legacy call:" + str(scenarios), 'ImPact Toolbox', level=Qgis.Info)
                 found = []
                 for scenario in scenarios:
-                    name = scenario["name"].replace("\n", " ").replace("<br>", " ").strip()
+                    name = scenario["name"]
                     if name == None or len(name) == 0:
                         name = "Scenario " + scenario["functionalName"]
-
-                    if "description" in scenario:
+                    name = name.replace("\n", " ").replace("<br>", " ").strip()
+                    if "description" in scenario and scenario["description"] is not None and scenario["description"] != "":
                         name = name + " ("+scenario["description"].replace("<br>"," ").strip()+")"
 
                     branchId = scenario["branchId"]
@@ -246,7 +245,7 @@ class impact_api(object):
             "Authorization": self.oauth_token
         })
 
-    def __load_project(self, path, callback, onError):
+    def __load_project(self, projectId, callback, onError):
         """
         Fetches the project details from an endpoint that doesn't require authentication.
         
@@ -256,18 +255,7 @@ class impact_api(object):
         :return: 
         """
 
-        QgsMessageLog.logMessage("current path in load_project:" + path, 'ImPact Toolbox', level=Qgis.Info)
-
-        parts = path.split("/")
-        QgsMessageLog.logMessage(str(len(parts)), 'ImPact Toolbox', level=Qgis.Info)
-        if len(parts) < 2:
-            QgsMessageLog.logMessage("parts not ok", 'ImPact Toolbox', level=Qgis.Info)
-            callback([])
-            return
-        
-        
-        organizationFunctionalName = parts[0]
-        functionalName = parts[1]
+        QgsMessageLog.logMessage("current project in load_project:" + projectId, 'ImPact Toolbox', level=Qgis.Info)
 
         def withData(response):
             if response == "":
@@ -282,7 +270,7 @@ class impact_api(object):
             #     QgsMessageLog.logMessage("failed"), 'ImPact Toolbox', level=Qgis.Info)
             #     onError("Invalid response, probably a wrong token")
 
-        url = IMPACT_API_PATH + "plugin/project/" + organizationFunctionalName + "/" + functionalName
+        url = IMPACT_API_PATH + "plugin/project/" + projectId
         QgsMessageLog.logMessage("fetching:" + url, 'ImPact Toolbox', level=Qgis.Info)
         fetch_non_blocking(url, withData, onError, postData=None, headers={
             "Accept": "*/*",
