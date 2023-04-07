@@ -8,7 +8,7 @@ from qgis.core import *
 from urllib import request
 
 standalone_mode = False
-staging_mode = False
+staging_mode = True
 
 
 def setStandalone():
