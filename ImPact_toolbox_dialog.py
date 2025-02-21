@@ -121,7 +121,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # At last: update and set the profile explanations
         self.profile_picker.currentIndexChanged.connect(self.update_profile_explanation)
-        self.scenario_picker.currentIndexChanged.connect(self.update_profile_picker)
         self.update_scenario_picker()
         self.update_profile_explanation()
         
@@ -815,34 +814,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self.state_tracker.resume_loading()
 
         self.impact_api.detect_scenarios(instance_name, withScenarioList)
-
-    def update_profile_picker(self):
-        """
-        Should be called whenever the scenario is changed
-        Makes sure the profile picker only show appropriate entries
-        :return: 
-        """
-
-        self.state_tracker.pause_loading()
-        self.profile_picker.clear()
-
-        index = self.scenario_picker.currentIndex()
-        if (index == 0):
-            # This is the live API; these profiles were loaded in 'profile_keys'
-            self.log("Setting profiles: " + ",".join(self.profile_keys))
-            self.profile_picker.clear()
-            self.profile_picker.addItems(self.profile_keys)
-        else:
-            # An impact instance
-            index = self.scenario_picker.currentIndex() - 1
-            instance_name = self.impact_instance_selector.currentText()
-            if instance_name != "":
-                def callback(profiles):
-                    self.profile_picker.clear()
-                    self.profile_picker.addItems(profiles)
-                self.impact_api.get_supported_profiles(instance_name, index, callback)
-                 
-        self.state_tracker.resume_loading()
 
     def update_profile_explanation(self):
         """

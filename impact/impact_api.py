@@ -14,16 +14,20 @@ API_PATH = "https://api.anyways.eu/publish/" if not staging_mode else "https://s
 IMPACT_API_PATH = "https://api.anyways.eu/impact/" if not staging_mode else "https://staging.anyways.eu/api/impact/"
 EDIT_API_PATH = "https://api.anyways.eu/edit/" if not staging_mode else "https://staging.anyways.eu/api/edit/"
 
-SUPPORTED_PROFILES = ["car", "car.shortest", "car.opa", "car.default", "car.classifications",
-                      "car.classifications_aggressive", "pedestrian", "pedestrian.shortest", "pedestrian.default",
-                      "pedestrian.opa",
-                      "bicycle", "bicycle.fastest", "bicycle.shortest", "bicycle.safety", "bicycle.comfort",
-                      "bicycle.comfort_safety",
-                      "bicycle.electrical_fastest", "bicycle.networks", "bicycle.brussels", "bicycle.genk",
-                      "bicycle.antwerp",
-                      "bicycle.cycle_highway", "bicycle.node_network", "bicycle.commute", "bicycle.b2w",
-                      "bicycle.anyways_network"]
-
+SUPPORTED_PROFILES = [
+			"bicycle.comfort_safety",
+			"bicycle.comfort",
+			"bicycle.commute",
+			"bicycle.fast",
+			"bicycle.safety",
+			"bicycle.short",
+			"car.fast",
+			"car.short",
+			"car.classifications",
+			"bigtruck.fast",
+			"bigtruck.short",
+			"pedestrian.short",
+			"pedestrian.slow_roads"]
 
 def extract_instance_name(url):
     if (not url.startswith("http")):
@@ -137,57 +141,6 @@ class impact_api(object):
                 callback(project["scenarioIds"])
 
         self.load_available_projects(handleProjects, print)
-
-
-
-    def get_supported_profiles(self, instance_name, index, callback):
-        def _callback(scenarios):
-            scenario_path = scenarios[index]
-            if(type(scenario_path) is tuple):
-                scenario_path = scenario_path[1]
-            self.__get_supported_profiles(scenario_path, callback)
-        self.detect_scenarios(instance_name, _callback)
-        
-        
-    def __get_supported_profiles(self, path, callback):
-        """
-        Fetches the supported profiles for the project from https://staging.anyways.eu/api/impact/publish/<token>/profiles
-        
-        If the call fails, the default list is reteruned
-        
-        :param index: the number of the scenario 
-        :param callback: 
-        :return: "type.profile"[]
-        """
-
-        if path in self.supported_profiles:
-            callback(self.supported_profiles[path])
-        url = API_PATH + path + "/profiles"
-        
-        def withData(data):
-            profiles = []
-            parsed = json.loads(data)["profiles"]
-            for element in parsed:
-                type = element["type"]
-                profile = element["name"]
-
-                if profile == "":
-                    profiles.append(type)
-                else:
-                    profiles.append(type+"."+profile)
-            self.supported_profiles[path] = profiles
-            self.log("Got "+str(len(profiles))+" supported profiles from "+url)
-            callback(profiles)
-            
-        def onError(e):
-            self.log(e)
-            callback(SUPPORTED_PROFILES)
-
-        self.log("Fetching supported profiles for "+url)
-        fetch_non_blocking(url, withData, onError, postData=None, headers={
-            "Accept": "*/*",
-        })
-
 
     def get_outline(self, instance_name, with_geojson):
         """
