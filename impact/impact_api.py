@@ -117,8 +117,6 @@ class impact_api(object):
                     if name == None or len(name) == 0:
                         name = "Scenario " + scenario["functionalName"]
                     name = name.replace("\n", " ").replace("<br>", " ").strip()
-                    if "description" in scenario and scenario["description"] is not None and scenario["description"] != "":
-                        name = name + " ("+scenario["description"].replace("<br>"," ").strip()+")"
 
                     branchId = scenario["branchId"]
                     if branchId.startswith("opa/"):
