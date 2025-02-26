@@ -26,7 +26,7 @@ class default_layer_styling:
 
 
     def log(self, msg):
-        QgsMessageLog.logMessage(msg, 'ImPact Toolbox', level=Qgis.Info)
+        QgsMessageLog.logMessage(msg, MESSAGE_CATEGORY, level=Qgis.Info)
 
 
     def style_impact_outline(self, qgsLayer):

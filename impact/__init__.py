@@ -7,6 +7,8 @@ from PyQt5.QtNetwork import QNetworkReply, QNetworkRequest
 from qgis.core import *
 from urllib import request
 
+from ..settings import MESSAGE_CATEGORY
+
 standalone_mode = False
 staging_mode = False
 
@@ -77,7 +79,7 @@ def fetch_non_blocking(url, callback, onerror, postData=None, headers=None):
             msg = "POST-request to " + url + " with headers " + json.dumps(headers)
             if staging_mode:
                 msg += " and post-data "+json.dumps(postData)
-            QgsMessageLog.logMessage(msg, 'ImPact Toolbox', level=Qgis.Info)
+            QgsMessageLog.logMessage(msg, MESSAGE_CATEGORY, level=Qgis.Info)
 
             req = request.Request(url, data=json.dumps(postData).encode('UTF-8'),
                                   headers=headers)  # this will make the method "POST"
@@ -105,10 +107,10 @@ def fetch_non_blocking(url, callback, onerror, postData=None, headers=None):
             except Exception as e:
                 stack = "".join(traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
                 QgsMessageLog.logMessage("Handling the response failed due to " + str(e) + "\n" + stack,
-                                         'ImPact Toolbox', level=Qgis.Warning)
-                QgsMessageLog.logMessage("The failed URL is " + url, 'ImPact Toolbox', level=Qgis.Warning)
+                                         MESSAGE_CATEGORY, level=Qgis.Warning)
+                QgsMessageLog.logMessage("The failed URL is " + url, MESSAGE_CATEGORY, level=Qgis.Warning)
                 if postData is not None:
-                    QgsMessageLog.logMessage("The failed Post-Data is " + json.dumps(postData), 'ImPact Toolbox',
+                    QgsMessageLog.logMessage("The failed Post-Data is " + json.dumps(postData), MESSAGE_CATEGORY,
                                              level=Qgis.Warning)
                 onerror(str(e))
                 if str(e) == "FIRST AID!":
@@ -126,32 +128,14 @@ def fetch_non_blocking(url, callback, onerror, postData=None, headers=None):
         fetcher.fetchContent(req)
     except Exception as e:
         stack = "".join(traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
-        QgsMessageLog.logMessage("Handling the response failed due to " + str(e) + "\n" + stack, 'ImPact Toolbox',
+        QgsMessageLog.logMessage("Handling the response failed due to " + str(e) + "\n" + stack, MESSAGE_CATEGORY,
                                  level=Qgis.Warning)
         onerror(str(e))
         if str(e) == "FIRST AID!":
             raise e
 
 
-def extract_valid_geometries(iface, features, warning='The selected layer has some entries where the geometry is Null'):
-    """check if a list of feature has empty geometries. 
-    :param iface (QgisInterface): the interface with the mainWindow
-    :param featureLayer (QgsVectorLayer): the layer to check
-    :param    warning (string, optional): a optional message to give to user if a null-geometry is found
-    :return (features[]): all the features for which the geometry is valid
-    """
-    valid_features = []
-    fautly_features_count = 0
-    for feat in features:
-        if feat.geometry().isNull():
-            fautly_features_count += 1
-        else:
-            valid_features.append(feat)
 
-    if fautly_features_count > 0:
-        iface.messageBar().pushMessage('ImPact_toolbox Warning', warning, level=Qgis.Warning)
-
-    return valid_features
 
 
 def add_reverse_lines(features):
@@ -242,26 +226,7 @@ def generate_layer_report(features):
     return "\n".join([total_str, forward_count_str + has_null_str, "", backward_count_str, count_rev_expl_str])
 
 
-def transform_layer_to_WGS84(layer):
-    """
-     Cheking and transforming layers' CRS to EPSG: 4326
-    :param layer: A qgis layer
-    :return A list of features
-    """
-    if layer.crs() == 4326:
-        features = layer.getFeatures()
-    else:
-        crsSrc = QgsCoordinateReferenceSystem(layer.crs())
-        crsDest = QgsCoordinateReferenceSystem(4326)
-        xform = QgsCoordinateTransform(crsSrc, crsDest, QgsProject.instance())
 
-        features = []
-        for f in layer.getFeatures():
-            g = f.geometry()
-            g.transform(xform)
-            f.setGeometry(g)
-            features.append(f)
-    return features
 
 
 def extract_polygons(layer):
@@ -284,7 +249,7 @@ def create_layergroup_from_files(filelist, groupname, color="#ff0000", width=1.0
 
     for file in filelist:
         try:
-            QgsMessageLog.logMessage("Creating a layer from file " + file, 'ImPact Toolbox', level=Qgis.Info)
+            QgsMessageLog.logMessage("Creating a layer from file " + file, MESSAGE_CATEGORY, level=Qgis.Info)
             fileroute = file
             filename = QgsVectorLayer(fileroute, file[:-5], "ogr")
             QgsProject.instance().addMapLayer(filename, False)
@@ -296,7 +261,7 @@ def create_layergroup_from_files(filelist, groupname, color="#ff0000", width=1.0
             shapeGroup.insertChildNode(1, QgsLayerTreeLayer(filename))
         except Exception as e:
             QgsMessageLog.logMessage("Creating a layer from file " + file + " failed due to " + e.message,
-                                     'ImPact Toolbox', level=Qgis.Warning)
+                                     MESSAGE_CATEGORY, level=Qgis.Warning)
 
 
 def create_layer_from_file(iface, filename):
@@ -304,30 +269,6 @@ def create_layer_from_file(iface, filename):
     lyr = QgsVectorLayer(filename, filename, "ogr")
     QgsProject.instance().addMapLayer(lyr)
     return lyr
-
-
-def extract_coordinates_array(features, latlonformat=False):
-    """
-    Returns the coordinates of the given features as a list containing two numbers, e.g. [[4.1,51.2], [4.2,51.3], ... ]
-    Returns [lon, lat] by default, unless 'latlonformat' is set
-    :param features: 
-    """
-    result = []
-    for feature in features:
-        if isinstance(feature, QgsPointXY):
-            point = feature
-        else:
-            point = feature.geometry().asPoint()
-        X = point.x()
-        Y = point.y()
-        coor = None
-        if latlonformat:
-            coor = [Y, X]
-        else:
-            coor = [X, Y]
-        result.append(coor)
-    return result
-
 
 def extract_coordinates(features, latlonformat=False):
     """

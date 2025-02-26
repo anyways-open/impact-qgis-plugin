@@ -14,7 +14,7 @@ class previous_state_tracker(object):
         self.is_updating = False
 
     def log(self, msg):
-        QgsMessageLog.logMessage(msg, 'ImPact Toolbox', level=Qgis.Info)
+        QgsMessageLog.logMessage(msg, MESSAGE_CATEGORY, level=Qgis.Info)
 
     def init_and_connect_textfield(self, id, qlineEdit):
         key = ("textfield_" + id).replace("/", "_").replace(" ", "_")

@@ -12,16 +12,10 @@ setStandalone()
 def test_routeplanning(writeFiles=False):
     routing = impact.routing_api.routing_api(testkey, "https://staging.anyways.eu/routing-api")
 
-    def withProfiles(profiles, profile_keys):
-        assert (len(profiles) > 0)
-
-        routes = routing.request_all_routes(
+    routes = routing.request_all_routes(
             [[5.489040573818812, 50.95426526062005], [5.489040573818812, 50.95426526062005]],
             [[5.489526754837783, 50.96498330385117]],
             "bicycle.fastest", print, print)
-
-    profiles = routing.request_supported_profiles(withProfiles)
-
 
 def test_fod_api():
     f = open("testdata/brugge_bbox.geojson", "r")
@@ -94,14 +88,6 @@ def test_impact():
     assert ("https://api.anyways.eu/publish/labo/herentals/1" == clean_url)
 
 
-def test_profiles():
-    def callback(profile_info, keys):
-        assert len(keys) > 10
-        assert profile_info["bicycle.safety"].startswith("A defensive route shying away from big roads")
-
-    impact.routing_api.routing_api("").request_supported_profiles(callback)
-
-
 def test_routing_matrix():
     impact_api.BASE_URL_IMPACT = "https://staging.anyways.eu/api/impact/"
     impact = impact_api.impact_api()
@@ -140,12 +126,6 @@ def test_boundaries():
     
     boundaries = hist.natural_boundaries()
     print(boundaries)
-
-def test_fetch_impact_profiles():
-    api = impact_api.impact_api()
-    def callback(profiles):
-        
-    api.get_supported_profiles("6d5f8c0e-2027-427c-abc7-5450ec3e4a68", print)
 
 def test_all():
     print("Testing all")
