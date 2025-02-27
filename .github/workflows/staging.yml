@@ -17,9 +17,8 @@ jobs:
       run: |
         FILE=`ls anyways-impact-toolbox-[0-9.]*.zip`
         VERSION=`echo $FILE | sed "s/anyways-impact-toolbox-\([0-9.]*[0-9]\)-dev.zip/\1/"`
-        echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "FILE=$FILE" >> $GITHUB_ENV
-        
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
@@ -29,5 +28,5 @@ jobs:
         files: |
           LICENSE
           *.zip
-    - name: Publish experimental version to QGIS repo.
+    - name: Publish To QGIS repo.
       run: python ./deployment/plugin_upload.py -u xivk -w ${{ secrets.QGIS_REPO_SECRET }} ${{ env.FILE }}

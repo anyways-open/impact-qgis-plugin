@@ -56,7 +56,7 @@ class feature_histogram(object):
         }
 
     def log(self, msg):
-        # QgsMessageLog.logMessage(msg, 'ImPact Toolbox', level=Qgis.Info)
+        # QgsMessageLog.logMessage(msg, MESSAGE_CATEGORY, level=Qgis.Info)
         pass
 
 

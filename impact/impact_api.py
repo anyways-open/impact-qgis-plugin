@@ -6,6 +6,7 @@ from qgis.PyQt.QtNetwork import QNetworkRequest
 from qgis.core import Qgis, QgsMessageLog, QgsBlockingNetworkRequest
 
 from . import fetch_non_blocking, fetch_blocking, staging_mode
+from ..settings import MESSAGE_CATEGORY
 
 BASE_URL_IMPACT_STAGING = "https://staging.anyways.eu/impact/"
 BASE_URL_IMPACT =  "https://api.anyways.eu/" if not staging_mode else BASE_URL_IMPACT_STAGING
@@ -13,21 +14,6 @@ BASE_URL_IMPACT_META = "https://www.anyways.eu/impact/"  if not staging_mode els
 API_PATH = "https://api.anyways.eu/publish/" if not staging_mode else "https://staging.anyways.eu/api/publish/"
 IMPACT_API_PATH = "https://api.anyways.eu/impact/" if not staging_mode else "https://staging.anyways.eu/api/impact/"
 EDIT_API_PATH = "https://api.anyways.eu/edit/" if not staging_mode else "https://staging.anyways.eu/api/edit/"
-
-SUPPORTED_PROFILES = [
-			"bicycle.comfort_safety",
-			"bicycle.comfort",
-			"bicycle.commute",
-			"bicycle.fast",
-			"bicycle.safety",
-			"bicycle.short",
-			"car.fast",
-			"car.short",
-			"car.classifications",
-			"bigtruck.fast",
-			"bigtruck.short",
-			"pedestrian.short",
-			"pedestrian.slow_roads"]
 
 def extract_instance_name(url):
     if (not url.startswith("http")):
@@ -64,11 +50,11 @@ class impact_api(object):
         self.available_scenarios = dict()
 
         # Cache for supported profiles per token, dict {token --> string[]}
-        self.supported_profiles = {}
+        self.supported_profiles = { "car.fast" }
         
 
     def log(self, msg):
-        QgsMessageLog.logMessage(msg, 'ImPact Toolbox', level=Qgis.Info)
+        QgsMessageLog.logMessage(msg, MESSAGE_CATEGORY, level=Qgis.Info)
 
     def _test_url(self, url):
         request = QNetworkRequest(QUrl(url))
@@ -110,7 +96,7 @@ class impact_api(object):
             # No auth-token given, use plugin call.
 
             def handleScenarios(scenarios):
-                QgsMessageLog.logMessage("Got scenarios via legacy call:" + str(scenarios), 'ImPact Toolbox', level=Qgis.Info)
+                QgsMessageLog.logMessage("Got scenarios via legacy call:" + str(scenarios), MESSAGE_CATEGORY, level=Qgis.Info)
                 found = []
                 for scenario in scenarios:
                     name = scenario["name"]
@@ -206,23 +192,23 @@ class impact_api(object):
         :return: 
         """
 
-        QgsMessageLog.logMessage("current project in load_project:" + projectId, 'ImPact Toolbox', level=Qgis.Info)
+        QgsMessageLog.logMessage("current project in load_project:" + projectId, MESSAGE_CATEGORY, level=Qgis.Info)
 
         def withData(response):
             if response == "":
                 onError("empty result, probably invalid token")
                 return
             # try:
-            QgsMessageLog.logMessage("repsonse ok", 'ImPact Toolbox', level=Qgis.Info)
+            QgsMessageLog.logMessage("repsonse ok", MESSAGE_CATEGORY, level=Qgis.Info)
             project = json.loads(response)
             scenarios = project["scenarios"]
             callback(scenarios)
             # except Exception:
-            #     QgsMessageLog.logMessage("failed"), 'ImPact Toolbox', level=Qgis.Info)
+            #     QgsMessageLog.logMessage("failed"), MESSAGE_CATEGORY, level=Qgis.Info)
             #     onError("Invalid response, probably a wrong token")
 
         url = IMPACT_API_PATH + "plugin/project/" + projectId
-        QgsMessageLog.logMessage("fetching:" + url, 'ImPact Toolbox', level=Qgis.Info)
+        QgsMessageLog.logMessage("fetching:" + url, MESSAGE_CATEGORY, level=Qgis.Info)
         fetch_non_blocking(url, withData, onError, postData=None, headers={
             "Accept": "*/*",
         })
