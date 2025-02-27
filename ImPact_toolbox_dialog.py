@@ -663,7 +663,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self.layer_styling.style_routeplanning_layer(result_layer, profile, scenario_index)
             if result_failed_layer is not None:
                 QgsProject.instance().addMapLayer(result_failed_layer)
-                #self.layer_styling.style_routeplanning_layer(result_failed_layer, "FAILED", scenario_index)
+                self.layer_styling.style_routeplanning_layer(result_failed_layer, "FAILED", scenario_index)
             return
 
         RoutingHandler.start_route_planning(result_layer_name, network, profile, matrix, routes_planning_callback)
