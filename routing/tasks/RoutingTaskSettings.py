@@ -1,7 +1,6 @@
 from collections.abc import Callable
 
-from ...Result import Result
-from ...clients.publish_api.Models.RouteResponse import RouteResponse
+from .RouteResult import RouteResult
 from ..Matrix import Matrix
 from ..RoutingNetwork import RoutingNetwork
 
@@ -20,7 +19,8 @@ class NetworkCommit(object):
     return f"<NetworkCommit: SnapshotCommit {self.snapshot_commit_id}>"
 
 class RoutingTaskSettings(object):
-  def __init__(self, network: RoutingNetwork, profile: str, matrix: Matrix, callback: Callable[[list[Result[RouteResponse]]], None]):
+  def __init__(self, name: str, network: RoutingNetwork, profile: str, matrix: Matrix, callback: Callable[[list[RouteResult]], None]):
+    self.name = name
     self.profile = profile
     self.network = network
     self.matrix = matrix

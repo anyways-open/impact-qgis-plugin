@@ -8,6 +8,7 @@ import time
 from qgis.PyQt import (QtWidgets, uic)
 from qgis.core import *
 
+from .routing.tasks.RouteResult import RouteResult
 from .clients.publish_api.Models.RouteResponse import RouteResponse
 from .layers.HistogramLayerBuilder import HistogramLayerBuilder
 from .settings import MESSAGE_CATEGORY
@@ -644,23 +645,29 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         # use the routing handler to do the work.
         scenario_index = self.scenario_picker.currentIndex()
         profile = self.profile_picker.currentText()
-        def routes_planning_callback(results: list[Result[RouteResponse]]):
+
+        time_str = time.strftime("%Y%m%d_%H%M%S")
+        profile_file_name = profile.replace(".", "_")
+        result_layer_name = f"live_{profile_file_name}_{time_str}"
+        if scenario_index > 0:
+            result_layer_name = f"scenario_{scenario_index-1}_{profile_file_name}_{time_str}"
+
+        def routes_planning_callback(results: list[RouteResult]):
             self.perform_routeplanning_button.setEnabled(True)
             self.perform_routeplanning_button.setText(self.tr("Start route planning"))
 
-            result_layer_name = f"live_{profile}"
-            if scenario_index >= 0:
-                result_layer_name = f"scenario_{profile}_{scenario_index-1:00}"
+            histogram_layer_builder = HistogramLayerBuilder(result_layer_name, matrix, results)
+            [result_layer, result_failed_layer] = histogram_layer_builder.build_layer(self.path)
 
-            filename = f"{self.path}/{result_layer_name}.geojson"
-            histogram_layer_builder = HistogramLayerBuilder(result_layer_name, results)
-            vector_layer = histogram_layer_builder.build_layer(filename)
-
-            QgsProject.instance().addMapLayer(vector_layer)
-            self.layer_styling.style_routeplanning_layer(vector_layer, profile, scenario_index)
+            QgsProject.instance().addMapLayer(result_layer)
+            self.layer_styling.style_routeplanning_layer(result_layer, profile, scenario_index)
+            if result_failed_layer is not None:
+                QgsProject.instance().addMapLayer(result_failed_layer)
+                #self.layer_styling.style_routeplanning_layer(result_failed_layer, "FAILED", scenario_index)
             return
 
-        RoutingHandler.start_route_planning(network, profile, matrix, routes_planning_callback)
+        RoutingHandler.start_route_planning(result_layer_name, network, profile, matrix, routes_planning_callback)
+        self.close()
 
     def calculate_traffic_diff(self):
         zero_layer = self.zero_situation_picker.currentLayer()

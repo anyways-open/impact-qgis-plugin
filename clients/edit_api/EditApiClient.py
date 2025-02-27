@@ -18,14 +18,11 @@ class EditApiClient(object):
             raise Exception("No callback given for fetch_non_blocking")
 
         url = f"{self.settings.url}snapshot/{snapshot_name}/commit/latest"
-        QgsMessageLog.logMessage(f"{EditApiClient.__name__} GET {url}", MESSAGE_CATEGORY, Qgis.Info)
 
         try:
             response = request.urlopen(request.Request(url))
             json_string = response.read().decode("utf-8")
-            QgsMessageLog.logMessage(f"{EditApiClient.__name__} GET response {json_string}", MESSAGE_CATEGORY, Qgis.Info)
             json_object = json.loads(json_string)
-            QgsMessageLog.logMessage(f"{EditApiClient.__name__} GET response {json_object['id']}", MESSAGE_CATEGORY, Qgis.Info)
             callback(SnapshotCommitModel.from_json(json_object))
         except Exception as e:
             raise e
@@ -35,11 +32,11 @@ class EditApiClient(object):
             raise Exception("No callback given for fetch_non_blocking")
 
         url = f"{self.settings.url}branch/{branch_id}"
-        QgsMessageLog.logMessage(f"{EditApiClient.__name__} GET {url}", MESSAGE_CATEGORY, Qgis.Info)
 
         try:
             response = request.urlopen(request.Request(url))
-
-            callback(BranchModel.from_json(json.loads(response.read().decode("utf-8"))))
+            json_string = response.read().decode("utf-8")
+            json_object = json.loads(json_string)
+            callback(BranchModel.from_json(json_object))
         except Exception as e:
             raise e

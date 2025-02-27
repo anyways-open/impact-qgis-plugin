@@ -2,7 +2,7 @@ from typing import Callable
 
 from qgis._core import QgsPointXY, QgsMessageLog, Qgis, QgsFeature, QgsApplication
 
-from ..clients.publish_api.Models.RouteResponse import RouteResponse
+from .tasks.RouteResult import RouteResult
 from .MatrixElement import MatrixElement
 from ..Result import Result
 from ..layers.PointLayerHelpers import transform_layer_to_wgs84, extract_valid_geometries
@@ -19,13 +19,10 @@ class RoutingHandler(object):
         pass
 
     @staticmethod
-    def start_route_planning(network: RoutingNetwork, profile: str, matrix: Matrix, callback: Callable[[list[Result[RouteResponse]]], None]) -> None:
-        routing_task = RoutingTask(RoutingTaskSettings(network=network, profile=profile, matrix=matrix, callback=callback))
-        RoutingTask.RUNNING_TASK = routing_task
-        # routing_task.run()
-        # https://realpython.com/python-pyqt-qthread/ do this?
-        # globals()['task1'] = routing_task
-        QgsApplication.taskManager().addTask(RoutingTask.RUNNING_TASK)
+    def start_route_planning(task_name: str, network: RoutingNetwork, profile: str, matrix: Matrix, callback: Callable[[list[RouteResult]], None]) -> None:
+        routing_task = RoutingTask(RoutingTaskSettings(name=task_name, network=network, profile=profile, matrix=matrix, callback=callback))
+        RoutingTask.RUNNING_TASKS.append(routing_task)
+        QgsApplication.taskManager().addTask(RoutingTask.RUNNING_TASKS[len(RoutingTask.RUNNING_TASKS)-1])
 
     @staticmethod
     def build_matrix_from_lines(line_layer) -> Result[Matrix]:

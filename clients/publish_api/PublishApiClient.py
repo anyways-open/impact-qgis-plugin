@@ -22,7 +22,8 @@ class PublishApiClient(object):
         url = f"{self.settings.url}branch/commit/{commit_id}/routing/many-to-many"
 
         try:
-            response = request.urlopen(request.Request(url, data=route_matrix_request.to_json().encode('UTF-8'),
+            data = route_matrix_request.to_json().encode('UTF-8')
+            response = request.urlopen(request.Request(url, data=data,
                                       headers=headers))
             json_response = json.loads(response.read().decode("UTF-8"))
             callback(RouteMatrixResponse.from_json(json_response))

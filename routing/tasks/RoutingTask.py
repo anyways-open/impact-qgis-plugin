@@ -4,6 +4,7 @@ from qgis.core import (
     QgsTask, QgsMessageLog, Qgis
 )
 
+from .RouteResult import RouteResult
 from ...clients.publish_api.Models.RouteResponse import RouteResponse
 from ...clients.publish_api.Models.RouteMatrixResponse import RouteMatrixResponse
 from ...Result import Result
@@ -19,12 +20,13 @@ from .RoutingTaskSettings import RoutingTaskSettings, NetworkCommit
 
 class RoutingTask(QgsTask):
     def __init__(self, settings: RoutingTaskSettings) -> None:
-        super().__init__("Routing task", QgsTask.CanCancel)
+        super().__init__(f"Routing for layer {settings.name}", QgsTask.CanCancel)
         self.settings = settings
-        self.data = list[Result[RouteResponse]]()
+        self.data = list[RouteResult]()
+        self.exception: Optional[Exception] = None
 
     def run(self):
-        QgsMessageLog.logMessage(f"Started {self.description()}", MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage(f"{self.description()} started!", MESSAGE_CATEGORY, Qgis.Info)
 
         self.setProgress(0)
 
@@ -37,8 +39,8 @@ class RoutingTask(QgsTask):
                     if self.isCanceled():
                         return False
 
-                    QgsMessageLog.logMessage(f"Calculating {i+1}/{len(self.settings.matrix.elements)}", MESSAGE_CATEGORY, Qgis.Info)
-                    self.setProgress((i + 0.0) / (len(self.settings.matrix.elements) + 1))
+                    # QgsMessageLog.logMessage(f"Calculating {i+1}/{len(self.settings.matrix.elements)}", MESSAGE_CATEGORY, Qgis.Info)
+                    self.setProgress((i + 1.0) / (len(self.settings.matrix.elements)) * 100.0)
 
                     element_index = i
                     i = i+1
@@ -47,7 +49,7 @@ class RoutingTask(QgsTask):
                                                                           self.settings.matrix,
                                                                           element_index)
                     def route_matrix_callback(response: RouteMatrixResponse):
-                        self.data.append(Result(response.routes[0][0]))
+                        self.data.append(RouteResult(element_index, response.routes[0][0]))
 
                     if network.branch_commit_id is not None:
                         public_api.post_branch_many_to_many(network.branch_commit_id, route_matrix_request, route_matrix_callback)
@@ -69,16 +71,16 @@ class RoutingTask(QgsTask):
 
             return True
         except Exception as e:
-            self.setError(e)
+            self.exception = e
             return False
 
     def finished(self, result):
         if result:
-            QgsMessageLog.logMessage(f"{self.description()} done", MESSAGE_CATEGORY, Qgis.Info)
+            QgsMessageLog.logMessage(f"{self.description()} finished!", MESSAGE_CATEGORY, Qgis.Info)
             self.settings.callback(self.data)
         else:
             if self.exception is None:
-                QgsMessageLog.logMessage(f"{self.description()} finished without success", MESSAGE_CATEGORY, Qgis.Info)
+                QgsMessageLog.logMessage(f"{self.description()} finished without results.", MESSAGE_CATEGORY, Qgis.Info)
             else:
                 QgsMessageLog.logMessage(
                     '"{name}" Exception: {exception}'.format(
@@ -88,8 +90,8 @@ class RoutingTask(QgsTask):
                 raise self.exception
 
     def cancel(self):
-        QgsMessageLog.logMessage(f"{self.description()} was cancelled", MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage(f"{self.description()} was cancelled.", MESSAGE_CATEGORY, Qgis.Info)
         super().cancel()
         RoutingTask.RUNNING_TASK = None
 
-    RUNNING_TASK: Optional['RoutingTask'] = None
+    RUNNING_TASKS: list['RoutingTask'] = list()

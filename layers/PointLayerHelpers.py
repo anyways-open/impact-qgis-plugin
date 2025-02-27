@@ -43,7 +43,7 @@ def transform_layer_to_wgs84(layer: QgsVectorLayer) -> list[QgsFeature]:
         features = layer.getFeatures()
     else:
         crs_src = QgsCoordinateReferenceSystem(layer.crs())
-        crs_dest = QgsCoordinateReferenceSystem(4326)
+        crs_dest = QgsCoordinateReferenceSystem.fromEpsgId(4326)
         xform = QgsCoordinateTransform(crs_src, crs_dest, QgsProject.instance())
 
         features = []
