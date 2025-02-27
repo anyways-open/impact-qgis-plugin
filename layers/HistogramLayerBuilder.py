@@ -20,9 +20,7 @@ class HistogramLayerBuilder(object):
         flattened = list()
         failed = list()
         for result in self.results:
-            if "error_message" in result.result.feature:
-                error_message = result.result.feature["error_message"]
-
+            if not result.is_success():
                 # build a feature representing the error.
                 element = self.matrix.elements[result.element]
                 origin_location = self.matrix.locations[element.origin]
@@ -30,7 +28,7 @@ class HistogramLayerBuilder(object):
                 error_feature = {
                             "type": "Feature",
                             "properties": {
-                                "error_message": error_message,
+                                "error_message": result.message,
                                 "guid": f"{element.origin},{element.destination}"
                             },
                             "geometry": {
@@ -42,7 +40,7 @@ class HistogramLayerBuilder(object):
                             }
                         }
                 failed.append(error_feature)
-                QgsMessageLog.logMessage(f"Route found with error: {error_feature}", MESSAGE_CATEGORY, Qgis.Info)
+                # QgsMessageLog.logMessage(f"Route found with error: {error_feature}", MESSAGE_CATEGORY, Qgis.Info)
                 continue
 
             if "features" not in result.result.feature:

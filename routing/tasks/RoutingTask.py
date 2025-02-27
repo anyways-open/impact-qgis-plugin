@@ -48,8 +48,17 @@ class RoutingTask(QgsTask):
                     route_matrix_request = RouteMatrixRequest.from_matrix_per_element(self.settings.profile,
                                                                           self.settings.matrix,
                                                                           element_index)
-                    def route_matrix_callback(response: RouteMatrixResponse):
-                        self.data.append(RouteResult(element_index, response.routes[0][0]))
+                    def route_matrix_callback(response: Result[RouteMatrixResponse]):
+                        if not response.is_success():
+                            self.data.append(RouteResult(element_index, message=response.message))
+                            return
+
+                        route_response = response.result.routes[0][0]
+                        if "error_message" in route_response.feature:
+                            self.data.append(RouteResult(element_index, message=route_response.feature["error_message"]))
+                            return
+
+                        self.data.append(RouteResult(element_index, route_response))
 
                     if network.branch_commit_id is not None:
                         public_api.post_branch_many_to_many(network.branch_commit_id, route_matrix_request, route_matrix_callback)

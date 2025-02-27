@@ -1,9 +1,12 @@
 from typing import Callable
 from urllib import request
 import json
+from urllib.error import URLError
+from socket import timeout
 
 from qgis._core import QgsMessageLog, Qgis
 
+from ...Result import Result
 from .Models.RouteMatrixResponse import RouteMatrixResponse
 from ...settings import MESSAGE_CATEGORY
 from . import PublishApiClientSettings
@@ -13,36 +16,38 @@ class PublishApiClient(object):
     def __init__(self, settings: PublishApiClientSettings):
         self.settings = settings
 
-    def post_branch_many_to_many(self, commit_id, route_matrix_request: RouteMatrixRequest, callback: Callable[[RouteMatrixResponse], None]):
+    def post_branch_many_to_many(self, commit_id, route_matrix_request: RouteMatrixRequest, callback: Callable[[Result[RouteMatrixResponse]], None]):
+        if callback is None:
+            raise Exception("No callback given")
+
+        def handle_result(response_result: Result[bytes]) -> None:
+            if response_result.result is None:
+                callback(Result(message=response_result.message))
+
+            callback(Result(RouteMatrixResponse.from_json(json.loads(response_result.result))))
+
+        self.fetch(f"{self.settings.url}branch/commit/{commit_id}/routing/many-to-many",
+                   route_matrix_request.to_json().encode('UTF-8'),
+                   {"Content-Type": "application/json"}, handle_result)
+
+    def post_snapshot_many_to_many(self, commit_id, route_matrix_request: RouteMatrixRequest, callback: Callable[[Result[RouteMatrixResponse]], None]):
         if callback is None:
             raise Exception("No callback given for fetch_non_blocking")
 
-        headers = {"Content-Type": "application/json"}
+        def handle_result(response_result: Result[bytes]) -> None:
+            if response_result.result is None:
+                callback(Result(message=response_result.message))
 
-        url = f"{self.settings.url}branch/commit/{commit_id}/routing/many-to-many"
+            callback(Result(RouteMatrixResponse.from_json(json.loads(response_result.result))))
 
+        self.fetch(f"{self.settings.url}snapshot/commit/{commit_id}/routing/many-to-many",
+                   route_matrix_request.to_json().encode('UTF-8'),
+                   {"Content-Type": "application/json"}, handle_result)
+
+    def fetch(self, url: str, data: bytes, headers: dict[str, str], callback: Callable[[Result[bytes]], None]) -> None:
         try:
-            data = route_matrix_request.to_json().encode('UTF-8')
             response = request.urlopen(request.Request(url, data=data,
-                                      headers=headers))
-            json_response = json.loads(response.read().decode("UTF-8"))
-            callback(RouteMatrixResponse.from_json(json_response))
+                                      headers=headers), timeout=self.settings.timeout)
+            callback(Result(response.read().decode("UTF-8")))
         except Exception as e:
-            raise e
-
-    def post_snapshot_many_to_many(self, commit_id, route_matrix_request: RouteMatrixRequest, callback: Callable[[RouteMatrixResponse], None]):
-        if callback is None:
-            raise Exception("No callback given for fetch_non_blocking")
-
-        headers = {"Content-Type": "application/json"}
-
-        url = f"{self.settings.url}snapshot/commit/{commit_id}/routing/many-to-many"
-
-        try:
-            data = route_matrix_request.to_json().encode('UTF-8')
-            response = request.urlopen(request.Request(url, data=data,
-                                      headers=headers))
-            json_response = json.loads(response.read().decode("UTF-8"))
-            callback(RouteMatrixResponse.from_json(json_response))
-        except Exception as e:
-            raise e
+            callback(Result(message=f"Request failed: {e}"))

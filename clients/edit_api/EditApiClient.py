@@ -20,7 +20,7 @@ class EditApiClient(object):
         url = f"{self.settings.url}snapshot/{snapshot_name}/commit/latest"
 
         try:
-            response = request.urlopen(request.Request(url))
+            response = request.urlopen(request.Request(url), timeout=self.settings.timeout)
             json_string = response.read().decode("utf-8")
             json_object = json.loads(json_string)
             callback(SnapshotCommitModel.from_json(json_object))
@@ -34,7 +34,7 @@ class EditApiClient(object):
         url = f"{self.settings.url}branch/{branch_id}"
 
         try:
-            response = request.urlopen(request.Request(url))
+            response = request.urlopen(request.Request(url), timeout=self.settings.timeout)
             json_string = response.read().decode("utf-8")
             json_object = json.loads(json_string)
             callback(BranchModel.from_json(json_object))
