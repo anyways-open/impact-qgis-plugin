@@ -29,26 +29,47 @@ class RoutingHandler(object):
         line_layer = transform_layer_to_wgs84(line_layer)
 
         # build origins and destinations
-        origins: list[MatrixOriginLocation] = []
-        destinations: list[MatrixLocation] = []
+        locations: list[MatrixLocation] = []
+        locations_index: dict[str, int] = {}
+        elements: list[MatrixElement] = []
         for line_feature in line_layer:
             line_geometry = line_feature.geometry()
             line_geometry.convertToSingleType()
             line = line_geometry.asPolyline()
 
-            # do forward.
-            count = int(float(line_feature.attribute('count')))
-            if count > 0:
-                origins.append(MatrixOriginLocation(line[0], count))
-                destinations.append(MatrixLocation(line[line(line)-1]))
+            # get or create origin location.
+            origin: QgsPointXY = line[0]
+            origin_str = str(f"{origin.x()}-{origin.y()}")
+            if origin_str in locations_index:
+                origin_index = locations_index[origin_str]
+            else:
+                origin_index = len(locations)
+                locations_index[origin_str] = len(locations)
+                locations.append(MatrixLocation(origin))
 
-            # do backward.
-            count_rev = int(float(line_feature.attribute('count_rev')))
-            if count_rev > 0:
-                origins.append(MatrixOriginLocation(line[line(line) - 1], count_rev))
-                destinations.append(MatrixLocation(line[0]))
+            # get or create destination location.
+            destination: QgsPointXY = line[len(line)-1]
+            destination_str = str(f"{destination.x()}-{destination.y()}")
+            if destination_str in locations_index:
+                destination_index = locations_index[destination_str]
+            else:
+                destination_index = len(locations)
+                locations_index[destination_str] = len(locations)
+                locations.append(MatrixLocation(destination))
 
-        return Result(Matrix(origins, destinations))
+            # add forward element.
+            if line_feature.fieldNameIndex("count") > -1:
+                count = int(float(line_feature.attribute("count")))
+                if count > 0:
+                    elements.append(MatrixElement(origin_index, destination_index, count))
+
+           # add backward element.
+            if line_feature.fieldNameIndex("count_rev") > -1:
+                count_rev = int(float(line_feature.attribute("count_rev")))
+                if count_rev > 0:
+                    elements.append(MatrixElement(destination_index, origin_index, count_rev))
+
+        return Result(Matrix(locations, elements))
 
     @staticmethod
     def build_matrix_from_points(origin_layer, destination_layer) -> Result[Matrix]:
