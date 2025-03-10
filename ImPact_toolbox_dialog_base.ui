@@ -2,6 +2,9 @@
 <ui version="4.0">
  <class>APIRequestDialogBase</class>
  <widget class="QDialog" name="APIRequestDialogBase">
+  <property name="windowModality">
+   <enum>Qt::ApplicationModal</enum>
+  </property>
   <property name="enabled">
    <bool>true</bool>
   </property>
@@ -9,9 +12,21 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1201</width>
-    <height>809</height>
+    <width>770</width>
+    <height>719</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>0</width>
+    <height>0</height>
+   </size>
   </property>
   <property name="contextMenuPolicy">
    <enum>Qt::DefaultContextMenu</enum>
@@ -26,41 +41,19 @@
    <bool>false</bool>
   </property>
   <property name="modal">
-   <bool>false</bool>
+   <bool>true</bool>
   </property>
-  <widget class="QLabel" name="label_anyways_header">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>760</y>
-     <width>501</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>11</pointsize>
-     <weight>75</weight>
-     <bold>true</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ffaa00;&quot;&gt;ANYWAYS&lt;/span&gt;
-                    Impact Management &amp;amp; Analysis ToolBox&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
-                </string>
-   </property>
-  </widget>
   <widget class="QTabWidget" name="main_tab">
    <property name="geometry">
     <rect>
      <x>10</x>
      <y>0</y>
-     <width>1191</width>
+     <width>751</width>
      <height>721</height>
     </rect>
    </property>
    <property name="currentIndex">
-    <number>2</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="settings_tab">
     <attribute name="title">
@@ -71,7 +64,7 @@
       <rect>
        <x>10</x>
        <y>10</y>
-       <width>1151</width>
+       <width>731</width>
        <height>661</height>
       </rect>
      </property>
@@ -137,7 +130,7 @@
        </widget>
       </item>
       <item row="13" column="1">
-       <widget class="QgsFileWidget" name="project_directory"/>
+       <widget class="QgsFileWidget" name="project_directory" native="true"/>
       </item>
       <item row="14" column="1">
        <widget class="QLabel" name="label_6">
@@ -215,165 +208,6 @@
      <zorder>impact_url_textfield</zorder>
     </widget>
    </widget>
-   <widget class="QWidget" name="movement_pairs_tab">
-    <attribute name="title">
-     <string>Load movement pairs</string>
-    </attribute>
-    <widget class="QWidget" name="formLayoutWidget_5">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>0</y>
-       <width>1131</width>
-       <height>678</height>
-      </rect>
-     </property>
-     <layout class="QFormLayout" name="movement_pairs_form">
-      <item row="0" column="1">
-       <widget class="QLabel" name="label_19">
-        <property name="text">
-         <string>The FOD Mobiliteit did a survey in 2017 collecting how people moved from their home to their work. This open data set can be queried to construct a movement pair layer.  For more information, see https://mobilit.belgium.be/nl/mobiliteit/woon_werkverkeer 2017</string>
-        </property>
-        <property name="wordWrap">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QLabel" name="label_20">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QgsMapLayerComboBox" name="home_locations"/>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_21">
-        <property name="text">
-         <string>Home area</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLabel" name="label_22">
-        <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A polygon marking the boundaries where the commuters live. Note that all commuters are bundled to the centerpoint of the municipality.&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="wordWrap">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <widget class="QgsMapLayerComboBox" name="work_locations"/>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="label_23">
-        <property name="text">
-         <string>Work locations</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="1">
-       <widget class="QLabel" name="label_24">
-        <property name="text">
-         <string>The locations where the commuters work</string>
-        </property>
-       </widget>
-      </item>
-      <item row="9" column="1">
-       <widget class="QCheckBox" name="include_cyclists">
-        <property name="text">
-         <string>Include cyclist counts</string>
-        </property>
-       </widget>
-      </item>
-      <item row="10" column="1">
-       <widget class="QCheckBox" name="include_car">
-        <property name="text">
-         <string>Include car counts</string>
-        </property>
-       </widget>
-      </item>
-      <item row="11" column="1">
-       <widget class="QCheckBox" name="include_train">
-        <property name="text">
-         <string>Include train counts</string>
-        </property>
-       </widget>
-      </item>
-      <item row="12" column="1">
-       <widget class="QCheckBox" name="include_public_transport">
-        <property name="text">
-         <string>Include public transport counts</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="1">
-       <spacer name="verticalSpacer_3">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="9" column="0">
-       <widget class="QLabel" name="label_25">
-        <property name="text">
-         <string>Transport modes to count</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QLabel" name="label_27">
-        <property name="text">
-         <string>Make sure this area is big enough. Only works in Belgium</string>
-        </property>
-        <property name="wordWrap">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="1">
-       <widget class="QLabel" name="label_28">
-        <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Make sure this area is big enough. Only works in Belgium; can be the same as locations of departure.&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="wordWrap">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="13" column="1">
-       <spacer name="verticalSpacer_4">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="14" column="1">
-       <widget class="QPushButton" name="query_movement_pairs_button">
-        <property name="text">
-         <string>Query movement pairs</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </widget>
    <widget class="QWidget" name="routeplanning_tab">
     <attribute name="title">
      <string>Routeplanning</string>
@@ -383,7 +217,7 @@
       <rect>
        <x>0</x>
        <y>20</y>
-       <width>1181</width>
+       <width>741</width>
        <height>661</height>
       </rect>
      </property>
@@ -420,20 +254,13 @@
        </widget>
       </item>
       <item row="4" column="1">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>Use real-life routeplanning or a scenario from your ImPact instance</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="1">
        <widget class="QLabel" name="label_16">
         <property name="text">
          <string/>
         </property>
        </widget>
       </item>
-      <item row="8" column="1">
+      <item row="6" column="1">
        <widget class="QTabWidget" name="toolbox_origin_destination_or_movement">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
@@ -448,7 +275,7 @@
          </size>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tab1">
          <attribute name="title">
@@ -459,7 +286,7 @@
            <rect>
             <x>0</x>
             <y>10</y>
-            <width>1091</width>
+            <width>671</width>
             <height>260</height>
            </rect>
           </property>
@@ -566,49 +393,27 @@
         </widget>
        </widget>
       </item>
-      <item row="10" column="0">
+      <item row="8" column="0">
        <widget class="QLabel" name="label_9">
         <property name="text">
          <string>Profile</string>
         </property>
        </widget>
       </item>
-      <item row="10" column="1">
+      <item row="8" column="1">
        <widget class="QComboBox" name="profile_picker"/>
       </item>
-      <item row="11" column="1">
+      <item row="9" column="1">
        <widget class="QLabel" name="label_10">
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select which vehicle to plan and it behaves. Read below how the profile behaves&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
-       <widget class="QComboBox" name="mergemode">
-        <item>
-         <property name="text">
-          <string>Create one line per segments and count sum the number of routes going over them</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Create one line for every route</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="label_26">
-        <property name="text">
-         <string>Merging?</string>
-        </property>
-       </widget>
-      </item>
-      <item row="12" column="1">
+      <item row="10" column="1">
        <widget class="QLabel" name="profile_explanation">
         <property name="font">
          <font>
-          <weight>75</weight>
           <italic>true</italic>
           <bold>true</bold>
          </font>
@@ -618,93 +423,12 @@
         </property>
        </widget>
       </item>
-      <item row="13" column="1">
+      <item row="11" column="1">
        <widget class="QPushButton" name="perform_routeplanning_button">
         <property name="text">
          <string>Perform routeplanning</string>
         </property>
        </widget>
-      </item>
-     </layout>
-    </widget>
-   </widget>
-   <widget class="QWidget" name="traffic_diff_tab">
-    <attribute name="title">
-     <string>Calculate traffic differences</string>
-    </attribute>
-    <widget class="QWidget" name="formLayoutWidget_6">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>10</y>
-       <width>1171</width>
-       <height>641</height>
-      </rect>
-     </property>
-     <layout class="QFormLayout" name="traffic_diff_form">
-      <item row="1" column="1">
-       <widget class="QgsMapLayerComboBox" name="zero_situation_picker"/>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_30">
-        <property name="text">
-         <string>Zero situation</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLabel" name="label_31">
-        <property name="text">
-         <string>The weighted segment layer of the original, zero situation.</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLabel" name="label_32">
-        <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Compare two layers of weighted segments to calculate a traffic shift. These can be constructed in the routeplanning tab.&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="wordWrap">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QgsMapLayerComboBox" name="new_situation_picker"/>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_33">
-        <property name="text">
-         <string>New situation</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QLabel" name="label_34">
-        <property name="text">
-         <string>The weighted segment layer of the new (hypothetical) situation.</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="1">
-       <widget class="QPushButton" name="calculate_traffic_shift_button">
-        <property name="text">
-         <string>Calculate traffic shift</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <spacer name="verticalSpacer_6">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
       </item>
      </layout>
     </widget>

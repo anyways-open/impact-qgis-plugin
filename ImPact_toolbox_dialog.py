@@ -85,26 +85,12 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.arrival_layer_picker.setFilters(QgsMapLayerProxyModel.PointLayer)
 
         self.movement_pairs_layer_picker.setFilters(QgsMapLayerProxyModel.LineLayer)
-        self.zero_situation_picker.setFilters(QgsMapLayerProxyModel.LineLayer)
-        self.new_situation_picker.setFilters(QgsMapLayerProxyModel.LineLayer)
-
-        self.home_locations.setFilters(QgsMapLayerProxyModel.PolygonLayer)
-        self.work_locations.setFilters(QgsMapLayerProxyModel.PolygonLayer)
 
         # Attach button listeners
-        self.query_movement_pairs_button.clicked.connect(self.query_movement_pairs)
         self.perform_routeplanning_button.clicked.connect(self.run_routeplanning)
-        self.calculate_traffic_shift_button.clicked.connect(self.calculate_traffic_diff)
         self.impact_instance_selector.currentIndexChanged.connect(self.update_scenario_picker)
         self.save_area_outline.clicked.connect(self.save_outline_as_layer)
         self.save_impact_url_button.clicked.connect(self.save_impact_url)
-        
-        # Attach mode check for FOD
-        self.include_cyclists.clicked.connect(self.check_fod_modes)
-        self.include_car.clicked.connect(self.check_fod_modes)
-        self.include_train.clicked.connect(self.check_fod_modes)
-        self.include_public_transport.clicked.connect(self.check_fod_modes)
-        self.check_fod_modes()
 
         # At last: update and set the profile explanations
         self.update_scenario_picker()
@@ -114,19 +100,13 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.update_selected_layer_explanation()
 
         # Keep track of the last selected state of qcomboboxes
-        state_tracker.init_and_connect("home_locations", self.home_locations)
-        state_tracker.init_and_connect("work_locations", self.work_locations)
         state_tracker.init_and_connect("impact_instance_selector", self.impact_instance_selector)
         state_tracker.init_and_connect("scenario_picker", self.scenario_picker)
-        state_tracker.init_and_connect("mergemode", self.mergemode)
 
         state_tracker.init_and_connect("departure_layer_picker", self.departure_layer_picker)
         state_tracker.init_and_connect("arrival_layer_picker", self.arrival_layer_picker)
         state_tracker.init_and_connect("movement_pairs_layer_picker", self.movement_pairs_layer_picker)
         state_tracker.init_and_connect("profile_picker", self.profile_picker, self.scenario_picker)
-        state_tracker.init_and_connect("zero_situation_picker", self.zero_situation_picker)
-        state_tracker.init_and_connect("new_situation_picker", self.new_situation_picker)
-        state_tracker.init_and_connect("routeplanning_mode", self.mergemode)
         state_tracker.init_and_connect_textfield("impact_url", self.impact_url_textfield)
         # disable components for the next version which require auth
         self.remove_auth_components()
@@ -412,8 +392,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             return
         
         # If 0: create a histogram (default)
-        # If 1: create a single linestring for every feature
-        mergemode = self.mergemode.currentIndex()
+        mergemode = 0
 
         scenario = "live"
         if (scenario_index > 0):
