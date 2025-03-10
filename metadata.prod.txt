@@ -3,17 +3,17 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=Impact toolbox
+name=ANYWAYS Plugin
 qgisMinimumVersion=3.0
-description=This plugin automates access to the ANYWAYS API
+description=This plugin enables integration between QGIS and ANYWAYS.
 version=0.10.3
 author=ANYWAYS BV
 email=support@anyways.eu
 
-about=This plugin automates ANYWAYS Routing, Impact and ShortCut APIs by:
-	-Taking a set of Points of Interest (POIs) and returning routings between all of them based on a given routing profile 
-	-Taking two sets of POIs as Origins and Destinations and returning routings from all origins to all Destinations based on a given routing profile
-
+about=This plugin enables integration between QGIS and ANYWAYS and can be used to plan routes:
+	- Large amounts of routes using origin-destination matrices.
+	- Using the networks from the scenarios defined in on of your ANYWAYS projects or the latest OpenStreetMap network.
+	- Using a selection of vehicle profiles.
 
 tracker=https://github.com/anyways-open/qgis-plugins/issues
 repository=https://github.com/anyways-open/qgis-plugins
