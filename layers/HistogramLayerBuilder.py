@@ -2,6 +2,8 @@ from typing import Optional
 
 from qgis._core import QgsMessageLog, Qgis, QgsVectorLayer
 
+from ..clients.publish_api.Models.Compact.MatrixCompactResponse import MatrixCompactResponse
+from ..geojson.GeoJsonFeature import GeoJsonFeature
 from ..routing.tasks.RouteResult import RouteResult
 from ..routing.Matrix import Matrix
 from ..settings import MESSAGE_CATEGORY
@@ -16,8 +18,7 @@ class HistogramLayerBuilder(object):
     def build_layer(self, project_path: str) -> [QgsVectorLayer, QgsVectorLayer]:
         # QgsMessageLog.logMessage(f"Results in layer: {self.results}", MESSAGE_CATEGORY, Qgis.Info)
 
-        # extract all segments.
-        flattened = list()
+        # build failed layer if needed.
         failed = list()
         for result in self.results:
             if not result.is_success():
@@ -43,63 +44,46 @@ class HistogramLayerBuilder(object):
                 # QgsMessageLog.logMessage(f"Route found with error: {error_feature}", MESSAGE_CATEGORY, Qgis.Info)
                 continue
 
-            if "features" not in result.result.feature:
-                QgsMessageLog.logMessage(f"An unknown feature was found in the response", MESSAGE_CATEGORY, Qgis.Warning)
-                continue
-
-            for segment in result.result.feature["features"]:
-                flattened.append(segment)
-
         # QgsMessageLog.logMessage(f"{flattened}", MESSAGE_CATEGORY, Qgis.Info)
-
-        histogram: dict[str, object] = dict()
-        for result in flattened:
-            if result["type"] is None:
-                raise Exception("Result is not a feature")
-
-            if result["type"] == "LineString":
+        histogram: dict[str, GeoJsonFeature] = dict()
+        for result in self.results:
+            if not result.is_success():
                 continue
 
-            if "properties" not in result:
-                continue
-            properties = result["properties"]
-            if properties is None:
-                continue
+            response: MatrixCompactResponse = result.result
+            for route_row in response.routes:
+                for route in route_row:
+                    for route_segment in route.segments:
+                        segment_key = f'{route_segment.global_id}-{route_segment.forward}'
 
-            if "_segment_guid" not in properties or properties["_segment_guid"] is None:
-                continue
-            segment_guid = properties["_segment_guid"]
+                        if segment_key not in histogram:
+                            segment = response.segments[route_segment.global_id]
+                            if segment is None:
+                                raise RuntimeError(f"Invalid response: could not find segment {route_segment.global_id}")
 
-            if "_segment_forward" not in properties or properties["_segment_forward"] is None:
-                continue
-            segment_forward = properties["_segment_forward"]
+                            if route_segment.forward:
+                                histogram[segment_key] = segment
+                            else:
+                                histogram[segment_key] = GeoJsonFeature.reverse_linestring(segment)
 
-            count = 1
-            if 'count' in properties:
-                count = properties["count"]
+                        else:
+                             segment = histogram[segment_key]
 
-            if segment_guid in histogram:
-                histogram[segment_guid]["properties"]["count"] += count
-            else:
-                properties["count"] = count
-                histogram[segment_guid] = result
+                        segment.add_to_attribute_value("count", 1)
 
             #QgsMessageLog.logMessage(f"{segment_guid}{segment_forward}: {result}", MESSAGE_CATEGORY, Qgis.Info)
 
         # write layer data as geojson
         result_layer_filename = f"{project_path}/{self.layer_name}.geojson"
         f = open(result_layer_filename, "w+")
-        f.write(json.dumps({
-            "type": 'FeatureCollection',
-            "features": list(histogram.values())
-        }))
+        f.write(json.dumps(GeoJsonFeature.to_feature_collection(list(histogram.values()))))
         f.close()
 
         # create vector layer from geojson file.
         result_layer = QgsVectorLayer(result_layer_filename, self.layer_name, "ogr")
 
-        #if len(failed) <= 0:
-        #    return [result_layer, None]
+        if len(failed) <= 0:
+            return [result_layer, None]
 
         # write layer data as geojson
         result_layer_failed_filename = f"{project_path}/{self.layer_name}_failed.geojson"
