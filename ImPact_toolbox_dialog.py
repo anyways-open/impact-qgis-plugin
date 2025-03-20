@@ -5,13 +5,17 @@ import traceback
 import sys
 
 import time
+
+from PyQt5.QtGui import QColor
 from qgis.PyQt import (QtWidgets, uic)
 from qgis.core import *
 
+from .layers.ErrorLayerBuilder import ErrorLayerBuilder
+from .layers.RoutesLayerBuilder import RoutesLayerBuilder
 from .routing.tasks.RouteResult import RouteResult
 from .clients.publish_api.Models.RouteResponse import RouteResponse
-from .layers.HistogramLayerBuilder import HistogramLayerBuilder
-from .settings import MESSAGE_CATEGORY
+from .layers.SegmentsLayerBuilder import SegmentsLayerBuilder
+from .settings import MESSAGE_CATEGORY, PROFILE_COLOURS, PROFILE_OFFSET
 from .Result import Result
 from .layers.PointLayerHelpers import extract_coordinates_array, extract_valid_geometries, transform_layer_to_wgs84
 from .routing.Matrix import Matrix
@@ -635,14 +639,37 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self.perform_routeplanning_button.setEnabled(True)
             self.perform_routeplanning_button.setText(self.tr("Start route planning"))
 
-            histogram_layer_builder = HistogramLayerBuilder(result_layer_name, matrix, results)
-            [result_layer, result_failed_layer] = histogram_layer_builder.build_layer(self.path)
+            result_layer = SegmentsLayerBuilder(result_layer_name, matrix, results).build_layer(self.path)
+            result_failed_layer = ErrorLayerBuilder(result_layer_name, matrix, results).build_layer(self.path)
+            result_routes_layer = RoutesLayerBuilder(result_layer_name, matrix, results).build_layer(self.path)
 
-            QgsProject.instance().addMapLayer(result_layer)
+            color = "#cccccc"
+            offset = 1
+            for key in PROFILE_COLOURS:
+                if profile.startswith(key):
+                    color = PROFILE_COLOURS[key]
+                    offset = PROFILE_OFFSET[key]
+                    break
+
+            # create a group for the results.
+            group = QgsProject.instance().layerTreeRoot().insertGroup(0, result_layer_name)
+
+            # add the default results a segments layer.
+            QgsProject.instance().addMapLayer(result_layer, False)
             self.layer_styling.style_routeplanning_layer(result_layer, profile, scenario_index)
+            group.addLayer(result_layer)
+
+            # add routes layer, style it but set it invisible.
+            QgsProject.instance().addMapLayer(result_routes_layer, False)
+            RoutesLayerBuilder.style_layer(result_routes_layer, color, offset)
+            group.addLayer(result_routes_layer)
+            group.findLayer(result_routes_layer).setItemVisibilityChecked(False)
+
+            # add error layer, if any.
             if result_failed_layer is not None:
-                QgsProject.instance().addMapLayer(result_failed_layer)
+                QgsProject.instance().addMapLayer(result_failed_layer, False)
                 self.layer_styling.style_routeplanning_layer(result_failed_layer, "FAILED", scenario_index)
+                group.addLayer(result_failed_layer)
             return
 
         RoutingHandler.start_route_planning(result_layer_name, network, profile, matrix, routes_planning_callback)

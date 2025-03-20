@@ -33,6 +33,18 @@ class GeoJsonFeature(object):
             }
         })
 
+    def append_coordinates(self, coordinates: list[list[float]], reverse: bool = False) -> None:
+        self_coordinates: list[list[float]] = self.feature["geometry"]["coordinates"]
+
+        if reverse:
+            for coordinate in reversed(self_coordinates):
+                coordinates.append(coordinate)
+            return
+
+        for coordinate in self_coordinates:
+            coordinates.append(coordinate)
+        return
+
     def get_properties(self) -> dict:
         if "properties" not in self.feature:
             self.feature["properties"] = {}
@@ -48,4 +60,9 @@ class GeoJsonFeature(object):
             value: int = properties["count"]
 
         value += increment
+        properties[key] = value
+
+    def add_or_update_attribute(self, key: str, value: str):
+        properties = self.get_properties()
+
         properties[key] = value
