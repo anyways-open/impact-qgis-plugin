@@ -26,7 +26,7 @@ class default_layer_styling:
 
 
     def log(self, msg):
-        QgsMessageLog.logMessage(msg, 'ImPact Toolbox', level=Qgis.Info)
+        QgsMessageLog.logMessage(msg, MESSAGE_CATEGORY, level=Qgis.Info)
 
 
     def style_impact_outline(self, qgsLayer):
@@ -101,7 +101,8 @@ class default_layer_styling:
 
         layer.triggerRepaint()
 
-    def style_routeplanning_layer(self, qgsLayer, profile_name, source_index):
+    @staticmethod
+    def style_routeplanning_layer(qgs_layer, profile_name, source_index):
         color = "#cccccc"
         offset = 1
         for key in PROFILE_COLOURS:
@@ -109,7 +110,7 @@ class default_layer_styling:
                 color = PROFILE_COLOURS[key]
                 offset = PROFILE_OFFSET[key]
                 break
-        symbols = qgsLayer.renderer().symbols(QgsRenderContext())
+        symbols = qgs_layer.renderer().symbols(QgsRenderContext())
         sym = symbols[0]
 
         line_rendering = QgsSimpleLineSymbolLayer()
@@ -123,4 +124,31 @@ class default_layer_styling:
         sym.setColor(QColor(color))
         sym.setWidth(1.0)
 
-        qgsLayer.triggerRepaint()
+        # build label settings.
+        layer_settings = QgsPalLayerSettings()
+        text_format = QgsTextFormat()
+
+        text_format.setFont(QFont("Arial", 12))
+        text_format.setSize(12)
+        text_format.setColor(QColor(color))
+
+        # buffer_settings = QgsTextBufferSettings()
+        # buffer_settings.setEnabled(True)
+        # buffer_settings.setSize(1)
+        # buffer_settings.setColor(QColor(color))
+        #
+        # text_format.setBuffer(buffer_settings)
+        layer_settings.setFormat(text_format)
+
+        layer_settings.fieldName = "count"
+        layer_settings.placement = QgsPalLayerSettings.Line
+        # layer_settings.placement = 2
+        layer_settings.placementFlags = QgsPalLayerSettings.AboveLine
+
+        layer_settings.enabled = True
+
+        layer_settings = QgsVectorLayerSimpleLabeling(layer_settings)
+        qgs_layer.setLabelsEnabled(True)
+        qgs_layer.setLabeling(layer_settings)
+
+        qgs_layer.triggerRepaint()

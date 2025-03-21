@@ -129,3 +129,4 @@ docs/
 zip_build/
 
 .idea/*
+.DS_store
