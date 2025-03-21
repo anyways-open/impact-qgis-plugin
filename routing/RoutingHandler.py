@@ -2,13 +2,13 @@ from typing import Callable
 
 from qgis._core import QgsPointXY, QgsMessageLog, Qgis, QgsFeature, QgsApplication
 
+from ..tools.ParsingTools import parse_float_or_default
 from .tasks.RouteResult import RouteResult
 from .MatrixElement import MatrixElement
 from ..Result import Result
 from ..layers.PointLayerHelpers import transform_layer_to_wgs84, extract_valid_geometries
 from .Matrix import Matrix
 from .MatrixLocation import MatrixLocation
-from .MatrixOriginLocation import MatrixOriginLocation
 from .RoutingNetwork import RoutingNetwork
 from .tasks.RoutingTask import RoutingTask
 from .tasks.RoutingTaskSettings import RoutingTaskSettings
@@ -59,13 +59,13 @@ class RoutingHandler(object):
 
             # add forward element.
             if line_feature.fieldNameIndex("count") > -1:
-                count = int(float(line_feature.attribute("count")))
+                count = int(parse_float_or_default(line_feature.attribute("count"), -1))
                 if count > 0:
                     elements.append(MatrixElement(origin_index, destination_index, count))
 
            # add backward element.
             if line_feature.fieldNameIndex("count_rev") > -1:
-                count_rev = int(float(line_feature.attribute("count_rev")))
+                count_rev = int(parse_float_or_default(line_feature.attribute("count_rev"), -1))
                 if count_rev > 0:
                     elements.append(MatrixElement(destination_index, origin_index, count_rev))
 
@@ -94,7 +94,7 @@ class RoutingHandler(object):
             if origin_geometry.fieldNameIndex("count") > -1:
                 count_value = origin_geometry['count']
                 if count_value is not None:
-                    count = int(float(count_value))
+                    count = int(parse_float_or_default(count_value, 1))
             if count <= 0:
                continue
 

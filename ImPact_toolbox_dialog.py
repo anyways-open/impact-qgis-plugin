@@ -617,6 +617,12 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
             matrix = RoutingHandler.build_matrix_from_lines(line_layer).result
 
+        # if matrix is empty, no need to continue.
+        if matrix.is_empty():
+            QgsMessageLog.logMessage("Could not start route planning: No data found in selected layer(s). Is there data in the layers and are the count attributes setup properly?", MESSAGE_CATEGORY, Qgis.Warning)
+            self.close()
+            return
+
         # get details about the network to use.
         if self.scenario_picker.currentIndex() == 0:
             # use the latest snapshot.
