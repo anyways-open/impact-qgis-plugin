@@ -39,7 +39,7 @@ class ToolBox:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&ImPact toolbox')
+        self.menu = '&ANYWAYS'
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
@@ -154,15 +154,14 @@ class ToolBox:
         icon_path = ':/plugins/anyways_impact_toolbox/icon.png'
         self.add_action(
             icon_path,
-            text=self.tr(u'ImPact ToolBox'),
+            text='Plugin',
             callback=self.open_dialog,
             parent=self.iface.mainWindow())
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
-            self.iface.removePluginMenu(
-                self.tr(u'&ImPact toolbox'),
+            self.iface.removePluginMenu('Plugin',
                 action)
             self.iface.removeToolBarIcon(action)
 
