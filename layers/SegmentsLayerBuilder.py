@@ -46,6 +46,10 @@ class SegmentsLayerBuilder(object):
 
             #QgsMessageLog.logMessage(f"{segment_guid}{segment_forward}: {result}", MESSAGE_CATEGORY, Qgis.Info)
 
+        # round numbers to format properly.
+        for result in histogram.values():
+            result.round_attribute_value("count")
+
         # write layer data as geojson
         result_layer_filename = f"{project_path}/{self.layer_name}.geojson"
         f = open(result_layer_filename, "w+")

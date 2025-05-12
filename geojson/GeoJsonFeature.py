@@ -52,12 +52,12 @@ class GeoJsonFeature(object):
             self.feature["properties"] = {}
         return self.feature["properties"]
 
-    def add_to_attribute_value(self, key, increment):
+    def add_to_attribute_value(self, key, increment: float):
         properties = self.get_properties()
 
         value = 0
         if key in properties:
-            value: int = properties["count"]
+            value: float = properties[key]
 
         value += increment
         properties[key] = value
@@ -66,3 +66,12 @@ class GeoJsonFeature(object):
         properties = self.get_properties()
 
         properties[key] = value
+
+    def round_attribute_value(self, key):
+        properties = self.get_properties()
+
+        if not key in properties:
+            return
+
+        value: float = properties[key]
+        properties[key] = round(value, 2)
