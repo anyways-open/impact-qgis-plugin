@@ -13,7 +13,6 @@ from qgis.core import *
 from .layers.ErrorLayerBuilder import ErrorLayerBuilder
 from .layers.RoutesLayerBuilder import RoutesLayerBuilder
 from .routing.tasks.RouteResult import RouteResult
-from .clients.publish_api.Models.RouteResponse import RouteResponse
 from .layers.SegmentsLayerBuilder import SegmentsLayerBuilder
 from .settings import MESSAGE_CATEGORY, PROFILE_COLOURS, PROFILE_OFFSET
 from .Result import Result

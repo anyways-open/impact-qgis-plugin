@@ -32,7 +32,7 @@
    <enum>Qt::DefaultContextMenu</enum>
   </property>
   <property name="windowTitle">
-   <string>ImPact ToolBox</string>
+   <string>ANYWAYS Plugin</string>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
@@ -102,7 +102,7 @@
       <item row="11" column="1">
        <widget class="QLabel" name="label_5">
         <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The URL of one of your impact instances. Copy and paste the URL of any instance here, the tool will figure out which instances exist. You can pick any later on.&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The URL of your ANYWAYS project. Copy and paste the URL here.&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -164,7 +164,7 @@
       <item row="7" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>ImPact URL</string>
+         <string>Project URL</string>
         </property>
        </widget>
       </item>
@@ -178,7 +178,7 @@
       <item row="10" column="1">
        <widget class="QPushButton" name="save_area_outline">
         <property name="text">
-         <string>Save the outline of this Impact instance as a layer</string>
+         <string>Save the outline of this Scenario as a layer</string>
         </property>
        </widget>
       </item>
@@ -188,7 +188,7 @@
       <item row="9" column="1">
        <widget class="QPushButton" name="save_impact_url_button">
         <property name="text">
-         <string>Save impact instance</string>
+         <string>Save Project URL</string>
         </property>
        </widget>
       </item>

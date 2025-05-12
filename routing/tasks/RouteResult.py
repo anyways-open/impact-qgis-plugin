@@ -1,7 +1,7 @@
-from ...clients.publish_api.Models.Compact.MatrixCompactResponse import MatrixCompactResponse
+from ...clients.publish_api.Models.RouteMatrixResponse import RouteMatrixResponse
 
 class RouteResult(object):
-    def __init__(self, element: int, result: MatrixCompactResponse=None, message: str=None) -> None:
+    def __init__(self, element: int, result: RouteMatrixResponse=None, message: str=None) -> None:
         self.result = result
         self.message = message
         self.element = element

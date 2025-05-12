@@ -1,18 +1,24 @@
+from .ProfileModel import ProfileModel
+from .ProfileParametersModel import ProfileParametersModel
 from ....routing.Matrix import Matrix
-from ....routing.MatrixLocation import MatrixLocation
 import json
 
 class RouteMatrixRequest(object):
-    def __init__(self, profile: str, origins: list[list[float]], destinations: list[list[float]]):
+    def __init__(self, profile: ProfileModel, origins: list[list[float]], destinations: list[list[float]]):
         self.profile = profile
         self.origins = origins
         self.destinations = destinations
 
     def to_json(self) -> str:
         return json.dumps({
-            "profile": self.profile,
-            "from": self.origins,
-            "to": self.destinations,
+            "profile": {
+                "name": self.profile.name,
+                "parameters": {
+                    "maxIncrease": self.profile.parameters.max_increase,
+                }
+            },
+            "origins": self.origins,
+            "destinations": self.destinations,
         })
 
     @staticmethod
@@ -27,7 +33,9 @@ class RouteMatrixRequest(object):
         destination_location = matrix.locations[element.destination]
         destinations.append([destination_location.location.x(), destination_location.location.y()])
 
-        return RouteMatrixRequest(profile, origins, destinations)
+        profile_model = ProfileModel.from_profile_string(profile)
+
+        return RouteMatrixRequest(profile_model, origins, destinations)
 
     @staticmethod
     def from_matrix_per_origin(profile: str, matrix: Matrix, origin: int) -> 'RouteMatrixRequest':
@@ -44,4 +52,6 @@ class RouteMatrixRequest(object):
             destination_location = matrix.locations[element.destination]
             destinations.append([destination_location.location.x(), destination_location.location.y()])
 
-        return RouteMatrixRequest(profile, origins, destinations)
+        profile_model = ProfileModel.from_profile_string(profile)
+
+        return RouteMatrixRequest(profile_model, origins, destinations)

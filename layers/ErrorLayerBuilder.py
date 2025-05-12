@@ -1,12 +1,9 @@
 from typing import Union
 
-from qgis._core import QgsMessageLog, Qgis, QgsVectorLayer
+from qgis._core import QgsVectorLayer
 
-from ..clients.publish_api.Models.Compact.MatrixCompactResponse import MatrixCompactResponse
-from ..geojson.GeoJsonFeature import GeoJsonFeature
 from ..routing.tasks.RouteResult import RouteResult
 from ..routing.Matrix import Matrix
-from ..settings import MESSAGE_CATEGORY
 import json
 
 class ErrorLayerBuilder(object):

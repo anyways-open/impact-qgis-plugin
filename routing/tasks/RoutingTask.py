@@ -4,7 +4,7 @@ from qgis.core import (
     QgsTask, QgsMessageLog, Qgis
 )
 
-from ...clients.publish_api.Models.Compact.MatrixCompactResponse import MatrixCompactResponse
+from ...clients.publish_api.Models.RouteMatrixResponse import RouteMatrixResponse
 from .RouteResult import RouteResult
 from ...Result import Result
 from ...clients.publish_api.PublishApiClient import PublishApiClient
@@ -29,14 +29,16 @@ class RoutingTask(QgsTask):
 
         self.setProgress(0)
 
+        QgsMessageLog.logMessage(f"{len(self.settings.matrix.elements)}", MESSAGE_CATEGORY, Qgis.Info)
+
         try:
-            def plan_with_network(network: NetworkCommit):
+            def plan_with_network(network: NetworkCommit) -> None:
                 public_api = PublishApiClient(PublishApiClientSettings())
 
                 i: int = 0
                 while i < len(self.settings.matrix.elements):
                     if self.isCanceled():
-                        return False
+                        return
 
                     # QgsMessageLog.logMessage(f"Calculating {i+1}/{len(self.settings.matrix.elements)}", MESSAGE_CATEGORY, Qgis.Info)
                     self.setProgress((i + 1.0) / (len(self.settings.matrix.elements)) * 100.0)
@@ -47,12 +49,12 @@ class RoutingTask(QgsTask):
                     route_matrix_request = RouteMatrixRequest.from_matrix_per_element(self.settings.profile,
                                                                           self.settings.matrix,
                                                                           element_index)
-                    def route_matrix_callback(response: Result[MatrixCompactResponse]):
+                    def route_matrix_callback(response: Result[RouteMatrixResponse]) -> None:
                         if not response.is_success():
                             self.data.append(RouteResult(element_index, message=response.message))
                             return
 
-                        route_response = response.result.routes[0][0]
+                        route_response = response.result.routes[0][0][0]
                         if route_response.is_error():
                             self.data.append(RouteResult(element_index, message=route_response.error))
                             return
@@ -60,9 +62,9 @@ class RoutingTask(QgsTask):
                         self.data.append(RouteResult(element_index, response.result))
 
                     if network.branch_commit_id is not None:
-                        public_api.post_branch_many_to_many_compact(network.branch_commit_id, route_matrix_request, route_matrix_callback)
+                        public_api.post_branch_many_to_many(network.branch_commit_id, route_matrix_request, route_matrix_callback)
                     else:
-                        public_api.post_snapshot_many_to_many_compact(network.snapshot_commit_id, route_matrix_request, route_matrix_callback)
+                        public_api.post_snapshot_many_to_many(network.snapshot_commit_id, route_matrix_request, route_matrix_callback)
 
             # fetch network commit details before planning routes.
             edit_api = EditApiClient(EditApiClientSettings())

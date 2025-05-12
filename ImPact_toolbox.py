@@ -47,18 +47,45 @@ class ToolBox:
 
         self.profile_keys = [
 			"car.fast",
+			"car.fast.5%",
+			"car.fast.10%",
 			"car.short",
+			"car.short.5%",
+			"car.short.10%",
 			"car.classifications",
+			"car.classifications.5%",
+			"car.classifications.10%",
 			"bicycle.comfort_safety",
+			"bicycle.comfort_safety.5%",
+			"bicycle.comfort_safety.10%",
 			"bicycle.comfort",
+			"bicycle.comfort.5%",
+			"bicycle.comfort.10%",
 			"bicycle.commute",
+			"bicycle.commute.5%",
+			"bicycle.commute.10%",
 			"bicycle.fast",
+			"bicycle.fast.5%",
+			"bicycle.fast.10%",
 			"bicycle.safety",
+			"bicycle.safety.5%",
+			"bicycle.safety.10%",
 			"bicycle.short",
+			"bicycle.short.5%",
+			"bicycle.short.10%",
 			"bigtruck.fast",
+			"bigtruck.fast.5%",
+			"bigtruck.fast.10%",
 			"bigtruck.short",
+			"bigtruck.short.5%",
+			"bigtruck.short.10%",
 			"pedestrian.short",
-			"pedestrian.slow_roads"]
+			"pedestrian.short.5%",
+			"pedestrian.short.10%",
+			"pedestrian.slow_roads",
+			"pedestrian.slow_roads.5%",
+			"pedestrian.slow_roads.10%"
+        ]
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):

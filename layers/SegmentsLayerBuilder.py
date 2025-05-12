@@ -1,12 +1,8 @@
-from typing import Optional
+from qgis._core import QgsVectorLayer
 
-from qgis._core import QgsMessageLog, Qgis, QgsVectorLayer
-
-from ..clients.publish_api.Models.Compact.MatrixCompactResponse import MatrixCompactResponse
 from ..geojson.GeoJsonFeature import GeoJsonFeature
 from ..routing.tasks.RouteResult import RouteResult
 from ..routing.Matrix import Matrix
-from ..settings import MESSAGE_CATEGORY
 import json
 
 class SegmentsLayerBuilder(object):
@@ -25,26 +21,28 @@ class SegmentsLayerBuilder(object):
 
             element = self.matrix.elements[i]
 
-            response: MatrixCompactResponse = result.result
+            response = result.result
             for route_row in response.routes:
-                for route in route_row:
-                    for route_segment in route.segments:
-                        segment_key = f'{route_segment.global_id}-{route_segment.forward}'
+                for alternatives in route_row:
+                    count_per_alternative = (element.count + 1.0) / len(alternatives)
+                    for route in alternatives:
+                        for route_segment in route.segments:
+                            segment_key = f'{route_segment.global_id}-{route_segment.forward}'
 
-                        if segment_key not in histogram:
-                            segment = response.segments[route_segment.global_id]
-                            if segment is None:
-                                raise RuntimeError(f"Invalid response: could not find segment {route_segment.global_id}")
+                            if segment_key not in histogram:
+                                segment = response.segments[route_segment.global_id]
+                                if segment is None:
+                                    raise RuntimeError(f"Invalid response: could not find segment {route_segment.global_id}")
 
-                            if not route_segment.forward:
-                                segment = GeoJsonFeature.reverse_linestring(segment)
+                                if not route_segment.forward:
+                                    segment = GeoJsonFeature.reverse_linestring(segment)
 
-                            histogram[segment_key] = segment
-                        else:
-                             segment = histogram[segment_key]
+                                histogram[segment_key] = segment
+                            else:
+                                 segment = histogram[segment_key]
 
-                        segment.add_to_attribute_value("count", element.count)
-                        segment.add_or_update_attribute("id", segment_key)
+                            segment.add_to_attribute_value("count", count_per_alternative)
+                            segment.add_or_update_attribute("id", segment_key)
 
             #QgsMessageLog.logMessage(f"{segment_guid}{segment_forward}: {result}", MESSAGE_CATEGORY, Qgis.Info)
 

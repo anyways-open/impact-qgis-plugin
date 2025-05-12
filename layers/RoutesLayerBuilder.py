@@ -1,15 +1,10 @@
-from typing import Optional
-
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor, QFont
-from qgis._core import QgsMessageLog, Qgis, QgsVectorLayer, QgsFeature, QgsRenderContext, QgsSimpleLineSymbolLayer, \
-    QgsPalLayerSettings, QgsTextFormat, QgsVectorLayerSimpleLabeling
+from PyQt5.QtGui import QColor
+from qgis._core import QgsVectorLayer, QgsRenderContext, QgsSimpleLineSymbolLayer
 
-from ..clients.publish_api.Models.Compact.MatrixCompactResponse import MatrixCompactResponse
 from ..geojson.GeoJsonFeature import GeoJsonFeature
 from ..routing.tasks.RouteResult import RouteResult
 from ..routing.Matrix import Matrix
-from ..settings import MESSAGE_CATEGORY
 import json
 
 class RoutesLayerBuilder(object):
@@ -26,25 +21,26 @@ class RoutesLayerBuilder(object):
             if not result.is_success():
                 continue
 
-            response: MatrixCompactResponse = result.result
+            response = result.result
             for route_row in response.routes:
-                for route in route_row:
-                    coordinates: list[list[float]] = list()
-                    for route_segment in route.segments:
-                        segment = response.segments[route_segment.global_id]
-                        segment.append_coordinates(coordinates, not route_segment.forward)
+                for alternatives in route_row:
+                    for route in alternatives:
+                        coordinates: list[list[float]] = list()
+                        for route_segment in route.segments:
+                            segment = response.segments[route_segment.global_id]
+                            segment.append_coordinates(coordinates, not route_segment.forward)
 
-                    route_feature = GeoJsonFeature({
-                        "type": "Feature",
-                        "properties": {
+                        route_feature = GeoJsonFeature({
+                            "type": "Feature",
+                            "properties": {
 
-                        },
-                        "geometry": {
-                            "type": "LineString",
-                            "coordinates": coordinates
-                        }
-                    })
-                    routes.append(route_feature)
+                            },
+                            "geometry": {
+                                "type": "LineString",
+                                "coordinates": coordinates
+                            }
+                        })
+                        routes.append(route_feature)
 
             #QgsMessageLog.logMessage(f"{segment_guid}{segment_forward}: {result}", MESSAGE_CATEGORY, Qgis.Info)
 

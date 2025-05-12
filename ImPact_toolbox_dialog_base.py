@@ -218,16 +218,16 @@ class Ui_APIRequestDialogBase(object):
 
     def retranslateUi(self, APIRequestDialogBase):
         _translate = QtCore.QCoreApplication.translate
-        APIRequestDialogBase.setWindowTitle(_translate("APIRequestDialogBase", "ImPact ToolBox"))
+        APIRequestDialogBase.setWindowTitle(_translate("APIRequestDialogBase", "ANYWAYS Plugin"))
         self.label.setText(_translate("APIRequestDialogBase", "Api-Key"))
         self.label_2.setText(_translate("APIRequestDialogBase", "A personal string which acts as key, provided to you by ANYWAYS BV."))
-        self.label_5.setText(_translate("APIRequestDialogBase", "<html><head/><body><p>The URL of one of your impact instances. Copy and paste the URL of any instance here, the tool will figure out which instances exist. You can pick any later on.</p><p/></body></html>"))
+        self.label_5.setText(_translate("APIRequestDialogBase", "<html><head/><body><p>The URL of your project. Copy and paste the URL here.</p><p/></body></html>"))
         self.label_4.setText(_translate("APIRequestDialogBase", "Project directory"))
         self.label_6.setText(_translate("APIRequestDialogBase", "<html><head/><body><p>This is the path of the current project. All intermediate files (output from routeplanning, ...) will be saved here as geoJson.</p></body></html>"))
-        self.label_3.setText(_translate("APIRequestDialogBase", "ImPact URL"))
+        self.label_3.setText(_translate("APIRequestDialogBase", "Project URL"))
         self.save_settings_button.setText(_translate("APIRequestDialogBase", "Save settings"))
-        self.save_area_outline.setText(_translate("APIRequestDialogBase", "Save the outline of this Impact instance as a layer"))
-        self.save_impact_url_button.setText(_translate("APIRequestDialogBase", "Save impact instance"))
+        self.save_area_outline.setText(_translate("APIRequestDialogBase", "Save the outline of this scenario as a layer"))
+        self.save_impact_url_button.setText(_translate("APIRequestDialogBase", "Save Project URL"))
         self.main_tab.setTabText(self.main_tab.indexOf(self.settings_tab), _translate("APIRequestDialogBase", "Settings"))
         self.label_15.setText(_translate("APIRequestDialogBase", "<html><head/><body><p>Calculate routes between multiple departure points and multiple arrival points</p><p/></body></html>"))
         self.label_29.setText(_translate("APIRequestDialogBase", "All individual road segments will be grouped and counted"))

@@ -1,23 +1,40 @@
-from qgis._core import QgsMessageLog, Qgis
-
-from ....settings import MESSAGE_CATEGORY
-from ....clients.publish_api.Models.RouteResponse import RouteResponse
+from ....clients.publish_api.Models.RouteModel import RouteModel
+from ....geojson.GeoJsonFeature import GeoJsonFeature
 
 class RouteMatrixResponse(object):
-    def __init__(self, routes: list[list[RouteResponse]]):
+    def __init__(self, segments: dict[str, GeoJsonFeature], routes: list[list[list[RouteModel]]]):
+        self.segments = segments
         self.routes = routes
 
     @staticmethod
     def from_json(response_json: dict) -> 'RouteMatrixResponse':
-        routes = response_json["routes"]
+        # parse segments as features.
+        segments: dict[str, GeoJsonFeature] = {}
+        json_segments: dict = response_json["segments"]
+        for key, value in json_segments.items():
+            segments[key] = RouteMatrixResponse.feature_from_segment_json(value)
 
-        route_responses: list[list[RouteResponse]] = []
-        for routes_for_origin in routes:
-            route_response_for_origin: list[RouteResponse] = []
+        # parse the routes
+        json_route_rows = response_json["routes"]
+        routes: list[list[list[RouteModel]]] = []
+        for json_route_row in json_route_rows:
+            route_row: list[list[RouteModel]] = []
+            routes.append(route_row)
+            for json_alternative_routes in json_route_row:
+                alternatives: list[RouteModel] = []
+                route_row.append(alternatives)
+                for json_alternative in json_alternative_routes:
+                    alternatives.append(RouteModel.from_json(json_alternative))
 
-            for route_for_origin in routes_for_origin:
-                route_response_for_origin.append(RouteResponse(route_for_origin))
+        return RouteMatrixResponse(segments, routes)
 
-            route_responses.append(route_response_for_origin)
-
-        return RouteMatrixResponse(route_responses)
+    @staticmethod
+    def feature_from_segment_json(response_json: dict) -> GeoJsonFeature:
+        return GeoJsonFeature({
+            "type": 'Feature',
+            "properties": response_json["attributes"],
+            "geometry": {
+                "type": "LineString",
+                "coordinates": response_json["shape"],
+            }
+        })
