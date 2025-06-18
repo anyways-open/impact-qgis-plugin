@@ -24,7 +24,7 @@ class SegmentsLayerBuilder(object):
             response = result.result
             for route_row in response.routes:
                 for alternatives in route_row:
-                    count_per_alternative = (element.count + 1.0) / len(alternatives)
+                    count_per_alternative = (element.count + 0.0) / len(alternatives)
                     for route in alternatives:
                         for route_segment in route.segments:
                             segment_key = f'{route_segment.global_id}-{route_segment.forward}'
