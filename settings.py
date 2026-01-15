@@ -2,6 +2,8 @@ MESSAGE_CATEGORY: str = "ANYWAYS"
 SNAPSHOT_NAME = "planet"
 EDIT_API = "https://api.anyways.eu/edit/"
 PUBLISH_API = "https://api.anyways.eu/plugin/publish/v2.0/"
+API = "https://api.anyways.eu/impact/canary/"
+
 PROFILE_COLOURS = {
     "bicycle": "#2222cc",
     "pedestrian": "#22cc22",

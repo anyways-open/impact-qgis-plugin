@@ -1,9 +1,5 @@
-
-Impact QGIS-plugin
+ANYWAYS QGIS-plugin
 ==================
-
-
-![staging](https://github.com/anyways-open/impact-qgis-plugin/workflows/staging/badge.svg)  
 
 This repo contains the code for the **ANYWAYS Plugin** for QGIS.
 
