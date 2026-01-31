@@ -738,14 +738,13 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             for scenario_id in response_model.details.scenarios:
                 scenario = response_model.scenarios[scenario_id]
                 network = networks[scenario.network]
-                network.name = f'{network.name} ({scenario.name})'
+                network.name = f'{network.name} - {scenario.name}'
 
             for network in networks.values():
                 name = network.name
                 branch = network.branch
-                key = f'{name} - {network.global_id}'
+                key = f'{name}'
                 if picker.findText(key) < 0:
-                    # Item hasn't been added previously
                     picker.addItem(key, branch)
             self.state_tracker.resume_loading()
 
