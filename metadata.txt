@@ -6,7 +6,7 @@
 name=ANYWAYS Plugin
 qgisMinimumVersion=3.0
 description=This plugin enables integration between QGIS and ANYWAYS.
-version=1.0.3
+version=1.0.4
 author=ANYWAYS BV
 email=support@anyways.eu
 
