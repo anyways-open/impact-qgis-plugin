@@ -210,6 +210,33 @@
            <property name="currentIndex">
             <number>0</number>
            </property>
+           <widget class="QWidget" name="tab_2">
+            <attribute name="title">
+             <string>Plan routes over a linestring layer</string>
+            </attribute>
+            <layout class="QFormLayout" name="formLayout_2">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_17">
+               <property name="text">
+                <string>Select a movement layer</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QgsMapLayerComboBox" name="movement_pairs_layer_picker"/>
+             </item>
+             <item row="1" column="0" colspan="2">
+              <widget class="QLabel" name="selected_layer_report">
+               <property name="text">
+                <string>No layer selected. Select a layer to show information about it.</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
            <widget class="QWidget" name="tab1">
             <attribute name="title">
              <string>Plan routes between point layers</string>
@@ -255,64 +282,6 @@
                <widget class="QLabel" name="label_14">
                 <property name="text">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Every point in this layer will be used as arrival point.&lt;/p&gt;&lt;p&gt;To do matrix routing, select the same as departure&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </widget>
-           <widget class="QWidget" name="tab_2">
-            <attribute name="title">
-             <string>Plan routes over a linestring layer</string>
-            </attribute>
-            <widget class="QWidget" name="formLayoutWidget_3">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>1081</width>
-               <height>297</height>
-              </rect>
-             </property>
-             <layout class="QFormLayout" name="formLayout_2">
-              <item row="1" column="1">
-               <widget class="QgsMapLayerComboBox" name="movement_pairs_layer_picker"/>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label_17">
-                <property name="text">
-                 <string>Select a movement layer</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLabel" name="label_18">
-                <property name="text">
-                 <string>Use a layer with movement data (e.g. loaded from file or from the FOD). Routeplanning will be performed on every origin-destination pair, which will be weighted                                        </string>
-                </property>
-                <property name="wordWrap">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="QLabel" name="selected_layer_report">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>No layer selected. Select a layer to show information about it.
-
-
-
-
-</string>
-                </property>
-                <property name="wordWrap">
-                 <bool>true</bool>
                 </property>
                </widget>
               </item>

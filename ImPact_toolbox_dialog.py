@@ -251,9 +251,19 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         source_index = self.toolbox_origin_destination_or_movement.currentIndex()
 
         # there are 2 different possibilities:
-        # - 0: origin and destination point layers.
-        # - 1: line layers with each line an origin-destination pair.
+        # - 0: line layers with each line an origin-destination pair.
+        # - 1: origin and destination point layers.
         if source_index == 0:
+            line_layer = self.movement_pairs_layer_picker.currentLayer()
+
+            if line_layer is None:
+                self.error_user(self.tr("Select line layer first"))
+                self.perform_routeplanning_button.setEnabled(True)
+                self.perform_routeplanning_button.setText(self.tr("Start route planning"))
+                return
+
+            matrix = RoutingHandler.build_matrix_from_lines(line_layer).result
+        else:
             # extract geometries from the origin and destination layers.
             origin_layer = self.departure_layer_picker.currentLayer()
             destination_layer = self.arrival_layer_picker.currentLayer()
@@ -265,16 +275,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 return
 
             matrix = RoutingHandler.build_matrix_from_points(origin_layer, destination_layer).result
-        else:
-            line_layer = self.movement_pairs_layer_picker.currentLayer()
-
-            if line_layer is None:
-                self.error_user(self.tr("Select line layer first"))
-                self.perform_routeplanning_button.setEnabled(True)
-                self.perform_routeplanning_button.setText(self.tr("Start route planning"))
-                return
-
-            matrix = RoutingHandler.build_matrix_from_lines(line_layer).result
 
         # if matrix is empty, no need to continue.
         if matrix.is_empty():
