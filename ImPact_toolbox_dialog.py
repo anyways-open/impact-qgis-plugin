@@ -36,7 +36,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
     The main dialog. All button actions get linked here with the logic in 'impact'
     """
 
-    def __init__(self, iface, profile_keys, auth: DeviceFlowAuth, parent=None):
+    def __init__(self, iface, profile_keys, auth: DeviceFlowAuth, project_cache=None, parent=None):
         """Constructor."""
         super(ToolBoxDialog, self).__init__(parent)
         # Set up the user interface from Designer through FORM_CLASS.
@@ -64,6 +64,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
         self.api = ApiClient(ApiClientSettings(), get_token=self.auth.get_access_token)
         self._current_project_id = None
+        self._project_cache = project_cache or {"projects": None}
 
         self.user_settings = QgsSettings()
         self.current_routeplanning_task = None
@@ -187,12 +188,17 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self._update_auth_ui()
 
     def _fetch_projects(self):
+        cached = self._project_cache.get("projects")
+        if cached is not None:
+            self._on_projects_loaded(cached)
+            return
         try:
             self.api.get_projects(self._on_projects_loaded)
         except Exception as e:
             self.log(f"Failed to fetch projects: {e}")
 
     def _on_projects_loaded(self, projects):
+        self._project_cache["projects"] = projects
         self.project_picker.blockSignals(True)
         self.project_picker.clear()
         self.project_picker.addItem(self.tr("Select a project..."), "")

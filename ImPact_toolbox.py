@@ -47,6 +47,7 @@ class ToolBox:
         self.first_start = None
 
         self.auth = DeviceFlowAuth()
+        self._project_cache = {"projects": None}
 
         self.profile_keys = [
 			"car.fast",
@@ -198,7 +199,7 @@ class ToolBox:
     def open_dialog(self):
         """Called when the menu item is clicked"""
         QgsMessageLog.logMessage("Initing dialog", MESSAGE_CATEGORY, level=Qgis.Info)
-        self.dlg = ToolBoxDialog(self.iface, self.profile_keys, self.auth)
+        self.dlg = ToolBoxDialog(self.iface, self.profile_keys, self.auth, project_cache=self._project_cache)
 
         # show the dialog
         self.dlg.show()
