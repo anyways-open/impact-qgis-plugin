@@ -23,7 +23,6 @@ from .layers.PointLayerHelpers import extract_coordinates_array, extract_valid_g
 from .routing.Matrix import Matrix
 from .routing.RoutingHandler import RoutingHandler
 from .routing.RoutingNetwork import RoutingNetwork
-from .settings import SNAPSHOT_NAME
 from .routing.tasks.RoutingTask import RoutingTask
 from .routing.tasks.RoutingTaskSettings import RoutingTaskSettings, NetworkCommit
 from .impact import previous_state_tracker, default_layer_styling, staging_mode, generate_layer_report
@@ -78,8 +77,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.path = prjpath
 
         # Set routing api options
-        self.scenario_picker.addItem(self.tr("Plan with a recent version of OpenStreetMap"), "routing-api")
         self.profile_picker.addItems(self.profile_keys)
+        self.scenario_picker.currentIndexChanged.connect(self._update_routing_options_visibility)
 
         # Set layer filters
 
@@ -113,6 +112,9 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         state_tracker.init_and_connect("movement_pairs_layer_picker", self.movement_pairs_layer_picker)
         state_tracker.init_and_connect("profile_picker", self.profile_picker, self.scenario_picker)
 
+        # Initially hide routing options until a network is selected
+        self._update_routing_options_visibility()
+
         # Check initial auth state (defer project fetch so dialog opens first)
         self._update_auth_ui(defer_fetch=True)
 
@@ -140,6 +142,19 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self.routeplanning_panel.setVisible(False)
             self.login_button.setEnabled(True)
             self.login_code_label.setText("")
+
+    def _update_routing_options_visibility(self):
+        has_network = self.scenario_picker.count() > 0 and bool(self.scenario_picker.currentData())
+        self.scenario_picker.setVisible(has_network)
+        self.label_7.setVisible(has_network)
+        self.toolbox_origin_destination_or_movement.setVisible(has_network)
+        self.profile_picker.setVisible(has_network)
+        self.label_9.setVisible(has_network)
+        self.label_10.setVisible(has_network)
+        self.profile_explanation.setVisible(has_network)
+        self.label_4.setVisible(has_network)
+        self.project_directory.setVisible(has_network)
+        self.perform_routeplanning_button.setVisible(has_network)
 
     def login(self):
         self.login_button.setEnabled(False)
@@ -262,12 +277,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             return
 
         # get details about the network to use.
-        if self.scenario_picker.currentIndex() == 0:
-            # use the latest snapshot.
-            network = RoutingNetwork(SNAPSHOT_NAME)
-        else:
-            # use the branch, get the latest commit.
-            network = RoutingNetwork(None, self.scenario_picker.currentData())
+        network = RoutingNetwork(None, self.scenario_picker.currentData())
 
         # use the routing handler to do the work.
         scenario_index = self.scenario_picker.currentIndex()
@@ -275,9 +285,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
         time_str = time.strftime("%Y%m%d_%H%M%S")
         profile_file_name = profile.replace(".", "_")
-        result_layer_name = f"live_{profile_file_name}_{time_str}"
-        if scenario_index > 0:
-            result_layer_name = f"scenario_{scenario_index-1}_{profile_file_name}_{time_str}"
+        result_layer_name = f"scenario_{scenario_index}_{profile_file_name}_{time_str}"
 
         def routes_planning_callback(results: list[RouteResult]):
             self.perform_routeplanning_button.setEnabled(True)
@@ -327,8 +335,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
             picker.clear()
 
-            picker.addItem(self.tr("Plan with a recent version of OpenStreetMap"), "routing-api")
-
             networks: dict[str, NetworkModel] = dict()
             for network_id in response_model.details.networks:
                 network = response_model.networks[network_id]
@@ -345,7 +351,10 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 key = f'{name}'
                 if picker.findText(key) < 0:
                     picker.addItem(key, branch)
+            if picker.count() > 0:
+                picker.setCurrentIndex(0)
             self.state_tracker.resume_loading()
+            self._update_routing_options_visibility()
 
         if len(project_id) > 0:
             self.api.get_project(project_id, project_callback)
