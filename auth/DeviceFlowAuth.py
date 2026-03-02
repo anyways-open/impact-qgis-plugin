@@ -1,5 +1,6 @@
 import json
 import webbrowser
+from typing import Optional
 from urllib import request, parse
 
 from qgis.PyQt.QtCore import QTimer, pyqtSignal, QObject
@@ -21,6 +22,7 @@ class DeviceFlowAuth(QObject):
         self._device_code = None
         self._token_endpoint = None
         self._device_authorization_endpoint = None
+        self._userinfo_endpoint = None
         self._poll_interval = 5
 
     @property
@@ -30,7 +32,7 @@ class DeviceFlowAuth(QObject):
             not self._storage.is_expired() or bool(tokens["refresh_token"])
         )
 
-    def get_access_token(self) -> str | None:
+    def get_access_token(self) -> Optional[str]:
         tokens = self._storage.load()
         if not tokens["access_token"]:
             return None
@@ -48,12 +50,13 @@ class DeviceFlowAuth(QObject):
             config = json.loads(resp.read().decode("utf-8"))
             self._token_endpoint = config["token_endpoint"]
             self._device_authorization_endpoint = config["device_authorization_endpoint"]
+            self._userinfo_endpoint = config.get("userinfo_endpoint")
             return True
         except Exception as e:
             QgsMessageLog.logMessage(f"OIDC discovery failed: {e}", MESSAGE_CATEGORY, Qgis.Warning)
             return False
 
-    def start_device_flow(self) -> dict | None:
+    def start_device_flow(self) -> Optional[dict]:
         if not self._discover_endpoints():
             self.login_failed.emit("Could not connect to identity server.")
             return None
@@ -190,20 +193,23 @@ class DeviceFlowAuth(QObject):
         self._storage.clear()
         self.logged_out.emit()
 
-    def get_user_name(self) -> str | None:
+    def get_user_name(self) -> Optional[str]:
         token = self.get_access_token()
         if not token:
             return None
         try:
-            # Decode JWT payload (no verification needed, server already validated)
-            import base64
-            parts = token.split(".")
-            if len(parts) != 3:
+            # Fetch user info from the userinfo endpoint
+            if self._token_endpoint is None:
+                if not self._discover_endpoints():
+                    return None
+            # Derive userinfo endpoint from discovery
+            if not hasattr(self, '_userinfo_endpoint') or self._userinfo_endpoint is None:
                 return None
-            payload = parts[1]
-            # Add padding
-            payload += "=" * (4 - len(payload) % 4)
-            decoded = json.loads(base64.urlsafe_b64decode(payload))
-            return decoded.get("name") or decoded.get("preferred_username") or decoded.get("sub")
-        except Exception:
+            req = request.Request(self._userinfo_endpoint)
+            req.add_header("Authorization", f"Bearer {token}")
+            resp = request.urlopen(req, timeout=10)
+            userinfo = json.loads(resp.read().decode("utf-8"))
+            return userinfo.get("name") or userinfo.get("preferred_username") or userinfo.get("email") or userinfo.get("sub")
+        except Exception as e:
+            QgsMessageLog.logMessage(f"Failed to get user name: {e}", MESSAGE_CATEGORY, Qgis.Warning)
             return None

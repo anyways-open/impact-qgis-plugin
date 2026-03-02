@@ -121,12 +121,12 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         state_tracker.init_and_connect("profile_picker", self.profile_picker, self.scenario_picker)
         state_tracker.init_and_connect_textfield("impact_url", self.impact_url_textfield)
 
-        # Check initial auth state
-        self._update_auth_ui()
+        # Check initial auth state (defer project fetch so dialog opens first)
+        self._update_auth_ui(defer_fetch=True)
 
         self.save_impact_url()  # TODO this should not be needed when login works
 
-    def _update_auth_ui(self):
+    def _update_auth_ui(self, defer_fetch=False):
         if self.auth.is_logged_in:
             name = self.auth.get_user_name() or "user"
             self.auth_status_label.setText(f"Logged in as {name}")
@@ -134,7 +134,11 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self.logout_button.setEnabled(True)
             self.login_code_label.setText("")
             self.project_picker.setEnabled(True)
-            self._fetch_projects()
+            if defer_fetch:
+                from qgis.PyQt.QtCore import QTimer
+                QTimer.singleShot(0, self._fetch_projects)
+            else:
+                self._fetch_projects()
         else:
             self.auth_status_label.setText("Not logged in")
             self.login_button.setEnabled(True)
@@ -179,13 +183,19 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         except Exception as e:
             self.log(f"Failed to fetch projects: {e}")
 
-    def _on_projects_loaded(self, projects: list[dict]):
+    def _on_projects_loaded(self, projects):
         self.project_picker.clear()
         self.project_picker.addItem(self.tr("Select a project..."), "")
+        projects.sort(key=lambda p: p.get("lastModified") or p.get("createdAt") or "", reverse=True)
         for project in projects:
             project_id = project.get("id", "")
             project_name = project.get("name", project_id)
-            self.project_picker.addItem(project_name, project_id)
+            org_name = project.get("_organization_name", "")
+            if org_name:
+                display_name = f"{org_name} / {project_name}"
+            else:
+                display_name = project_name
+            self.project_picker.addItem(display_name, project_id)
 
     def on_project_selected(self, index: int):
         project_id = self.project_picker.currentData()
