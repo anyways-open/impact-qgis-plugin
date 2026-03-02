@@ -9,6 +9,7 @@ from qgis.PyQt import (QtWidgets, uic)
 from qgis.core import *
 from urllib.parse import urlparse
 
+from .auth.DeviceFlowAuth import DeviceFlowAuth
 from .clients.api.ApiClient import ApiClient
 from .clients.api.ApiClientSettings import ApiClientSettings
 from .clients.api.Models.NetworkModel import NetworkModel
@@ -38,7 +39,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
     The main dialog. All button actions get linked here with the logic in 'impact'
     """
 
-    def __init__(self, iface, profile_keys, parent=None):
+    def __init__(self, iface, profile_keys, auth: DeviceFlowAuth, parent=None):
         """Constructor."""
         super(ToolBoxDialog, self).__init__(parent)
         # Set up the user interface from Designer through FORM_CLASS.
@@ -50,10 +51,10 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
        # QCoreApplication.installTranslator("")
         self.setupUi(self)
         self.setModal(True)
-        
+
         if staging_mode:
             self.warn("Debug build using ANYWAYS testing server")
-            
+
         self.log("Staging mode: "+str(staging_mode))
 
         self.iface = iface
@@ -62,13 +63,12 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.state_tracker = state_tracker
 
         self.profile_keys = profile_keys
+        self.auth = auth
 
-        self.api = ApiClient(ApiClientSettings())
+        self.api = ApiClient(ApiClientSettings(), get_token=self.auth.get_access_token)
 
         self.user_settings = QgsSettings()
-        self.api_key_field.setText(self.user_settings.value("anyways.eu/impact/api_key"))
         self.current_routeplanning_task = None
-        # self.save_settings_button.clicked.connect(self.save_setting)
 
         # Get project path
         prjpath = QgsProject.instance().fileName()
@@ -81,7 +81,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         # Set routing api options
         self.scenario_picker.addItem(self.tr("Plan with a recent version of OpenStreetMap"), "routing-api")
         self.profile_picker.addItems(self.profile_keys)
-        
+
         # Set layer filters
 
         self.departure_layer_picker.setFilters(QgsMapLayerProxyModel.PointLayer)
@@ -94,9 +94,19 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.impact_instance_selector.currentIndexChanged.connect(self.update_network_picker)
         self.save_impact_url_button.clicked.connect(self.save_impact_url)
 
+        # Auth button listeners
+        self.login_button.clicked.connect(self.login)
+        self.logout_button.clicked.connect(self.logout)
+        self.auth.token_received.connect(self.on_token_received)
+        self.auth.login_failed.connect(self.on_login_failed)
+        self.auth.logged_out.connect(self.on_logged_out)
+
+        # Project picker listener
+        self.project_picker.currentIndexChanged.connect(self.on_project_selected)
+
         # At last: update and set the profile explanations
         self.update_network_picker()
-        
+
         # Update the selected layer information
         self.movement_pairs_layer_picker.currentIndexChanged.connect(self.update_selected_layer_explanation)
         self.update_selected_layer_explanation()
@@ -110,18 +120,80 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         state_tracker.init_and_connect("movement_pairs_layer_picker", self.movement_pairs_layer_picker)
         state_tracker.init_and_connect("profile_picker", self.profile_picker, self.scenario_picker)
         state_tracker.init_and_connect_textfield("impact_url", self.impact_url_textfield)
-        # disable components for the next version which require auth
-        self.remove_auth_components()
+
+        # Check initial auth state
+        self._update_auth_ui()
 
         self.save_impact_url()  # TODO this should not be needed when login works
 
-    def remove_auth_components(self):
-        self.label.hide()
-        self.api_key_field.hide()
-        self.save_settings_button.hide()
-        self.label_2.hide()
-        self.impact_instance_selector.hide()
-        self.save_area_outline.hide()
+    def _update_auth_ui(self):
+        if self.auth.is_logged_in:
+            name = self.auth.get_user_name() or "user"
+            self.auth_status_label.setText(f"Logged in as {name}")
+            self.login_button.setEnabled(False)
+            self.logout_button.setEnabled(True)
+            self.login_code_label.setText("")
+            self.project_picker.setEnabled(True)
+            self._fetch_projects()
+        else:
+            self.auth_status_label.setText("Not logged in")
+            self.login_button.setEnabled(True)
+            self.logout_button.setEnabled(False)
+            self.login_code_label.setText("")
+            self.project_picker.setEnabled(False)
+            self.project_picker.clear()
+
+    def login(self):
+        self.login_button.setEnabled(False)
+        self.login_code_label.setText("Connecting to identity server...")
+
+        flow = self.auth.start_device_flow()
+        if flow is None:
+            self.login_button.setEnabled(True)
+            return
+
+        user_code = flow.get("user_code", "")
+        verification_uri = flow.get("verification_uri", "")
+        self.login_code_label.setText(
+            f"A browser window has been opened. If it didn't open, visit:\n"
+            f"{verification_uri}\n\n"
+            f"Enter code: {user_code}"
+        )
+
+    def on_token_received(self, access_token: str):
+        self._update_auth_ui()
+
+    def on_login_failed(self, error_message: str):
+        self.login_button.setEnabled(True)
+        self.login_code_label.setText(f"Login failed: {error_message}")
+
+    def logout(self):
+        self.auth.logout()
+
+    def on_logged_out(self):
+        self._update_auth_ui()
+
+    def _fetch_projects(self):
+        try:
+            self.api.get_projects(self._on_projects_loaded)
+        except Exception as e:
+            self.log(f"Failed to fetch projects: {e}")
+
+    def _on_projects_loaded(self, projects: list[dict]):
+        self.project_picker.clear()
+        self.project_picker.addItem(self.tr("Select a project..."), "")
+        for project in projects:
+            project_id = project.get("id", "")
+            project_name = project.get("name", project_id)
+            self.project_picker.addItem(project_name, project_id)
+
+    def on_project_selected(self, index: int):
+        project_id = self.project_picker.currentData()
+        if project_id:
+            self.impact_instance_selector.clear()
+            self.impact_instance_selector.addItem(project_id)
+            self.impact_instance_selector.setCurrentIndex(0)
+            self.update_network_picker()
 
     @staticmethod
     def extract_instance_name(url: str):

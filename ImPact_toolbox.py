@@ -8,6 +8,7 @@ from .settings import MESSAGE_CATEGORY
 # Initialize Qt resources from file resources.py
 # Import the code for the dialog
 from .ImPact_toolbox_dialog import ToolBoxDialog
+from .auth.DeviceFlowAuth import DeviceFlowAuth
 from qgis.core import *
 # The import 'from .resources import *' is needed to load the resources (e.g. the icon)
 from .resources import *
@@ -44,6 +45,8 @@ class ToolBox:
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
+
+        self.auth = DeviceFlowAuth()
 
         self.profile_keys = [
 			"car.fast",
@@ -195,7 +198,7 @@ class ToolBox:
     def open_dialog(self):
         """Called when the menu item is clicked"""
         QgsMessageLog.logMessage("Initing dialog", MESSAGE_CATEGORY, level=Qgis.Info)
-        self.dlg = ToolBoxDialog(self.iface, self.profile_keys)
+        self.dlg = ToolBoxDialog(self.iface, self.profile_keys, self.auth)
 
         # show the dialog
         self.dlg.show()

@@ -70,19 +70,52 @@
      </property>
      <layout class="QFormLayout" name="settings_form">
       <item row="0" column="0">
-       <widget class="QLabel" name="label">
+       <widget class="QLabel" name="label_auth_header">
         <property name="text">
-         <string>Api-Key</string>
+         <string>Account</string>
+        </property>
+        <property name="font">
+         <font>
+          <bold>true</bold>
+         </font>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="api_key_field"/>
+       <widget class="QLabel" name="auth_status_label">
+        <property name="text">
+         <string>Not logged in</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <layout class="QHBoxLayout" name="auth_buttons_layout">
+        <item>
+         <widget class="QPushButton" name="login_button">
+          <property name="text">
+           <string>Login</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="logout_button">
+          <property name="text">
+           <string>Logout</string>
+          </property>
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item row="2" column="1">
-       <widget class="QLabel" name="label_2">
+       <widget class="QLabel" name="login_code_label">
         <property name="text">
-         <string>A personal string which acts as key, provided to you by ANYWAYS BV.</string>
+         <string/>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -94,12 +127,74 @@
         <property name="sizeHint" stdset="0">
          <size>
           <width>20</width>
-          <height>40</height>
+          <height>20</height>
          </size>
         </property>
        </spacer>
       </item>
-      <item row="11" column="1">
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_project_header">
+        <property name="text">
+         <string>Project</string>
+        </property>
+        <property name="font">
+         <font>
+          <bold>true</bold>
+         </font>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QComboBox" name="project_picker">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QLabel" name="label_project_explanation">
+        <property name="text">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Login to see your available projects, or enter a project URL manually below.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <spacer name="verticalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="7" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Project URL</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="1">
+       <widget class="QComboBox" name="impact_instance_selector"/>
+      </item>
+      <item row="8" column="1">
+       <widget class="QLineEdit" name="impact_url_textfield"/>
+      </item>
+      <item row="9" column="1">
+       <widget class="QPushButton" name="save_impact_url_button">
+        <property name="text">
+         <string>Save Project URL</string>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="1">
        <widget class="QLabel" name="label_5">
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The URL of your ANYWAYS project. Copy and paste the URL here.&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -109,7 +204,7 @@
         </property>
        </widget>
       </item>
-      <item row="12" column="1">
+      <item row="11" column="1">
        <spacer name="verticalSpacer_2">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
@@ -122,17 +217,17 @@
         </property>
        </spacer>
       </item>
-      <item row="13" column="0">
+      <item row="12" column="0">
        <widget class="QLabel" name="label_4">
         <property name="text">
          <string>Project directory</string>
         </property>
        </widget>
       </item>
-      <item row="13" column="1">
+      <item row="12" column="1">
        <widget class="QgsFileWidget" name="project_directory" native="true"/>
       </item>
-      <item row="14" column="1">
+      <item row="13" column="1">
        <widget class="QLabel" name="label_6">
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This is the path of the current project. All intermediate files (output from routeplanning, ...) will be saved here as geoJson.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -145,7 +240,7 @@
         </property>
        </widget>
       </item>
-      <item row="15" column="1">
+      <item row="14" column="1">
        <spacer name="verticalSpacer_5">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
@@ -158,54 +253,7 @@
         </property>
        </spacer>
       </item>
-      <item row="7" column="1">
-       <widget class="QComboBox" name="impact_instance_selector"/>
-      </item>
-      <item row="7" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Project URL</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QPushButton" name="save_settings_button">
-        <property name="text">
-         <string>Save settings</string>
-        </property>
-       </widget>
-      </item>
-      <item row="10" column="1">
-       <widget class="QPushButton" name="save_area_outline">
-        <property name="text">
-         <string>Save the outline of this Scenario as a layer</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="1">
-       <widget class="QLineEdit" name="impact_url_textfield"/>
-      </item>
-      <item row="9" column="1">
-       <widget class="QPushButton" name="save_impact_url_button">
-        <property name="text">
-         <string>Save Project URL</string>
-        </property>
-       </widget>
-      </item>
      </layout>
-     <zorder>label</zorder>
-     <zorder>api_key_field</zorder>
-     <zorder>label_2</zorder>
-     <zorder>label_5</zorder>
-     <zorder>label_4</zorder>
-     <zorder>project_directory</zorder>
-     <zorder>label_6</zorder>
-     <zorder>impact_instance_selector</zorder>
-     <zorder>label_3</zorder>
-     <zorder>save_settings_button</zorder>
-     <zorder>save_area_outline</zorder>
-     <zorder>save_impact_url_button</zorder>
-     <zorder>impact_url_textfield</zorder>
     </widget>
    </widget>
    <widget class="QWidget" name="routeplanning_tab">
@@ -372,11 +420,6 @@
              </property>
              <property name="text">
               <string>No layer selected. Select a layer to show information about it.
-
-
-
-
-
 
 
 
