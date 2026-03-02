@@ -7,8 +7,6 @@ import time
 
 from qgis.PyQt import (QtWidgets, uic)
 from qgis.core import *
-from urllib.parse import urlparse
-
 from .auth.DeviceFlowAuth import DeviceFlowAuth
 from .clients.api.ApiClient import ApiClient
 from .clients.api.ApiClientSettings import ApiClientSettings
@@ -66,6 +64,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.auth = auth
 
         self.api = ApiClient(ApiClientSettings(), get_token=self.auth.get_access_token)
+        self._current_project_id = None
 
         self.user_settings = QgsSettings()
         self.current_routeplanning_task = None
@@ -91,8 +90,6 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # Attach button listeners
         self.perform_routeplanning_button.clicked.connect(self.run_routeplanning)
-        self.impact_instance_selector.currentIndexChanged.connect(self.update_network_picker)
-        self.save_impact_url_button.clicked.connect(self.save_impact_url)
 
         # Auth button listeners
         self.login_button.clicked.connect(self.login)
@@ -104,48 +101,45 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         # Project picker listener
         self.project_picker.currentIndexChanged.connect(self.on_project_selected)
 
-        # At last: update and set the profile explanations
-        self.update_network_picker()
-
         # Update the selected layer information
         self.movement_pairs_layer_picker.currentIndexChanged.connect(self.update_selected_layer_explanation)
         self.update_selected_layer_explanation()
 
         # Keep track of the last selected state of qcomboboxes
-        state_tracker.init_and_connect("impact_instance_selector", self.impact_instance_selector)
         state_tracker.init_and_connect("scenario_picker", self.scenario_picker)
 
         state_tracker.init_and_connect("departure_layer_picker", self.departure_layer_picker)
         state_tracker.init_and_connect("arrival_layer_picker", self.arrival_layer_picker)
         state_tracker.init_and_connect("movement_pairs_layer_picker", self.movement_pairs_layer_picker)
         state_tracker.init_and_connect("profile_picker", self.profile_picker, self.scenario_picker)
-        state_tracker.init_and_connect_textfield("impact_url", self.impact_url_textfield)
 
         # Check initial auth state (defer project fetch so dialog opens first)
         self._update_auth_ui(defer_fetch=True)
-
-        self.save_impact_url()  # TODO this should not be needed when login works
 
     def _update_auth_ui(self, defer_fetch=False):
         if self.auth.is_logged_in:
             name = self.auth.get_user_name() or "user"
             self.auth_status_label.setText(f"Logged in as {name}")
-            self.login_button.setEnabled(False)
             self.logout_button.setEnabled(True)
-            self.login_code_label.setText("")
-            self.project_picker.setEnabled(True)
+            self.login_panel.setVisible(False)
+            self.routeplanning_panel.setVisible(True)
+
+            # Restore saved project immediately so network picker loads without waiting for project list
+            saved_id = QgsProject.instance().readEntry("anyways", "selected_project_id")[0]
+            if saved_id:
+                self._current_project_id = saved_id
+                self.update_network_picker()
+
             if defer_fetch:
                 from qgis.PyQt.QtCore import QTimer
                 QTimer.singleShot(0, self._fetch_projects)
             else:
                 self._fetch_projects()
         else:
-            self.auth_status_label.setText("Not logged in")
+            self.login_panel.setVisible(True)
+            self.routeplanning_panel.setVisible(False)
             self.login_button.setEnabled(True)
-            self.logout_button.setEnabled(False)
             self.login_code_label.setText("")
-            self.project_picker.setEnabled(False)
-            self.project_picker.clear()
 
     def login(self):
         self.login_button.setEnabled(False)
@@ -184,6 +178,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self.log(f"Failed to fetch projects: {e}")
 
     def _on_projects_loaded(self, projects):
+        self.project_picker.blockSignals(True)
         self.project_picker.clear()
         self.project_picker.addItem(self.tr("Select a project..."), "")
         projects.sort(key=lambda p: p.get("lastModified") or p.get("createdAt") or "", reverse=True)
@@ -197,39 +192,25 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 display_name = project_name
             self.project_picker.addItem(display_name, project_id)
 
+        # Restore previously selected project
+        saved_id = QgsProject.instance().readEntry("anyways", "selected_project_id")[0]
+        if saved_id:
+            for i in range(self.project_picker.count()):
+                if self.project_picker.itemData(i) == saved_id:
+                    self.project_picker.setCurrentIndex(i)
+                    break
+        self.project_picker.blockSignals(False)
+        # Only fetch networks if a different project was selected than what's already loaded
+        current_data = self.project_picker.currentData()
+        if current_data and current_data != self._current_project_id:
+            self.on_project_selected(self.project_picker.currentIndex())
+
     def on_project_selected(self, index: int):
         project_id = self.project_picker.currentData()
         if project_id:
-            self.impact_instance_selector.clear()
-            self.impact_instance_selector.addItem(project_id)
-            self.impact_instance_selector.setCurrentIndex(0)
+            self._current_project_id = project_id
+            QgsProject.instance().writeEntry("anyways", "selected_project_id", project_id)
             self.update_network_picker()
-
-    @staticmethod
-    def extract_instance_name(url: str):
-        if not url.startswith("http"):
-            return url
-        path = urlparse(url).path[1:]
-        parts = list(filter(lambda s: s != "", path.split("/")))
-        if parts[0] == 'impact':
-            del parts[0]
-        try:
-            int(parts[-1])
-            del parts[-1]
-        except:
-            pass
-
-        return parts[-1]
-
-    def save_impact_url(self):
-        self.log("Saving impact url")
-        url = self.impact_url_textfield.text()
-        url = self.extract_instance_name(url)
-        self.impact_url_textfield.setText(url)
-
-        self.impact_instance_selector.addItem(url)
-        self.impact_instance_selector.setCurrentIndex(self.impact_instance_selector.count() - 1)
-        self.update_network_picker()
 
     def update_selected_layer_explanation(self):
         line_layer = self.movement_pairs_layer_picker.currentLayer()
@@ -339,7 +320,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.close()
 
     def update_network_picker(self):
-        project_id = self.impact_instance_selector.currentText()
+        project_id = self._current_project_id or ""
         def project_callback(response_model: ResponseModel[ProjectModel]):
             picker = self.scenario_picker
             self.state_tracker.pause_loading()
