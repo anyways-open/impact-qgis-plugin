@@ -79,7 +79,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # Set routing api options
         self.profile_picker.addItems(self.profile_keys)
-        self.scenario_picker.currentIndexChanged.connect(self._update_routing_options_visibility)
+        self.network_picker.currentIndexChanged.connect(self._update_routing_options_visibility)
 
         # Set layer filters
 
@@ -106,12 +106,12 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.update_selected_layer_explanation()
 
         # Keep track of the last selected state of qcomboboxes
-        state_tracker.init_and_connect("scenario_picker", self.scenario_picker)
+        state_tracker.init_and_connect("network_picker", self.network_picker)
 
         state_tracker.init_and_connect("departure_layer_picker", self.departure_layer_picker)
         state_tracker.init_and_connect("arrival_layer_picker", self.arrival_layer_picker)
         state_tracker.init_and_connect("movement_pairs_layer_picker", self.movement_pairs_layer_picker)
-        state_tracker.init_and_connect("profile_picker", self.profile_picker, self.scenario_picker)
+        state_tracker.init_and_connect("profile_picker", self.profile_picker, self.network_picker)
 
         # Initially hide routing options until a network is selected
         self._update_routing_options_visibility()
@@ -145,8 +145,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self.login_code_label.setText("")
 
     def _update_routing_options_visibility(self):
-        has_network = self.scenario_picker.count() > 0 and bool(self.scenario_picker.currentData())
-        self.scenario_picker.setVisible(has_network)
+        has_network = self.network_picker.count() > 0 and bool(self.network_picker.currentData())
+        self.network_picker.setVisible(has_network)
         self.label_7.setVisible(has_network)
         self.toolbox_origin_destination_or_movement.setVisible(has_network)
         self.profile_picker.setVisible(has_network)
@@ -283,10 +283,10 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             return
 
         # get details about the network to use.
-        network = RoutingNetwork(None, self.scenario_picker.currentData())
+        network = RoutingNetwork(None, self.network_picker.currentData())
 
         # use the routing handler to do the work.
-        scenario_index = self.scenario_picker.currentIndex()
+        scenario_index = self.network_picker.currentIndex()
         profile = self.profile_picker.currentText()
 
         time_str = time.strftime("%Y%m%d_%H%M%S")
@@ -336,7 +336,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
     def update_network_picker(self):
         project_id = self._current_project_id or ""
         def project_callback(response_model: ResponseModel[ProjectModel]):
-            picker = self.scenario_picker
+            picker = self.network_picker
             self.state_tracker.pause_loading()
 
             picker.clear()
