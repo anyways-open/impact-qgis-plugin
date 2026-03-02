@@ -2,8 +2,6 @@ from typing import Callable, Optional
 from urllib import request
 import json
 
-from qgis.core import QgsMessageLog, Qgis
-
 from .ApiClientSettings import ApiClientSettings
 from .Models.ProjectModel import ProjectModel
 from .Models.ResponseModel import ResponseModel
@@ -46,12 +44,8 @@ class ApiClient(object):
 
         try:
             req = self._build_request(url)
-            QgsMessageLog.logMessage(f"get_projects: GET {url}", "ANYWAYS", Qgis.Info)
-            QgsMessageLog.logMessage(f"get_projects: Authorization header present: {'Authorization' in dict(req.headers)}", "ANYWAYS", Qgis.Info)
             response = request.urlopen(req, timeout=self.settings.timeout)
-            status = response.getcode()
             json_string = response.read().decode("utf-8")
-            QgsMessageLog.logMessage(f"get_projects: status={status}, response={json_string[:500]}", "ANYWAYS", Qgis.Info)
             data = json.loads(json_string)
             projects = data.get("details", []) if isinstance(data, dict) else data
             # build org name lookup from included organizations
@@ -65,11 +59,4 @@ class ApiClient(object):
                 project["_organization_name"] = org_lookup.get(org_id, "")
             callback(projects)
         except Exception as e:
-            error_body = ""
-            if hasattr(e, "read"):
-                try:
-                    error_body = e.read().decode("utf-8")
-                except Exception:
-                    pass
-            QgsMessageLog.logMessage(f"get_projects: error={e}, body={error_body}", "ANYWAYS", Qgis.Warning)
             raise e
