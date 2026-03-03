@@ -6,13 +6,14 @@
 name=ANYWAYS Plugin
 qgisMinimumVersion=3.0
 description=This plugin enables integration between QGIS and ANYWAYS.
-version=1.0.4
+version=2.0.2
 author=ANYWAYS BV
 email=support@anyways.eu
 
 about=This plugin enables integration between QGIS and ANYWAYS and can be used to plan routes:
+	- Log in with your ANYWAYS account to access your projects.
 	- Large amounts of routes using origin-destination matrices.
-	- Using the networks from the scenarios defined in on of your ANYWAYS projects or the latest OpenStreetMap network.
+	- Using the networks from the scenarios defined in one of your ANYWAYS projects.
 	- Using a selection of vehicle profiles.
 
 tracker=https://github.com/anyways-open/qgis-plugins/issues
