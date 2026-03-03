@@ -4,6 +4,10 @@ EDIT_API = "https://api.anyways.eu/edit/"
 PUBLISH_API = "https://api.anyways.eu/plugin/publish/v2.0/"
 API = "https://api.anyways.eu/impact/canary/"
 
+OIDC_AUTHORITY = "https://www.anyways.eu/account"
+OIDC_CLIENT_ID = "qgis-plugin"
+OIDC_SCOPES = "openid profile impact"
+
 PROFILE_COLOURS = {
     "bicycle": "#2222cc",
     "pedestrian": "#22cc22",

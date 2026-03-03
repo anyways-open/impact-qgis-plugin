@@ -11,8 +11,9 @@ from . import PublishApiClientSettings
 from .Models.RouteMatrixRequest import RouteMatrixRequest
 
 class PublishApiClient(object):
-    def __init__(self, settings: PublishApiClientSettings):
+    def __init__(self, settings: PublishApiClientSettings, get_token=None):
         self.settings = settings
+        self._get_token = get_token
 
     def post_branch_many_to_many(self, commit_id, route_matrix_request: RouteMatrixRequest, callback: Callable[[Result[RouteMatrixResponse]], None]):
         if callback is None:
@@ -46,6 +47,10 @@ class PublishApiClient(object):
 
     def fetch(self, url: str, data: bytes, headers: dict[str, str], callback: Callable[[Result[bytes]], None]) -> None:
         try:
+            if self._get_token is not None:
+                token = self._get_token()
+                if token:
+                    headers["Authorization"] = f"Bearer {token}"
             response = request.urlopen(request.Request(url, data=data,
                                       headers=headers), timeout=self.settings.timeout)
             raw_json = response.read().decode("UTF-8")
