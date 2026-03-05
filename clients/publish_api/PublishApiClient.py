@@ -15,11 +15,12 @@ class PublishApiClient(object):
         self.settings = settings
         self._get_token = get_token
 
-    def post_ad_hoc_routes(self, commit_id: str, ad_hoc_request: AdHocRoutesRequest, callback: Callable[[Result[AdHocRoutesResponse]], None]):
+    def post_ad_hoc_routes(self, commit_id: str, ad_hoc_request: AdHocRoutesRequest, callback: Callable[[Result[AdHocRoutesResponse]], None], is_cancelled: Callable[[], bool] = None, on_progress: Callable[[int, int], None] = None):
         if callback is None:
             raise Exception("No callback given")
 
         url = f"{self.settings.url}v3.0/cachedroutes/{commit_id}"
+        total_trips = len(ad_hoc_request.trips)
 
         try:
             request_json = ad_hoc_request.to_json()
@@ -27,13 +28,21 @@ class PublishApiClient(object):
             response_data = json.loads(raw_json)
             accumulated = AdHocRoutesResponse.from_json(response_data)
 
+            if on_progress:
+                on_progress(len(accumulated.routes), total_trips)
+
             # batch poll until complete
             while accumulated.batch is not None:
+                if is_cancelled and is_cancelled():
+                    return
                 batch_url = f"{self.settings.url}v3.0/cachedroutes/{commit_id}/batch/{accumulated.batch}"
                 batch_raw = self._fetch(batch_url, None, {})
                 batch_data = json.loads(batch_raw)
                 batch_response = AdHocRoutesResponse.from_json(batch_data)
                 accumulated = accumulated.merge(batch_response)
+
+                if on_progress:
+                    on_progress(len(accumulated.routes), total_trips)
 
             callback(Result(accumulated))
         except Exception as e:

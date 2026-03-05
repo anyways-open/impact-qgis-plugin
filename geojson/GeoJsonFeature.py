@@ -104,7 +104,7 @@ class GeoJsonFeature(object):
         properties = copy.deepcopy(self.feature["properties"])
 
         if len(cut_coordinates) <= 1:
-            raise ValueError("cut is empty or only has one coordinate")
+            return None
 
         return GeoJsonFeature({
             "type": "Feature",

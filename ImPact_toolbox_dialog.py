@@ -330,7 +330,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 group.addLayer(result_failed_layer)
             return
 
-        RoutingHandler.start_route_planning(result_layer_name, network, profile, matrix, routes_planning_callback)
+        RoutingHandler.start_route_planning(result_layer_name, network, profile, matrix, routes_planning_callback, get_token=self.auth.get_access_token)
         self.close()
 
     def update_network_picker(self):

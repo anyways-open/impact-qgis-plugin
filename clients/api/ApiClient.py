@@ -2,6 +2,8 @@ from typing import Callable, Optional
 from urllib import request
 import json
 
+from qgis._core import QgsMessageLog, Qgis
+from ...settings import MESSAGE_CATEGORY
 from .ApiClientSettings import ApiClientSettings
 from .Models.ProjectModel import ProjectModel
 from .Models.ResponseModel import ResponseModel
@@ -54,15 +56,17 @@ class ApiClient(object):
 
         url = f"{self.settings.url}v3.0/data/"
         body = json.dumps({
-            "type": "organization",
-            "children": [{"type": "project", "children": [], "parents": []}],
-            "parents": []
+            "type": "project",
+            "children": [],
+            "parents": [{"type": "organization", "children": [], "parents": []}]
         }).encode("utf-8")
 
         try:
+            QgsMessageLog.logMessage(f"get_projects: POST {url}", MESSAGE_CATEGORY, Qgis.Info)
             req = self._build_request(url, data=body, extra_headers={"Content-Type": "application/json"})
             response = request.urlopen(req, timeout=self.settings.timeout)
             json_string = response.read().decode("utf-8")
+            QgsMessageLog.logMessage(f"get_projects: response {json_string[:500]}", MESSAGE_CATEGORY, Qgis.Info)
             data = json.loads(json_string)
 
             # v3 returns flat array of DataObjects, separate by _type
@@ -74,10 +78,12 @@ class ApiClient(object):
                 elif item.get("_type") == "project":
                     projects.append(item)
 
+            QgsMessageLog.logMessage(f"get_projects: found {len(projects)} projects, {len(org_lookup)} orgs", MESSAGE_CATEGORY, Qgis.Info)
             # attach org name to each project
             for project in projects:
                 org_id = project.get("organization", "")
                 project["_organization_name"] = org_lookup.get(org_id, "")
             callback(projects)
         except Exception as e:
+            QgsMessageLog.logMessage(f"get_projects: ERROR {e}", MESSAGE_CATEGORY, Qgis.Warning)
             raise e

@@ -32,7 +32,7 @@ class RoutingTask(QgsTask):
 
         try:
             # resolve branch → latest commit via Edit API
-            edit_api = EditApiClient(EditApiClientSettings())
+            edit_api = EditApiClient(EditApiClientSettings(), get_token=self.settings.get_token)
             commit_id = None
 
             def branch_callback(branch_model: BranchModel):
@@ -48,10 +48,8 @@ class RoutingTask(QgsTask):
             if self.isCanceled():
                 return False
 
-            self.setProgress(10)
-
             # build request with all locations and trips at once
-            publish_api = PublishApiClient(PublishApiClientSettings())
+            publish_api = PublishApiClient(PublishApiClientSettings(), get_token=self.settings.get_token)
             ad_hoc_request = AdHocRoutesRequest.from_matrix(self.settings.profile, self.settings.matrix)
 
             def route_callback(response: Result[AdHocRoutesResponse]) -> None:
@@ -61,7 +59,12 @@ class RoutingTask(QgsTask):
 
                 self.data.append(RouteResult(result=response.result))
 
-            publish_api.post_ad_hoc_routes(commit_id, ad_hoc_request, route_callback)
+            def on_progress(routes_done: int, routes_total: int):
+                if routes_total > 0:
+                    self.setProgress(100 * routes_done / routes_total)
+                QgsMessageLog.logMessage(f"{routes_done}/{routes_total} routes", MESSAGE_CATEGORY, Qgis.Info)
+
+            publish_api.post_ad_hoc_routes(commit_id, ad_hoc_request, route_callback, is_cancelled=self.isCanceled, on_progress=on_progress)
 
             self.setProgress(100)
             return True

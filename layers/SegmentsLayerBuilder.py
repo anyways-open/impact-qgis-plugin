@@ -110,9 +110,9 @@ class SegmentsLayerBuilder(object):
                                     segment = GeoJsonFeature.reverse_linestring(segment)
 
                                 if cut_tail != 0 or cut_head != 65535:
-                                    QgsMessageLog.logMessage(f"{segment_cut_key}", MESSAGE_CATEGORY, Qgis.Info)
-                                    QgsMessageLog.logMessage(f"{segment}", MESSAGE_CATEGORY, Qgis.Info)
                                     segment = segment.get_cut(cut_tail, cut_head)
+                                    if segment is None:
+                                        continue
 
                                 histogram[segment_cut_key] = segment
                             else:
