@@ -10,21 +10,30 @@ class ProjectModel(object):
         self.scenarios = scenarios
 
     @staticmethod
-    def from_response_json(response_json) -> 'ResponseModel[ProjectModel]':
-        name: str = response_json["details"]["name"]
-        global_id: str = response_json["details"]["id"]
-        network_ids: list = response_json["details"]["networks"]
-        scenario_ids: list = response_json["details"]["scenarios"]
-
-        scenarios: dict[str, ScenarioModel] = dict()
-        for json_scenario in response_json["scenarios"]:
-            scenario = ScenarioModel.from_json(json_scenario)
-            scenarios[scenario.global_id] = scenario
-
+    def from_response_json(data: list) -> 'ResponseModel[ProjectModel]':
+        # v3 returns a flat array of DataObjects, filter by _type
+        project_obj = None
         networks: dict[str, NetworkModel] = dict()
-        for json_network in response_json["networks"]:
-            network = NetworkModel.from_json(json_network)
-            networks[network.global_id] = network
+        scenarios: dict[str, ScenarioModel] = dict()
+
+        for item in data:
+            item_type = item.get("_type", "")
+            if item_type == "project":
+                project_obj = item
+            elif item_type == "network":
+                network = NetworkModel.from_json(item)
+                networks[network.global_id] = network
+            elif item_type == "scenario":
+                scenario = ScenarioModel.from_json(item)
+                scenarios[scenario.global_id] = scenario
+
+        if project_obj is None:
+            raise ValueError("No project found in response")
+
+        global_id = project_obj["id"]
+        name = project_obj["name"]
+        network_ids = project_obj.get("networks", [])
+        scenario_ids = project_obj.get("scenarios", [])
 
         project = ProjectModel(global_id, name, network_ids, scenario_ids)
 

@@ -15,34 +15,33 @@ class RoutesLayerBuilder(object):
 
     def build_layer(self, project_path: str) -> QgsVectorLayer:
 
-        # QgsMessageLog.logMessage(f"{flattened}", MESSAGE_CATEGORY, Qgis.Info)
         routes: list[GeoJsonFeature] = list()
         for result in self.results:
             if not result.is_success():
                 continue
 
             response = result.result
-            for route_row in response.routes:
-                for alternatives in route_row:
-                    for route in alternatives:
-                        coordinates: list[list[float]] = list()
-                        for route_segment in route.segments:
-                            segment = response.segments[route_segment.global_id]
+            for route in response.routes:
+                if route.is_error():
+                    continue
+                for alternative in route.alternatives:
+                    coordinates: list[list[float]] = list()
+                    for route_segment in alternative.segments:
+                        segment = response.segments.get(route_segment.segment_id)
+                        if segment is not None:
                             segment.append_coordinates(coordinates, not route_segment.forward)
 
-                        route_feature = GeoJsonFeature({
-                            "type": "Feature",
-                            "properties": {
+                    route_feature = GeoJsonFeature({
+                        "type": "Feature",
+                        "properties": {
 
-                            },
-                            "geometry": {
-                                "type": "LineString",
-                                "coordinates": coordinates
-                            }
-                        })
-                        routes.append(route_feature)
-
-            #QgsMessageLog.logMessage(f"{segment_guid}{segment_forward}: {result}", MESSAGE_CATEGORY, Qgis.Info)
+                        },
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": coordinates
+                        }
+                    })
+                    routes.append(route_feature)
 
         # write layer data as geojson
         result_layer_filename = f"{project_path}/{self.layer_name}_routes.geojson"
@@ -71,32 +70,4 @@ class RoutesLayerBuilder(object):
         sym.setColor(QColor(color))
         sym.setWidth(1.0)
 
-        # # build label settings.
-        # layer_settings = QgsPalLayerSettings()
-        # text_format = QgsTextFormat()
-        #
-        # text_format.setFont(QFont("Arial", 12))
-        # text_format.setSize(12)
-        # text_format.setColor(QColor(color))
-
-        # buffer_settings = QgsTextBufferSettings()
-        # buffer_settings.setEnabled(True)
-        # buffer_settings.setSize(1)
-        # buffer_settings.setColor(QColor(color))
-        #
-        # text_format.setBuffer(buffer_settings)
-        # layer_settings.setFormat(text_format)
-        #
-        # layer_settings.fieldName = "count"
-        # layer_settings.placement = QgsPalLayerSettings.Line
-        # # layer_settings.placement = 2
-        # layer_settings.placementFlags = QgsPalLayerSettings.AboveLine
-        #
-        # layer_settings.enabled = True
-        #
-        # layer_settings = QgsVectorLayerSimpleLabeling(layer_settings)
-        # qgs_layer.setLabelsEnabled(True)
-        # qgs_layer.setLabeling(layer_settings)
-
         qgs_layer.triggerRepaint()
-

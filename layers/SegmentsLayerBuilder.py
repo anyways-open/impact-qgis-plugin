@@ -12,85 +12,114 @@ class SegmentsLayerBuilder(object):
         self.matrix = matrix
         self.results = results
 
+    @staticmethod
+    def _get_segment_offsets(alternative, seg_idx: int, num_segments: int) -> tuple[int, int]:
+        """Get tail/head offsets for a segment based on its position in the alternative.
+        Returns offsets in 0-65535 range for compatibility with get_cut()."""
+        if num_segments == 1:
+            tail = alternative.tail
+            head = alternative.head
+        elif seg_idx == 0:
+            tail = alternative.tail
+            head = 100
+        elif seg_idx == num_segments - 1:
+            tail = 0
+            head = alternative.head
+        else:
+            tail = 0
+            head = 100
+
+        # convert 0-100 percentage to 0-65535 range
+        tail_65535 = int(tail * 65535 / 100)
+        head_65535 = int(head * 65535 / 100)
+        return tail_65535, head_65535
+
     def build_layer(self, project_path: str) -> QgsVectorLayer:
+        # first pass: collect all segment cuts across all routes
         cuts_per_segment: dict[str, list[int]] = dict()
-        for i, result in enumerate(self.results):
+        for result in self.results:
             if not result.is_success():
                 continue
 
             response = result.result
-            for route_row in response.routes:
-                for alternatives in route_row:
-                    for route in alternatives:
-                        for route_segment in route.segments:
-                            segment_key = f'{route_segment.global_id}-{route_segment.forward}'
-                            segment_cuts: list[int] = []
-                            if segment_key in cuts_per_segment:
-                                segment_cuts = cuts_per_segment[segment_key]
+            for route in response.routes:
+                if route.is_error():
+                    continue
+                for alternative in route.alternatives:
+                    num_segments = len(alternative.segments)
+                    for seg_idx, route_segment in enumerate(alternative.segments):
+                        segment_key = f'{route_segment.segment_id}-{route_segment.forward}'
+                        segment_cuts: list[int] = cuts_per_segment.get(segment_key, [])
 
-                            if route_segment.tail_offset not in segment_cuts:
-                                segment_cuts.append(route_segment.tail_offset)
-                                segment_cuts = sorted(segment_cuts)
-                            if route_segment.head_offset not in segment_cuts:
-                                segment_cuts.append(route_segment.head_offset)
-                                segment_cuts = sorted(segment_cuts)
+                        tail_offset, head_offset = self._get_segment_offsets(alternative, seg_idx, num_segments)
 
-                            cuts_per_segment[segment_key] = segment_cuts
+                        if tail_offset not in segment_cuts:
+                            segment_cuts.append(tail_offset)
+                            segment_cuts = sorted(segment_cuts)
+                        if head_offset not in segment_cuts:
+                            segment_cuts.append(head_offset)
+                            segment_cuts = sorted(segment_cuts)
 
-        # QgsMessageLog.logMessage(f"{flattened}", MESSAGE_CATEGORY, Qgis.Info)
+                        cuts_per_segment[segment_key] = segment_cuts
+
+        # second pass: build histogram of segment usage
         histogram: dict[str, GeoJsonFeature] = dict()
-        for i, result in enumerate(self.results):
+        for result in self.results:
             if not result.is_success():
                 continue
 
-            element = self.matrix.elements[i]
-
             response = result.result
-            for route_row in response.routes:
-                for alternatives in route_row:
-                    count_per_alternative = (element.count + 0.0) / len(alternatives)
-                    for route in alternatives:
-                        for route_segment in route.segments:
-                            segment_key = f'{route_segment.global_id}-{route_segment.forward}'
+            for route_idx, route in enumerate(response.routes):
+                if route.is_error():
+                    continue
 
-                            # get the cuts covered by this route_segment
-                            segment_cuts = cuts_per_segment[segment_key]
-                            covered_cuts: list[int] = []
-                            for segment_cut in segment_cuts:
-                                if route_segment.tail_offset > segment_cut:
-                                    continue
-                                if route_segment.head_offset < segment_cut:
-                                    continue
+                # routes correspond 1:1 to matrix elements (trips sent in same order)
+                element = self.matrix.elements[route_idx]
 
-                                covered_cuts.append(segment_cut)
+                num_alternatives = max(len(route.alternatives), 1)
+                count_per_alternative = (element.count + 0.0) / num_alternatives
 
-                            # process the segment for each cut
-                            for k in range(1, len(covered_cuts)):
-                                tail_offset = covered_cuts[k - 1]
-                                head_offset = covered_cuts[k]
-                                segment_cut_key = f'{route_segment.global_id}-{route_segment.forward}@{tail_offset}-{head_offset}'
+                for alternative in route.alternatives:
+                    num_segments = len(alternative.segments)
+                    for seg_idx, route_segment in enumerate(alternative.segments):
+                        segment_key = f'{route_segment.segment_id}-{route_segment.forward}'
+                        tail_offset, head_offset = self._get_segment_offsets(alternative, seg_idx, num_segments)
 
-                                if segment_cut_key not in histogram:
-                                    segment = response.segments[route_segment.global_id]
-                                    if segment is None:
-                                        raise RuntimeError(f"Invalid response: could not find segment {route_segment.global_id}")
+                        # get the cuts covered by this route_segment
+                        segment_cuts = cuts_per_segment[segment_key]
+                        covered_cuts: list[int] = []
+                        for segment_cut in segment_cuts:
+                            if tail_offset > segment_cut:
+                                continue
+                            if head_offset < segment_cut:
+                                continue
+                            covered_cuts.append(segment_cut)
 
-                                    if not route_segment.forward:
-                                        segment = GeoJsonFeature.reverse_linestring(segment)
+                        # process the segment for each cut
+                        for k in range(1, len(covered_cuts)):
+                            cut_tail = covered_cuts[k - 1]
+                            cut_head = covered_cuts[k]
+                            segment_cut_key = f'{route_segment.segment_id}-{route_segment.forward}@{cut_tail}-{cut_head}'
 
-                                    if tail_offset != 0 or head_offset != 65535:
-                                        QgsMessageLog.logMessage(f"{segment_cut_key}", MESSAGE_CATEGORY, Qgis.Info)
-                                        QgsMessageLog.logMessage(f"{segment}", MESSAGE_CATEGORY, Qgis.Info)
-                                        segment = segment.get_cut(tail_offset, head_offset)
+                            if segment_cut_key not in histogram:
+                                segment = response.segments.get(route_segment.segment_id)
+                                if segment is None:
+                                    raise RuntimeError(f"Invalid response: could not find segment {route_segment.segment_id}")
 
-                                    histogram[segment_cut_key] = segment
-                                else:
-                                     segment = histogram[segment_cut_key]
+                                if not route_segment.forward:
+                                    segment = GeoJsonFeature.reverse_linestring(segment)
 
-                                segment.add_to_attribute_value("count", count_per_alternative)
-                                segment.add_or_update_attribute("id", segment_cut_key)
+                                if cut_tail != 0 or cut_head != 65535:
+                                    QgsMessageLog.logMessage(f"{segment_cut_key}", MESSAGE_CATEGORY, Qgis.Info)
+                                    QgsMessageLog.logMessage(f"{segment}", MESSAGE_CATEGORY, Qgis.Info)
+                                    segment = segment.get_cut(cut_tail, cut_head)
 
-            #QgsMessageLog.logMessage(f"{segment_guid}{segment_forward}: {result}", MESSAGE_CATEGORY, Qgis.Info)
+                                histogram[segment_cut_key] = segment
+                            else:
+                                 segment = histogram[segment_cut_key]
+
+                            segment.add_to_attribute_value("count", count_per_alternative)
+                            segment.add_or_update_attribute("id", segment_cut_key)
 
         # round numbers to format properly.
         for result in histogram.values():

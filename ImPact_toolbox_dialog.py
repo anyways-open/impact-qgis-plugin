@@ -24,7 +24,7 @@ from .routing.Matrix import Matrix
 from .routing.RoutingHandler import RoutingHandler
 from .routing.RoutingNetwork import RoutingNetwork
 from .routing.tasks.RoutingTask import RoutingTask
-from .routing.tasks.RoutingTaskSettings import RoutingTaskSettings, NetworkCommit
+from .routing.tasks.RoutingTaskSettings import RoutingTaskSettings
 from .impact import previous_state_tracker, default_layer_styling, staging_mode, generate_layer_report
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -283,7 +283,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             return
 
         # get details about the network to use.
-        network = RoutingNetwork(None, self.network_picker.currentData())
+        network = RoutingNetwork(self.network_picker.currentData())
 
         # use the routing handler to do the work.
         scenario_index = self.network_picker.currentIndex()
@@ -350,9 +350,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 scenario = response_model.scenarios[scenario_id]
                 network = networks[scenario.network]
                 name = network.name
-                branch = network.branch
                 if picker.findText(name) < 0:
-                    picker.addItem(name, branch)
+                    picker.addItem(name, network.branch)
             if picker.count() > 0:
                 picker.setCurrentIndex(0)
             self.state_tracker.resume_loading()

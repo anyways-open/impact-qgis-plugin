@@ -26,13 +26,25 @@ class ApiClient(object):
         if callback is None:
             raise Exception("No callback given for fetch_non_blocking")
 
-        url = f"{self.settings.url}v2.0/plugin/project/{project_id}/"
+        url = f"{self.settings.url}v3.0/data/"
+        body = json.dumps({
+            "type": "project",
+            "id": project_id,
+            "children": [
+                {"type": "network", "children": [], "parents": []},
+                {"type": "scenario", "children": [], "parents": []}
+            ],
+            "parents": [
+                {"type": "organization", "children": [], "parents": []}
+            ]
+        }).encode("utf-8")
 
         try:
-            response = request.urlopen(self._build_request(url), timeout=self.settings.timeout)
+            req = self._build_request(url, data=body, extra_headers={"Content-Type": "application/json"})
+            response = request.urlopen(req, timeout=self.settings.timeout)
             json_string = response.read().decode("utf-8")
-            json_object = json.loads(json_string)
-            callback(ProjectModel.from_response_json(json_object))
+            data = json.loads(json_string)
+            callback(ProjectModel.from_response_json(data))
         except Exception as e:
             raise e
 
@@ -40,19 +52,28 @@ class ApiClient(object):
         if callback is None:
             raise Exception("No callback given")
 
-        url = f"{self.settings.url}v2.0/project/"
+        url = f"{self.settings.url}v3.0/data/"
+        body = json.dumps({
+            "type": "organization",
+            "children": [{"type": "project", "children": [], "parents": []}],
+            "parents": []
+        }).encode("utf-8")
 
         try:
-            req = self._build_request(url)
+            req = self._build_request(url, data=body, extra_headers={"Content-Type": "application/json"})
             response = request.urlopen(req, timeout=self.settings.timeout)
             json_string = response.read().decode("utf-8")
             data = json.loads(json_string)
-            projects = data.get("details", []) if isinstance(data, dict) else data
-            # build org name lookup from included organizations
+
+            # v3 returns flat array of DataObjects, separate by _type
             org_lookup = {}
-            if isinstance(data, dict):
-                for org in data.get("organizations", []):
-                    org_lookup[org.get("id", "")] = org.get("name", "")
+            projects = []
+            for item in data:
+                if item.get("_type") == "organization":
+                    org_lookup[item.get("id", "")] = item.get("name", "")
+                elif item.get("_type") == "project":
+                    projects.append(item)
+
             # attach org name to each project
             for project in projects:
                 org_id = project.get("organization", "")

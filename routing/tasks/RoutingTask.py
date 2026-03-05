@@ -4,18 +4,17 @@ from qgis.core import (
     QgsTask, QgsMessageLog, Qgis
 )
 
-from ...clients.publish_api.Models.RouteMatrixResponse import RouteMatrixResponse
+from ...clients.publish_api.Models.AdHocRoutesResponse import AdHocRoutesResponse
 from .RouteResult import RouteResult
 from ...Result import Result
-from ...clients.publish_api.PublishApiClient import PublishApiClient
 from ...clients.edit_api.EditApiClient import EditApiClient
 from ...clients.edit_api.EditApiClientSettings import EditApiClientSettings
 from ...clients.edit_api.Models.BranchModel import BranchModel
-from ...clients.edit_api.Models.SnapshotCommitModel import SnapshotCommitModel
-from ...clients.publish_api.Models.RouteMatrixRequest import RouteMatrixRequest
+from ...clients.publish_api.PublishApiClient import PublishApiClient
+from ...clients.publish_api.Models.AdHocRoutesRequest import AdHocRoutesRequest
 from ...clients.publish_api.PublishApiClientSettings import PublishApiClientSettings
 from ...settings import MESSAGE_CATEGORY
-from .RoutingTaskSettings import RoutingTaskSettings, NetworkCommit
+from .RoutingTaskSettings import RoutingTaskSettings
 
 class RoutingTask(QgsTask):
     def __init__(self, settings: RoutingTaskSettings) -> None:
@@ -29,56 +28,42 @@ class RoutingTask(QgsTask):
 
         self.setProgress(0)
 
-        QgsMessageLog.logMessage(f"{len(self.settings.matrix.elements)}", MESSAGE_CATEGORY, Qgis.Info)
+        QgsMessageLog.logMessage(f"{len(self.settings.matrix.elements)} trips", MESSAGE_CATEGORY, Qgis.Info)
 
         try:
-            def plan_with_network(network: NetworkCommit) -> None:
-                public_api = PublishApiClient(PublishApiClientSettings())
-
-                i: int = 0
-                while i < len(self.settings.matrix.elements):
-                    if self.isCanceled():
-                        return
-
-                    # QgsMessageLog.logMessage(f"Calculating {i+1}/{len(self.settings.matrix.elements)}", MESSAGE_CATEGORY, Qgis.Info)
-                    self.setProgress((i + 1.0) / (len(self.settings.matrix.elements)) * 100.0)
-
-                    element_index = i
-                    i = i+1
-
-                    route_matrix_request = RouteMatrixRequest.from_matrix_per_element(self.settings.profile,
-                                                                          self.settings.matrix,
-                                                                          element_index)
-                    def route_matrix_callback(response: Result[RouteMatrixResponse]) -> None:
-                        if not response.is_success():
-                            self.data.append(RouteResult(element_index, message=response.message))
-                            return
-
-                        route_response = response.result.routes[0][0][0]
-                        if route_response.is_error():
-                            self.data.append(RouteResult(element_index, message=route_response.error))
-                            return
-
-                        self.data.append(RouteResult(element_index, response.result))
-
-                    if network.branch_commit_id is not None:
-                        public_api.post_branch_many_to_many(network.branch_commit_id, route_matrix_request, route_matrix_callback)
-                    else:
-                        public_api.post_snapshot_many_to_many(network.snapshot_commit_id, route_matrix_request, route_matrix_callback)
-
-            # fetch network commit details before planning routes.
+            # resolve branch → latest commit via Edit API
             edit_api = EditApiClient(EditApiClientSettings())
-            if self.settings.network.snapshot_name is not None:
-                def callback(snapshot_commit: SnapshotCommitModel):
-                    plan_with_network(NetworkCommit(None, snapshot_commit.global_id))
+            commit_id = None
 
-                edit_api.get_latest_commit_for_snapshot_with_name(self.settings.network.snapshot_name, callback)
-            else:
-                def callback(branch_model: BranchModel):
-                    plan_with_network(NetworkCommit(branch_model.commit_model.global_id))
+            def branch_callback(branch_model: BranchModel):
+                nonlocal commit_id
+                commit_id = branch_model.commit_model.global_id
 
-                edit_api.get_branch(self.settings.network.branch_id, callback)
+            edit_api.get_branch(self.settings.network.branch_id, branch_callback)
 
+            if commit_id is None:
+                self.data.append(RouteResult(message="Failed to resolve branch to commit"))
+                return True
+
+            if self.isCanceled():
+                return False
+
+            self.setProgress(10)
+
+            # build request with all locations and trips at once
+            publish_api = PublishApiClient(PublishApiClientSettings())
+            ad_hoc_request = AdHocRoutesRequest.from_matrix(self.settings.profile, self.settings.matrix)
+
+            def route_callback(response: Result[AdHocRoutesResponse]) -> None:
+                if not response.is_success():
+                    self.data.append(RouteResult(message=response.message))
+                    return
+
+                self.data.append(RouteResult(result=response.result))
+
+            publish_api.post_ad_hoc_routes(commit_id, ad_hoc_request, route_callback)
+
+            self.setProgress(100)
             return True
         except Exception as e:
             self.exception = e
