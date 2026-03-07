@@ -19,8 +19,8 @@ class RoutingHandler(object):
         pass
 
     @staticmethod
-    def start_route_planning(task_name: str, network: RoutingNetwork, profile: str, matrix: Matrix, callback: Callable[[list[RouteResult]], None]) -> None:
-        routing_task = RoutingTask(RoutingTaskSettings(name=task_name, network=network, profile=profile, matrix=matrix, callback=callback))
+    def start_route_planning(task_name: str, network: RoutingNetwork, profile: str, matrix: Matrix, callback: Callable[[list[RouteResult]], None], get_token=None) -> None:
+        routing_task = RoutingTask(RoutingTaskSettings(name=task_name, network=network, profile=profile, matrix=matrix, callback=callback, get_token=get_token))
         RoutingTask.RUNNING_TASKS.append(routing_task)
         QgsApplication.taskManager().addTask(RoutingTask.RUNNING_TASKS[len(RoutingTask.RUNNING_TASKS)-1])
 
@@ -89,7 +89,6 @@ class RoutingHandler(object):
                 QgsMessageLog.logMessage("Layer has features that empty, they are being ignored", MESSAGE_CATEGORY, Qgis.Warning)
                 continue
 
-            # QgsMessageLog.logMessage(f"{origin_geometry.geometry().asWkt()}", MESSAGE_CATEGORY, Qgis.Info)
             if isinstance(origin_geometry, QgsPointXY):
                 point = origin_geometry
             else:
@@ -103,9 +102,7 @@ class RoutingHandler(object):
             if count <= 0:
                continue
 
-            # QgsMessageLog.logMessage(f"{point.x()}-{point.y()}", MESSAGE_CATEGORY, Qgis.Info)
             origins.append(MatrixLocation(point))
-            # QgsMessageLog.logMessage(f"{count}", MESSAGE_CATEGORY, Qgis.Info)
             origin_counts.append(count)
 
         # build destinations list.

@@ -1,6 +1,6 @@
-from ...settings import PUBLISH_API
+from ...settings import API
 
 class PublishApiClientSettings(object):
     def __init__(self, url=None):
-        self.url = PUBLISH_API if url is None else url
+        self.url = API if url is None else url
         self.timeout = 6000

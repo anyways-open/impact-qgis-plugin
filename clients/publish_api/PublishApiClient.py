@@ -6,55 +6,53 @@ from qgis._core import QgsMessageLog, Qgis
 
 from ...settings import MESSAGE_CATEGORY
 from ...Result import Result
-from .Models.RouteMatrixResponse import RouteMatrixResponse
-from . import PublishApiClientSettings
-from .Models.RouteMatrixRequest import RouteMatrixRequest
+from .Models.AdHocRoutesResponse import AdHocRoutesResponse
+from .PublishApiClientSettings import PublishApiClientSettings
+from .Models.AdHocRoutesRequest import AdHocRoutesRequest
 
 class PublishApiClient(object):
     def __init__(self, settings: PublishApiClientSettings, get_token=None):
         self.settings = settings
         self._get_token = get_token
 
-    def post_branch_many_to_many(self, commit_id, route_matrix_request: RouteMatrixRequest, callback: Callable[[Result[RouteMatrixResponse]], None]):
+    def post_ad_hoc_routes(self, commit_id: str, ad_hoc_request: AdHocRoutesRequest, callback: Callable[[Result[AdHocRoutesResponse]], None], is_cancelled: Callable[[], bool] = None, on_progress: Callable[[int, int], None] = None):
         if callback is None:
             raise Exception("No callback given")
 
-        def handle_result(response_result: Result[bytes]) -> None:
-            if response_result.result is None:
-                callback(Result(message=response_result.message))
+        url = f"{self.settings.url}v3.0/cachedroutes/{commit_id}"
+        total_trips = len(ad_hoc_request.trips)
 
-            callback(Result(RouteMatrixResponse.from_json(json.loads(response_result.result))))
-
-        self.fetch(f"{self.settings.url}branch/commit/{commit_id}/routing",
-                   route_matrix_request.to_json().encode('UTF-8'),
-                   {"Content-Type": "application/json"}, handle_result)
-
-    def post_snapshot_many_to_many(self, commit_id, route_matrix_request: RouteMatrixRequest, callback: Callable[[Result[RouteMatrixResponse]], None]):
-        if callback is None:
-            raise Exception("No callback given for fetch_non_blocking")
-
-        def handle_result(response_result: Result[bytes]) -> None:
-            if response_result.result is None:
-                callback(Result(message=response_result.message))
-
-            callback(Result(RouteMatrixResponse.from_json(json.loads(response_result.result))))
-
-        request_json = route_matrix_request.to_json()
-        # QgsMessageLog.logMessage(f"request: {request_json}", MESSAGE_CATEGORY, Qgis.Info)
-        self.fetch(f"{self.settings.url}snapshot/commit/{commit_id}/routing",
-                   request_json.encode('UTF-8'),
-                   {"Content-Type": "application/json"}, handle_result)
-
-    def fetch(self, url: str, data: bytes, headers: dict[str, str], callback: Callable[[Result[bytes]], None]) -> None:
         try:
-            if self._get_token is not None:
-                token = self._get_token()
-                if token:
-                    headers["Authorization"] = f"Bearer {token}"
-            response = request.urlopen(request.Request(url, data=data,
-                                      headers=headers), timeout=self.settings.timeout)
-            raw_json = response.read().decode("UTF-8")
-            # QgsMessageLog.logMessage(f"response: {raw_json}", MESSAGE_CATEGORY, Qgis.Info)
-            callback(Result(raw_json))
+            request_json = ad_hoc_request.to_json()
+            raw_json = self._fetch(url, request_json.encode('UTF-8'), {"Content-Type": "application/json"})
+            response_data = json.loads(raw_json)
+            accumulated = AdHocRoutesResponse.from_json(response_data)
+
+            if on_progress:
+                on_progress(len(accumulated.routes), total_trips)
+
+            # batch poll until complete
+            while accumulated.batch is not None:
+                if is_cancelled and is_cancelled():
+                    return
+                batch_url = f"{self.settings.url}v3.0/cachedroutes/{commit_id}/batch/{accumulated.batch}"
+                batch_raw = self._fetch(batch_url, None, {})
+                batch_data = json.loads(batch_raw)
+                batch_response = AdHocRoutesResponse.from_json(batch_data)
+                accumulated = accumulated.merge(batch_response)
+
+                if on_progress:
+                    on_progress(len(accumulated.routes), total_trips)
+
+            callback(Result(accumulated))
         except Exception as e:
             callback(Result(message=f"Request failed: {e}"))
+
+    def _fetch(self, url: str, data: bytes, headers: dict[str, str]) -> str:
+        if self._get_token is not None:
+            token = self._get_token()
+            if token:
+                headers["Authorization"] = f"Bearer {token}"
+        response = request.urlopen(request.Request(url, data=data,
+                                  headers=headers), timeout=self.settings.timeout)
+        return response.read().decode("UTF-8")

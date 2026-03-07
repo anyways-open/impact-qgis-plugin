@@ -8,6 +8,6 @@ class NetworkModel(object):
     def from_json(json) -> 'NetworkModel':
         global_id = json["id"]
         name = json["name"]
-        branch = json["branch"]
+        branch = json.get("branch", "")
 
         return NetworkModel(global_id, name, branch)

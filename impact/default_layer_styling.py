@@ -34,7 +34,12 @@ class default_layer_styling:
                 color = PROFILE_COLOURS[key]
                 offset = PROFILE_OFFSET[key]
                 break
-        symbols = qgs_layer.renderer().symbols(QgsRenderContext())
+        renderer = qgs_layer.renderer()
+        if renderer is None:
+            return
+        symbols = renderer.symbols(QgsRenderContext())
+        if not symbols:
+            return
         sym = symbols[0]
 
         line_rendering = QgsSimpleLineSymbolLayer()
