@@ -358,7 +358,11 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self._update_routing_options_visibility()
 
         if len(project_id) > 0:
-            self.api.get_project(project_id, project_callback)
+            try:
+                self.api.get_project(project_id, project_callback)
+            except Exception as e:
+                self.log(f"Failed to fetch project {project_id}: {e}")
+                self._update_routing_options_visibility()
 
     def log(self, msg):
         QgsMessageLog.logMessage(msg, MESSAGE_CATEGORY, level=Qgis.Info)

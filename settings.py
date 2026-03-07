@@ -1,6 +1,6 @@
 MESSAGE_CATEGORY: str = "ANYWAYS"
 EDIT_API = "https://api.anyways.eu/edit/"
-API = "https://api.anyways.eu/impact/canary/"
+API = "https://api.anyways.eu/impact/"
 
 OIDC_AUTHORITY = "https://www.anyways.eu/account"
 OIDC_CLIENT_ID = "qgis-plugin"
