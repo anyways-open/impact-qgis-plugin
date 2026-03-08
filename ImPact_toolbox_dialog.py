@@ -93,9 +93,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         # Attach button listeners
         self.perform_routeplanning_button.clicked.connect(self.run_routeplanning)
 
-        # Dataset listeners
-        self.dataset_list.currentRowChanged.connect(self._on_dataset_selected)
-        self.download_dataset_button.clicked.connect(self._download_dataset)
+        # Hide global download button; each card has its own
+        self.download_dataset_button.setVisible(False)
 
         # Auth button listeners
         self.login_button.clicked.connect(self.login)
@@ -408,31 +407,77 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
     def _update_dataset_list(self, response_model: ResponseModel[ProjectModel]):
         self.dataset_list.clear()
-        self.download_dataset_button.setEnabled(False)
+        self.dataset_list.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+        self.dataset_list.setStyleSheet("QListWidget::item:hover { background: transparent; }")
+        self.dataset_status_label.setText("")
         for dataset_id in response_model.details.datasets:
             if dataset_id in response_model.datasets:
                 dataset = response_model.datasets[dataset_id]
-                item = QtWidgets.QListWidgetItem(dataset.name)
-                item.setData(256, dataset.global_id)  # Qt.UserRole = 256
+
+                # build card widget
+                card = QtWidgets.QFrame()
+                card.setStyleSheet("QFrame { border: none; }")
+                card_outer = QtWidgets.QHBoxLayout(card)
+                card_outer.setContentsMargins(4, 6, 4, 6)
+                card_outer.setSpacing(8)
+
+                # add separator line between items
+                if self.dataset_list.count() > 0:
+                    sep_item = QtWidgets.QListWidgetItem()
+                    sep_item.setFlags(sep_item.flags() & ~sep_item.flags())
+                    sep = QtWidgets.QFrame()
+                    sep.setFrameShape(QtWidgets.QFrame.HLine)
+                    sep.setStyleSheet("color: #ddd;")
+                    sep_item.setSizeHint(sep.sizeHint())
+                    self.dataset_list.addItem(sep_item)
+                    self.dataset_list.setItemWidget(sep_item, sep)
+
+                # left: text content
+                text_layout = QtWidgets.QVBoxLayout()
+                text_layout.setSpacing(2)
+
+                name_label = QtWidgets.QLabel(dataset.name)
+                name_label.setStyleSheet("font-weight: bold; border: none; padding: 0;")
+                text_layout.addWidget(name_label)
+
+                if dataset.description:
+                    desc_label = QtWidgets.QLabel(dataset.description)
+                    desc_label.setStyleSheet("color: #555; border: none; padding: 0;")
+                    desc_label.setWordWrap(True)
+                    text_layout.addWidget(desc_label)
+
+                if dataset.last_modified:
+                    date_str = dataset.last_modified[:10] if len(dataset.last_modified) >= 10 else dataset.last_modified
+                    date_label = QtWidgets.QLabel(f"Last modified: {date_str}")
+                    date_label.setStyleSheet("color: #999; font-size: 10px; border: none; padding: 0;")
+                    text_layout.addWidget(date_label)
+
+                card_outer.addLayout(text_layout, 1)
+
+                # right: download button
+                download_btn = QtWidgets.QPushButton("Download")
+                download_btn.setStyleSheet(
+                    "QPushButton { border: 1px solid #aaa; border-radius: 3px; padding: 4px 12px; background: palette(button); color: white; }"
+                    "QPushButton:hover { background: palette(midlight); border-color: palette(dark); }"
+                    "QPushButton:pressed { background: palette(mid); }"
+                    "QPushButton:disabled { color: #ccc; }"
+                )
+                download_btn.clicked.connect(lambda checked, did=dataset.global_id, dname=dataset.name, btn=download_btn: self._download_dataset(did, dname, btn))
+                card_outer.addWidget(download_btn, 0)
+
+                item = QtWidgets.QListWidgetItem()
+                item.setSizeHint(card.sizeHint())
                 self.dataset_list.addItem(item)
+                self.dataset_list.setItemWidget(item, card)
 
-    def _on_dataset_selected(self, row: int):
-        self.download_dataset_button.setEnabled(row >= 0)
-
-    def _download_dataset(self):
-        item = self.dataset_list.currentItem()
-        if item is None:
-            return
-
-        dataset_id = item.data(256)
-        dataset_name = item.text()
-        self.download_dataset_button.setEnabled(False)
-        self.download_dataset_button.setText(self.tr("Downloading..."))
+    def _download_dataset(self, dataset_id: str, dataset_name: str, button: QtWidgets.QPushButton):
+        button.setEnabled(False)
+        button.setText(self.tr("Downloading..."))
         self.dataset_status_label.setText("")
 
         def on_trips_loaded(trips: list[DatasetTripModel], locations: dict[str, DatasetLocationModel]):
-            self.download_dataset_button.setEnabled(True)
-            self.download_dataset_button.setText(self.tr("Download as Layer"))
+            button.setEnabled(True)
+            button.setText("Download")
 
             if not trips:
                 self.dataset_status_label.setText("Dataset is empty, no trips to download.")
@@ -484,8 +529,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         try:
             self.api.get_dataset(dataset_id, on_trips_loaded)
         except Exception as e:
-            self.download_dataset_button.setEnabled(True)
-            self.download_dataset_button.setText(self.tr("Download as Layer"))
+            button.setEnabled(True)
+            button.setText("Download")
             self.dataset_status_label.setText(f"Failed to download dataset: {e}")
 
     def log(self, msg):
