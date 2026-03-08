@@ -334,10 +334,16 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             result_failed_layer = ErrorLayerBuilder(result_layer_name, matrix, results).build_layer(self.path)
             result_routes_layer = RoutesLayerBuilder(result_layer_name, matrix, results).build_layer(self.path)
 
+            # determine color/offset from profile; when using per-feature profiles
+            # check the first matrix element for its profile
+            effective_profile = profile
+            if not effective_profile and matrix.elements:
+                effective_profile = matrix.elements[0].profile or ""
+
             color = "#cccccc"
             offset = 1
             for key in PROFILE_COLOURS:
-                if profile.startswith(key):
+                if effective_profile.startswith(key):
                     color = PROFILE_COLOURS[key]
                     offset = PROFILE_OFFSET[key]
                     break
@@ -347,7 +353,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
             # add the default results a segments layer.
             QgsProject.instance().addMapLayer(result_layer, False)
-            self.layer_styling.style_routeplanning_layer(result_layer, profile, scenario_index)
+            self.layer_styling.style_routeplanning_layer(result_layer, effective_profile, scenario_index)
             group.addLayer(result_layer)
 
             # add routes layer, style it but set it invisible.
