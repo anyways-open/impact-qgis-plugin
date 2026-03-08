@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import os
 import traceback
 import sys
@@ -10,6 +11,7 @@ from qgis.core import *
 from .auth.DeviceFlowAuth import DeviceFlowAuth
 from .clients.api.ApiClient import ApiClient
 from .clients.api.ApiClientSettings import ApiClientSettings
+from .clients.api.Models.DatasetModel import DatasetLocationModel, DatasetModel, DatasetTripModel
 from .clients.api.Models.NetworkModel import NetworkModel
 from .clients.api.Models.ProjectModel import ProjectModel
 from .clients.api.Models.ResponseModel import ResponseModel
@@ -91,6 +93,10 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         # Attach button listeners
         self.perform_routeplanning_button.clicked.connect(self.run_routeplanning)
 
+        # Dataset listeners
+        self.dataset_list.currentRowChanged.connect(self._on_dataset_selected)
+        self.download_dataset_button.clicked.connect(self._download_dataset)
+
         # Auth button listeners
         self.login_button.clicked.connect(self.login)
         self.logout_button.clicked.connect(self.logout)
@@ -149,13 +155,20 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self.network_picker.setVisible(has_network)
         self.label_7.setVisible(has_network)
         self.toolbox_origin_destination_or_movement.setVisible(has_network)
+        self.label_4.setVisible(has_network)
+        self.project_directory.setVisible(has_network)
+        self.perform_routeplanning_button.setVisible(has_network)
+
         self.profile_picker.setVisible(has_network)
         self.label_9.setVisible(has_network)
         self.label_10.setVisible(has_network)
         self.profile_explanation.setVisible(has_network)
-        self.label_4.setVisible(has_network)
-        self.project_directory.setVisible(has_network)
-        self.perform_routeplanning_button.setVisible(has_network)
+
+        if has_network:
+            # check if the selected line layer has per-feature profiles
+            line_layer = self.movement_pairs_layer_picker.currentLayer()
+            layer_has_profile = line_layer is not None and line_layer.fields().indexFromName("profile") > -1
+            self._update_profile_picker_visibility(layer_has_profile)
 
     def login(self):
         self.login_button.setEnabled(False)
@@ -237,10 +250,30 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         line_layer = self.movement_pairs_layer_picker.currentLayer()
         if line_layer is None:
             self.selected_layer_report.setText("No layer selected")
+            self._update_profile_picker_visibility(False)
             return
         line_features = extract_valid_geometries(transform_layer_to_wgs84(line_layer))
         report = generate_layer_report(line_features)
+
+        has_profile = line_layer.fields().indexFromName("profile") > -1
+        if has_profile:
+            report += "\n\nThis layer contains profile information. The profile from each trip will be used for route planning."
         self.selected_layer_report.setText(report)
+
+        self._update_profile_picker_visibility(has_profile)
+
+    def _update_profile_picker_visibility(self, layer_has_profile: bool):
+        self.profile_picker.setEnabled(not layer_has_profile)
+        self.label_10.setVisible(not layer_has_profile)
+        if layer_has_profile:
+            self.profile_picker.blockSignals(True)
+            self.profile_picker.setCurrentIndex(-1)
+            self.profile_picker.blockSignals(False)
+            self.profile_explanation.setText("Profile selection is disabled because the selected layer already contains a profile attribute.")
+        else:
+            if self.profile_picker.currentIndex() < 0 and self.profile_picker.count() > 0:
+                self.profile_picker.setCurrentIndex(0)
+            self.profile_explanation.setText("(Select a profile first. The profile info will be shown here)")
 
     def run_routeplanning(self) -> None:
         # let user know route planning is starting
@@ -257,7 +290,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             line_layer = self.movement_pairs_layer_picker.currentLayer()
 
             if line_layer is None:
-                self.error_user(self.tr("Select line layer first"))
+                self.error_user(self.tr("Select a linestring layer first"))
                 self.perform_routeplanning_button.setEnabled(True)
                 self.perform_routeplanning_button.setText(self.tr("Start route planning"))
                 return
@@ -357,12 +390,97 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self.state_tracker.resume_loading()
             self._update_routing_options_visibility()
 
+            # Populate datasets list
+            self._update_dataset_list(response_model)
+
         if len(project_id) > 0:
             try:
                 self.api.get_project(project_id, project_callback)
             except Exception as e:
                 self.log(f"Failed to fetch project {project_id}: {e}")
                 self._update_routing_options_visibility()
+
+    def _update_dataset_list(self, response_model: ResponseModel[ProjectModel]):
+        self.dataset_list.clear()
+        self.download_dataset_button.setEnabled(False)
+        for dataset_id in response_model.details.datasets:
+            if dataset_id in response_model.datasets:
+                dataset = response_model.datasets[dataset_id]
+                item = QtWidgets.QListWidgetItem(dataset.name)
+                item.setData(256, dataset.global_id)  # Qt.UserRole = 256
+                self.dataset_list.addItem(item)
+
+    def _on_dataset_selected(self, row: int):
+        self.download_dataset_button.setEnabled(row >= 0)
+
+    def _download_dataset(self):
+        item = self.dataset_list.currentItem()
+        if item is None:
+            return
+
+        dataset_id = item.data(256)
+        dataset_name = item.text()
+        self.download_dataset_button.setEnabled(False)
+        self.download_dataset_button.setText(self.tr("Downloading..."))
+        self.dataset_status_label.setText("")
+
+        def on_trips_loaded(trips: list[DatasetTripModel], locations: dict[str, DatasetLocationModel]):
+            self.download_dataset_button.setEnabled(True)
+            self.download_dataset_button.setText(self.tr("Download as Layer"))
+
+            if not trips:
+                self.dataset_status_label.setText("Dataset is empty, no trips to download.")
+                return
+
+            features = []
+            for trip in trips:
+                origin_loc = locations.get(trip.origin)
+                dest_loc = locations.get(trip.destination)
+                if origin_loc is None or dest_loc is None:
+                    continue
+                feature = {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "LineString",
+                        "coordinates": [
+                            [origin_loc.longitude, origin_loc.latitude],
+                            [dest_loc.longitude, dest_loc.latitude]
+                        ]
+                    },
+                    "properties": {
+                        "count": trip.count,
+                        "profile": trip.profile
+                    }
+                }
+                features.append(feature)
+
+            if not features:
+                self.dataset_status_label.setText("Dataset has no trips with valid locations.")
+                return
+
+            geojson = {
+                "type": "FeatureCollection",
+                "features": features
+            }
+
+            import re
+            safe_name = re.sub(r'[^\w\-.]', '_', dataset_name).lower()
+            time_str = time.strftime("%Y%m%d_%H%M%S")
+            filename = os.path.join(self.path, f"dataset_{safe_name}_{time_str}.geojson")
+            with open(filename, "w") as f:
+                json.dump(geojson, f)
+
+            layer_name = f"dataset_{safe_name}_{time_str}"
+            layer = QgsVectorLayer(filename, layer_name, "ogr")
+            QgsProject.instance().addMapLayer(layer)
+            self.dataset_status_label.setText(f"Downloaded '{dataset_name}' with {len(features)} trips.")
+
+        try:
+            self.api.get_dataset(dataset_id, on_trips_loaded)
+        except Exception as e:
+            self.download_dataset_button.setEnabled(True)
+            self.download_dataset_button.setText(self.tr("Download as Layer"))
+            self.dataset_status_label.setText(f"Failed to download dataset: {e}")
 
     def log(self, msg):
         QgsMessageLog.logMessage(msg, MESSAGE_CATEGORY, level=Qgis.Info)

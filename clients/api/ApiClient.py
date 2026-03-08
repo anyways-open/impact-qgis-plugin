@@ -5,6 +5,7 @@ import json
 from qgis._core import QgsMessageLog, Qgis
 from ...settings import MESSAGE_CATEGORY
 from .ApiClientSettings import ApiClientSettings
+from .Models.DatasetModel import DatasetLocationModel, DatasetModel, DatasetTripModel
 from .Models.ProjectModel import ProjectModel
 from .Models.ResponseModel import ResponseModel
 
@@ -34,7 +35,8 @@ class ApiClient(object):
             "id": project_id,
             "children": [
                 {"type": "network", "children": [], "parents": []},
-                {"type": "scenario", "children": [], "parents": []}
+                {"type": "scenario", "children": [], "parents": []},
+                {"type": "dataset", "children": [], "parents": []}
             ],
             "parents": [
                 {"type": "organization", "children": [], "parents": []}
@@ -48,6 +50,41 @@ class ApiClient(object):
             data = json.loads(json_string)
             callback(ProjectModel.from_response_json(data))
         except Exception as e:
+            raise e
+
+    def get_dataset(self, dataset_id: str, callback: Callable):
+        if callback is None:
+            raise Exception("No callback given")
+
+        url = f"{self.settings.url}v3.0/data/"
+        body = json.dumps({
+            "type": "dataset",
+            "id": dataset_id,
+            "children": [
+                {"type": "dataset_trip", "children": [], "parents": []},
+                {"type": "dataset_location", "children": [], "parents": []}
+            ],
+            "parents": []
+        }).encode("utf-8")
+
+        try:
+            req = self._build_request(url, data=body, extra_headers={"Content-Type": "application/json"})
+            response = request.urlopen(req, timeout=self.settings.timeout)
+            json_string = response.read().decode("utf-8")
+            data = json.loads(json_string)
+
+            trips = []
+            locations = {}
+            for item in data:
+                item_type = item.get("_type", "")
+                if item_type == "dataset_trip":
+                    trips.append(DatasetTripModel.from_json(item))
+                elif item_type == "dataset_location":
+                    loc = DatasetLocationModel.from_json(item)
+                    locations[loc.global_id] = loc
+            callback(trips, locations)
+        except Exception as e:
+            QgsMessageLog.logMessage(f"get_dataset: ERROR {e}", MESSAGE_CATEGORY, Qgis.Warning)
             raise e
 
     def get_projects(self, callback: Callable[[list], None]):

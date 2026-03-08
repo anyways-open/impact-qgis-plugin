@@ -157,187 +157,239 @@
         </item>
        </layout>
       </item>
-      <!-- Routeplanning content -->
+      <!-- Project picker -->
       <item>
-       <widget class="QWidget" name="formLayoutWidget_2">
-        <layout class="QFormLayout" name="routeplanning_form">
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_project_header">
-           <property name="text">
-            <string>Project</string>
-           </property>
-           <property name="font">
-            <font>
-             <bold>true</bold>
-            </font>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QComboBox" name="project_picker"/>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_7">
-           <property name="text">
-            <string>Network</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QComboBox" name="network_picker">
-           <property name="editable">
-            <bool>false</bool>
-           </property>
-           <property name="currentText">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QTabWidget" name="toolbox_origin_destination_or_movement">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>210</height>
-            </size>
-           </property>
-           <property name="currentIndex">
-            <number>0</number>
-           </property>
-           <widget class="QWidget" name="tab_2">
-            <attribute name="title">
-             <string>Plan routes over a linestring layer</string>
-            </attribute>
-            <layout class="QFormLayout" name="formLayout_2">
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_17">
-               <property name="text">
-                <string>Select a movement layer</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QgsMapLayerComboBox" name="movement_pairs_layer_picker"/>
-             </item>
-             <item row="1" column="0" colspan="2">
-              <widget class="QLabel" name="selected_layer_report">
-               <property name="text">
-                <string>No layer selected. Select a layer to show information about it.</string>
-               </property>
-               <property name="wordWrap">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
+       <layout class="QFormLayout" name="project_form">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_project_header">
+          <property name="text">
+           <string>Project</string>
+          </property>
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="project_picker"/>
+        </item>
+       </layout>
+      </item>
+      <!-- Main tabs: Route Planning and Datasets -->
+      <item>
+       <widget class="QTabWidget" name="main_tabs">
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <!-- Route Planning tab -->
+        <widget class="QWidget" name="route_planning_tab">
+         <attribute name="title">
+          <string>Route Planning</string>
+         </attribute>
+         <layout class="QFormLayout" name="routeplanning_form">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_7">
+            <property name="text">
+             <string>Network</string>
+            </property>
            </widget>
-           <widget class="QWidget" name="tab1">
-            <attribute name="title">
-             <string>Plan routes between point layers</string>
-            </attribute>
-            <widget class="QWidget" name="formLayoutWidget_4">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>10</y>
-               <width>671</width>
-               <height>260</height>
-              </rect>
-             </property>
-             <layout class="QFormLayout" name="formLayout_3">
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="network_picker">
+            <property name="editable">
+             <bool>false</bool>
+            </property>
+            <property name="currentText">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QTabWidget" name="toolbox_origin_destination_or_movement">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>210</height>
+             </size>
+            </property>
+            <property name="currentIndex">
+             <number>0</number>
+            </property>
+            <widget class="QWidget" name="tab_2">
+             <attribute name="title">
+              <string>Plan routes over a linestring layer</string>
+             </attribute>
+             <layout class="QFormLayout" name="formLayout_2">
               <item row="0" column="0">
-               <widget class="QLabel" name="label_11">
+               <widget class="QLabel" name="label_17">
                 <property name="text">
-                 <string>Departure</string>
+                 <string>Select a linestring layer</string>
                 </property>
                </widget>
               </item>
               <item row="0" column="1">
-               <widget class="QgsMapLayerComboBox" name="departure_layer_picker"/>
+               <widget class="QgsMapLayerComboBox" name="movement_pairs_layer_picker"/>
               </item>
-              <item row="1" column="1">
-               <widget class="QLabel" name="label_12">
+              <item row="1" column="0" colspan="2">
+               <widget class="QLabel" name="selected_layer_report">
                 <property name="text">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Every point in this layer will be considered a departure point.&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <string>No layer selected. Select a layer to show information about it.</string>
                 </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="QgsMapLayerComboBox" name="arrival_layer_picker"/>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="label_13">
-                <property name="text">
-                 <string>Arrival</string>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="1">
-               <widget class="QLabel" name="label_14">
-                <property name="text">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Every point in this layer will be used as arrival point.&lt;/p&gt;&lt;p&gt;To do matrix routing, select the same as departure&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <property name="wordWrap">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
              </layout>
             </widget>
+            <widget class="QWidget" name="tab1">
+             <attribute name="title">
+              <string>Plan routes between point layers</string>
+             </attribute>
+             <widget class="QWidget" name="formLayoutWidget_4">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>10</y>
+                <width>671</width>
+                <height>260</height>
+               </rect>
+              </property>
+              <layout class="QFormLayout" name="formLayout_3">
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_11">
+                 <property name="text">
+                  <string>Departure</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QgsMapLayerComboBox" name="departure_layer_picker"/>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLabel" name="label_12">
+                 <property name="text">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Every point in this layer will be considered a departure point.&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QgsMapLayerComboBox" name="arrival_layer_picker"/>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_13">
+                 <property name="text">
+                  <string>Arrival</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QLabel" name="label_14">
+                 <property name="text">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Every point in this layer will be used as arrival point.&lt;/p&gt;&lt;p&gt;To do matrix routing, select the same as departure&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </widget>
            </widget>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_9">
-           <property name="text">
-            <string>Profile</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QComboBox" name="profile_picker"/>
-         </item>
-         <item row="4" column="1">
-          <widget class="QLabel" name="label_10">
-           <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select which vehicle to plan and it behaves. Read below how the profile behaves&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="1">
-          <widget class="QLabel" name="profile_explanation">
-           <property name="font">
-            <font>
-             <italic>true</italic>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>(Select a profile first. The profile info will be shown here)</string>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="0">
-          <widget class="QLabel" name="label_4">
-           <property name="text">
-            <string>Output directory</string>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="1">
-          <widget class="QgsFileWidget" name="project_directory" native="true"/>
-         </item>
-         <item row="7" column="1">
-          <widget class="QPushButton" name="perform_routeplanning_button">
-           <property name="text">
-            <string>Perform routeplanning</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>Profile</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QComboBox" name="profile_picker"/>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLabel" name="label_10">
+            <property name="text">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select which vehicle to plan and it behaves. Read below how the profile behaves&lt;/p&gt;&lt;p/&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLabel" name="profile_explanation">
+            <property name="font">
+             <font>
+              <italic>true</italic>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>(Select a profile first. The profile info will be shown here)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Output directory</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QgsFileWidget" name="project_directory" native="true"/>
+          </item>
+          <item row="6" column="1">
+           <widget class="QPushButton" name="perform_routeplanning_button">
+            <property name="text">
+             <string>Perform routeplanning</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <!-- Datasets tab -->
+        <widget class="QWidget" name="datasets_tab">
+         <attribute name="title">
+          <string>Datasets</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="datasets_layout">
+          <item>
+           <widget class="QLabel" name="datasets_info_label">
+            <property name="text">
+             <string>Select a dataset to download it as a layer.</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListWidget" name="dataset_list"/>
+          </item>
+          <item>
+           <widget class="QPushButton" name="download_dataset_button">
+            <property name="text">
+             <string>Download as Layer</string>
+            </property>
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="dataset_status_label">
+            <property name="text">
+             <string/>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </widget>
       </item>
      </layout>

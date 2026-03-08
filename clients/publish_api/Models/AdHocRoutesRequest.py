@@ -29,7 +29,7 @@ class AdHocRoutesRequest(object):
                 "origin": element.origin,
                 "destination": element.destination,
                 "count": element.count,
-                "profile": profile
+                "profile": element.profile or profile
             })
 
         return AdHocRoutesRequest(locations, trips)

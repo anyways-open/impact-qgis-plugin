@@ -57,17 +57,22 @@ class RoutingHandler(object):
                 locations_index[destination_str] = len(locations)
                 locations.append(MatrixLocation(destination))
 
+            # read per-feature profile if available.
+            feature_profile = None
+            if line_feature.fieldNameIndex("profile") > -1:
+                feature_profile = line_feature.attribute("profile") or None
+
             # add forward element.
             if line_feature.fieldNameIndex("count") > -1:
                 count = int(parse_float_or_default(line_feature.attribute("count"), -1))
                 if count > 0:
-                    elements.append(MatrixElement(origin_index, destination_index, count))
+                    elements.append(MatrixElement(origin_index, destination_index, count, feature_profile))
 
            # add backward element.
             if line_feature.fieldNameIndex("count_rev") > -1:
                 count_rev = int(parse_float_or_default(line_feature.attribute("count_rev"), -1))
                 if count_rev > 0:
-                    elements.append(MatrixElement(destination_index, origin_index, count_rev))
+                    elements.append(MatrixElement(destination_index, origin_index, count_rev, feature_profile))
 
         return Result(Matrix(locations, elements))
 
