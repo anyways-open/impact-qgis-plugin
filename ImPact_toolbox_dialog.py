@@ -485,6 +485,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
 
             features = []
             for trip in trips:
+                if not trip.count:
+                    continue
                 origin_loc = locations.get(trip.origin)
                 dest_loc = locations.get(trip.destination)
                 if origin_loc is None or dest_loc is None:
