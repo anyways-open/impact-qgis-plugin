@@ -125,7 +125,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         self._update_auth_ui(defer_fetch=True)
 
     def _update_auth_ui(self, defer_fetch=False):
-        if self.auth.is_logged_in:
+        if self.auth.try_restore_session():
             name = self.auth.get_user_name() or "user"
             self.auth_status_label.setText(f"Logged in as {name}")
             self.logout_button.setEnabled(True)
