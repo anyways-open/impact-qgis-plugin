@@ -45,7 +45,7 @@ class default_layer_styling:
         line_rendering = QgsSimpleLineSymbolLayer()
         line_rendering.setUseCustomDashPattern(True)
         line_rendering.setPenCapStyle(Qt.RoundCap)
-        line_rendering.setOffset(0.2 * offset)
+        line_rendering.setOffset(1.0 * offset)
 
         sym.deleteSymbolLayer(0)
         sym.appendSymbolLayer(line_rendering)
@@ -61,18 +61,17 @@ class default_layer_styling:
         text_format.setSize(12)
         text_format.setColor(QColor(color))
 
-        # buffer_settings = QgsTextBufferSettings()
-        # buffer_settings.setEnabled(True)
-        # buffer_settings.setSize(1)
-        # buffer_settings.setColor(QColor(color))
-        #
-        # text_format.setBuffer(buffer_settings)
+        buffer_settings = QgsTextBufferSettings()
+        buffer_settings.setEnabled(True)
+        buffer_settings.setSize(1)
+        buffer_settings.setColor(QColor("#ffffff"))
+        text_format.setBuffer(buffer_settings)
         layer_settings.setFormat(text_format)
 
         layer_settings.fieldName = "count"
         layer_settings.placement = QgsPalLayerSettings.Line
-        # layer_settings.placement = 2
-        layer_settings.placementFlags = QgsPalLayerSettings.AboveLine
+        layer_settings.placementFlags = QgsPalLayerSettings.BelowLine
+        layer_settings.dist = 1.0
 
         layer_settings.enabled = True
 

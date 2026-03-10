@@ -14,7 +14,7 @@ class RouteAlternative(object):
         for json_segment in response_json.get("segments", []):
             segments.append(RouteSegmentModel.from_json(json_segment))
         tail = response_json.get("tail", 0)
-        head = response_json.get("head", 100)
+        head = response_json.get("head", 65536)
         return RouteAlternative(segments, tail, head)
 
 class RouteModel(object):

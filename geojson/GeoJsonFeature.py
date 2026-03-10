@@ -12,6 +12,10 @@ class GeoJsonFeature(object):
         self.feature = feature
 
     @staticmethod
+    def copy(feature: 'GeoJsonFeature') -> 'GeoJsonFeature':
+        return GeoJsonFeature(copy.deepcopy(feature.feature))
+
+    @staticmethod
     def to_feature_collection(features: list['GeoJsonFeature']) -> dict[str, Union[str, list[Any]]]:
         raw_features = []
         for feature in features:
@@ -51,8 +55,8 @@ class GeoJsonFeature(object):
     def get_cut(self, tail_offset: int, head_offset: int) -> 'GeoJsonFeature':
         length = self.get_length()
 
-        tail = length * (tail_offset / 65535.0)
-        head = length * (head_offset / 65535.0)
+        tail = length * (tail_offset / 65536.0)
+        head = length * (head_offset / 65536.0)
         QgsMessageLog.logMessage(f"{length} - {tail} - {head}", MESSAGE_CATEGORY, Qgis.Info)
 
         if tail > head:
