@@ -196,10 +196,16 @@ class DeviceFlowAuth(QObject):
             return True
         except Exception as e:
             QgsMessageLog.logMessage(f"Token refresh failed: {e}", MESSAGE_CATEGORY, Qgis.Warning)
-            # If the server explicitly rejected the refresh token, clear stale credentials.
-            # Network errors (no 'code' attr) leave tokens in storage for later retry.
-            if hasattr(e, 'code') and e.code in (400, 401, 403):
-                self._storage.clear()
+            # Only clear on explicit invalid_grant — any other error (network, server, etc.)
+            # leaves tokens in storage so we can retry later.
+            if hasattr(e, 'read'):
+                try:
+                    error_body = json.loads(e.read().decode("utf-8"))
+                    if error_body.get("error") == "invalid_grant":
+                        QgsMessageLog.logMessage("Refresh token rejected by server, clearing session.", MESSAGE_CATEGORY, Qgis.Warning)
+                        self._storage.clear()
+                except Exception:
+                    pass
             return False
 
     def logout(self):

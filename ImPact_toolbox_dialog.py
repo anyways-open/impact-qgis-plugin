@@ -136,6 +136,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             saved_id = QgsProject.instance().readEntry("anyways", "selected_project_id")[0]
             if saved_id:
                 self._current_project_id = saved_id
+                self.api.track("project.open", {"projectId": saved_id})
                 self.update_network_picker()
 
             if defer_fetch:
@@ -243,6 +244,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         if project_id:
             self._current_project_id = project_id
             QgsProject.instance().writeEntry("anyways", "selected_project_id", project_id)
+            self.api.track("project.open", {"projectId": project_id})
             self.update_network_picker()
 
     def update_selected_layer_explanation(self):
@@ -315,7 +317,8 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             return
 
         # get details about the network to use.
-        network = RoutingNetwork(self.network_picker.currentData())
+        network_data = self.network_picker.currentData()
+        network = RoutingNetwork(network_data["branch"])
 
         # use the routing handler to do the work.
         scenario_index = self.network_picker.currentIndex()
@@ -368,6 +371,12 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 group.addLayer(result_failed_layer)
             return
 
+        project_id = self._current_project_id or ""
+        network_id = network_data.get("networkId", "") if network_data else ""
+        layer_name = ""
+        if source_index == 0:
+            layer_name = line_layer.name() if line_layer else ""
+        self.api.track("network.route", {"projectId": project_id, "networkId": network_id, "profile": profile, "layer": layer_name, "trips": str(len(matrix.elements))})
         RoutingHandler.start_route_planning(result_layer_name, network, profile, matrix, routes_planning_callback, get_token=self.auth.get_access_token)
         self.close()
 
@@ -389,7 +398,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 network = networks[scenario.network]
                 name = network.name
                 if picker.findText(name) < 0:
-                    picker.addItem(name, network.branch)
+                    picker.addItem(name, {"branch": network.branch, "networkId": network.global_id})
             if picker.count() > 0:
                 picker.setCurrentIndex(0)
             self.state_tracker.resume_loading()
@@ -528,6 +537,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             QgsProject.instance().addMapLayer(layer)
             self.dataset_status_label.setText(f"Downloaded '{dataset_name}' with {len(features)} trips.")
 
+        self.api.track("dataset.open", {"datasetId": dataset_id})
         try:
             self.api.get_dataset(dataset_id, on_trips_loaded)
         except Exception as e:

@@ -2,9 +2,25 @@ from typing import Callable, Optional
 from urllib import request
 import json
 import uuid
+import threading
+from datetime import datetime, timezone
+
+import configparser
+import os
 
 from qgis._core import QgsMessageLog, Qgis
 from ...settings import MESSAGE_CATEGORY
+
+def _read_plugin_version():
+    try:
+        metadata = os.path.join(os.path.dirname(__file__), "..", "..", "metadata.txt")
+        cfg = configparser.ConfigParser()
+        cfg.read(metadata)
+        return cfg.get("general", "version", fallback="unknown")
+    except Exception:
+        return "unknown"
+
+_PLUGIN_VERSION = _read_plugin_version()
 from .ApiClientSettings import ApiClientSettings
 from .Models.DatasetModel import DatasetLocationModel, DatasetModel, DatasetTripModel
 from .Models.ProjectModel import ProjectModel
@@ -25,6 +41,34 @@ class ApiClient(object):
             if token:
                 req.add_header("Authorization", f"Bearer {token}")
         return req
+
+    def track(self, action: str, properties: dict = None):
+        url = f"{self.settings.url}v3.0/track"
+        props = {"application": "qgis-plugin", "applicationVersion": _PLUGIN_VERSION}
+        if properties:
+            props.update(properties)
+        event = {"action": action, "properties": props, "timestamp": datetime.now(timezone.utc).isoformat()}
+        body = json.dumps([event]).encode("utf-8")
+
+        # Build request with current token only — never trigger a refresh from tracking
+        req = request.Request(url, data=body)
+        req.add_header("Content-Type", "application/json")
+        if self._get_token is not None:
+            from ..api.ApiClientSettings import ApiClientSettings  # avoid circular
+            # Read token directly from storage without refreshing
+            from ...auth.TokenStorage import TokenStorage
+            token = TokenStorage().load().get("access_token", "")
+            if token:
+                req.add_header("Authorization", f"Bearer {token}")
+
+        def _send():
+            try:
+                response = request.urlopen(req, timeout=5)
+                QgsMessageLog.logMessage(f"track: sent '{action}' — {response.status}", MESSAGE_CATEGORY, Qgis.Info)
+            except Exception as e:
+                QgsMessageLog.logMessage(f"track: failed to send '{action}': {e}", MESSAGE_CATEGORY, Qgis.Warning)
+
+        threading.Thread(target=_send, daemon=True).start()
 
     def get_project(self, project_id: str, callback: Callable[[ResponseModel[ProjectModel]], None]):
         if callback is None:

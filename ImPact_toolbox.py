@@ -292,6 +292,7 @@ class ToolBox:
                     level=Qgis.Success, duration=5)
 
             api.upload_dataset(project_id, name, description, locations, trips, on_upload_complete)
+            api.track("dataset.create", {"projectId": project_id})
         except Exception as e:
             self.iface.messageBar().pushMessage(
                 "ANYWAYS", f"Upload failed: {e}",

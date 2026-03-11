@@ -18,6 +18,18 @@ The source of the user documentation is kept [in the anyways/docs repo](https://
 This plugin should be installed via the QGIS plugin manager. The plugin is in [the QGIS Python Plugins repository](https://plugins.qgis.org/plugins/anyways_impact_toolbox/)
 The latest unstable version can be found [here](https://github.com/anyways-open/impact-qgis-plugin/releases)
 
+Usage tracking
+--------------
+
+The plugin collects basic usage information tied to your ANYWAYS account to help us understand how the tool is used and improve it. The following actions are logged to the ANYWAYS server:
+
+- Opening a project
+- Downloading a dataset
+- Uploading a dataset
+- Starting route planning (including the network, profile, layer name, and trip count)
+
+Each event also includes the plugin version. No personal data beyond your ANYWAYS user account is collected. Tracking is fire-and-forget and will never block the plugin or cause errors if the server is unreachable.
+
 The rest of this document contains technical instructions for developers.
 
 Development hints

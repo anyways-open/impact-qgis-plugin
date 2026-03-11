@@ -4,7 +4,7 @@ API = "https://api.anyways.eu/impact/"
 
 OIDC_AUTHORITY = "https://www.anyways.eu/account"
 OIDC_CLIENT_ID = "qgis-plugin"
-OIDC_SCOPES = "openid profile impact"
+OIDC_SCOPES = "openid profile impact offline_access"
 
 PROFILE_COLOURS = {
     "bicycle": "#2222cc",
