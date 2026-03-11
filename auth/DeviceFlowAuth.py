@@ -161,6 +161,16 @@ class DeviceFlowAuth(QObject):
         )
         self.token_received.emit(token_data["access_token"])
 
+    def try_restore_session(self) -> bool:
+        """Try to restore a previous session from stored tokens.
+
+        If the access token is expired, attempts a refresh.
+        Clears stored tokens if the refresh token is rejected by the server.
+        Returns True if a valid access token is available.
+        """
+        token = self.get_access_token()
+        return token is not None
+
     def _refresh_token(self, refresh_token: str) -> bool:
         if self._token_endpoint is None:
             if not self._discover_endpoints():
@@ -186,6 +196,10 @@ class DeviceFlowAuth(QObject):
             return True
         except Exception as e:
             QgsMessageLog.logMessage(f"Token refresh failed: {e}", MESSAGE_CATEGORY, Qgis.Warning)
+            # If the server explicitly rejected the refresh token, clear stale credentials.
+            # Network errors (no 'code' attr) leave tokens in storage for later retry.
+            if hasattr(e, 'code') and e.code in (400, 401, 403):
+                self._storage.clear()
             return False
 
     def logout(self):

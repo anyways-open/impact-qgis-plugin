@@ -15,24 +15,18 @@ class SegmentsLayerBuilder(object):
     @staticmethod
     def _get_segment_offsets(alternative, seg_idx: int, num_segments: int) -> tuple[int, int]:
         """Get tail/head offsets for a segment based on its position in the alternative.
-        Returns offsets in 0-65535 range for compatibility with get_cut()."""
-        if num_segments == 1:
+        Returns offsets in 0-65536 range matching the API's offset format."""
+        if seg_idx == 0:
             tail = alternative.tail
-            head = alternative.head
-        elif seg_idx == 0:
-            tail = alternative.tail
-            head = 100
-        elif seg_idx == num_segments - 1:
-            tail = 0
-            head = alternative.head
         else:
             tail = 0
-            head = 100
 
-        # convert 0-100 percentage to 0-65535 range
-        tail_65535 = int(tail * 65535 / 100)
-        head_65535 = int(head * 65535 / 100)
-        return tail_65535, head_65535
+        if seg_idx == num_segments - 1:
+            head = alternative.head
+        else:
+            head = 65536
+
+        return tail, head
 
     def build_layer(self, project_path: str) -> QgsVectorLayer:
         # first pass: collect all segment cuts across all routes
@@ -109,10 +103,13 @@ class SegmentsLayerBuilder(object):
                                 if not route_segment.forward:
                                     segment = GeoJsonFeature.reverse_linestring(segment)
 
-                                if cut_tail != 0 or cut_head != 65535:
+                                if cut_tail != 0 or cut_head != 65536:
                                     segment = segment.get_cut(cut_tail, cut_head)
                                     if segment is None:
                                         continue
+                                else:
+                                    # copy to avoid mutating the original in response.segments
+                                    segment = GeoJsonFeature.copy(segment)
 
                                 histogram[segment_cut_key] = segment
                             else:

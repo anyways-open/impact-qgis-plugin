@@ -29,12 +29,16 @@ class DatasetTripModel(object):
 
 
 class DatasetModel(object):
-    def __init__(self, global_id: str, name: str) -> None:
+    def __init__(self, global_id: str, name: str, description: str, last_modified: str) -> None:
         self.global_id = global_id
         self.name = name
+        self.description = description
+        self.last_modified = last_modified
 
     @staticmethod
     def from_json(json) -> 'DatasetModel':
         global_id = json["id"]
         name = json.get("name", global_id)
-        return DatasetModel(global_id, name)
+        description = json.get("description", "")
+        last_modified = json.get("lastModified", "")
+        return DatasetModel(global_id, name, description, last_modified)
