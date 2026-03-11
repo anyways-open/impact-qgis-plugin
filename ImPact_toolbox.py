@@ -297,6 +297,8 @@ class ToolBox:
             self.iface.messageBar().pushMessage(
                 "ANYWAYS", f"Upload failed: {e}",
                 level=Qgis.Critical, duration=10)
+            import traceback
+            api.track("dataset.error", {"message": str(e), "projectId": project_id, "stack": traceback.format_exc()})
 
     def _extract_dataset_from_layer(self, layer, default_profile: str):
         import uuid

@@ -19,8 +19,8 @@ class RoutingHandler(object):
         pass
 
     @staticmethod
-    def start_route_planning(task_name: str, network: RoutingNetwork, profile: str, matrix: Matrix, callback: Callable[[list[RouteResult]], None], get_token=None) -> None:
-        routing_task = RoutingTask(RoutingTaskSettings(name=task_name, network=network, profile=profile, matrix=matrix, callback=callback, get_token=get_token))
+    def start_route_planning(task_name: str, network: RoutingNetwork, profile: str, matrix: Matrix, callback: Callable[[list[RouteResult]], None], get_token=None, on_error=None) -> None:
+        routing_task = RoutingTask(RoutingTaskSettings(name=task_name, network=network, profile=profile, matrix=matrix, callback=callback, get_token=get_token, on_error=on_error))
         RoutingTask.RUNNING_TASKS.append(routing_task)
         QgsApplication.taskManager().addTask(RoutingTask.RUNNING_TASKS[len(RoutingTask.RUNNING_TASKS)-1])
 

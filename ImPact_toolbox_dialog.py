@@ -209,6 +209,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             self.api.get_projects(self._on_projects_loaded)
         except Exception as e:
             self.log(f"Failed to fetch projects: {e}")
+            self.api.track("project.error", {"message": str(e), "stack": traceback.format_exc()})
 
     def _on_projects_loaded(self, projects):
         self._project_cache["projects"] = projects
@@ -377,7 +378,10 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
         if source_index == 0:
             layer_name = line_layer.name() if line_layer else ""
         self.api.track("network.route", {"projectId": project_id, "networkId": network_id, "profile": profile, "layer": layer_name, "trips": str(len(matrix.elements))})
-        RoutingHandler.start_route_planning(result_layer_name, network, profile, matrix, routes_planning_callback, get_token=self.auth.get_access_token)
+        api = self.api
+        def on_routing_error(message, stack):
+            api.track("network.error", {"message": message, "projectId": project_id, "networkId": network_id, "profile": profile, "stack": stack})
+        RoutingHandler.start_route_planning(result_layer_name, network, profile, matrix, routes_planning_callback, get_token=self.auth.get_access_token, on_error=on_routing_error)
         self.close()
 
     def update_network_picker(self):
@@ -412,6 +416,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.api.get_project(project_id, project_callback)
             except Exception as e:
                 self.log(f"Failed to fetch project {project_id}: {e}")
+                self.api.track("project.error", {"message": str(e), "projectId": project_id, "stack": traceback.format_exc()})
                 self._update_routing_options_visibility()
 
     def _update_dataset_list(self, response_model: ResponseModel[ProjectModel]):
@@ -544,6 +549,7 @@ class ToolBoxDialog(QtWidgets.QDialog, FORM_CLASS):
             button.setEnabled(True)
             button.setText("Download")
             self.dataset_status_label.setText(f"Failed to download dataset: {e}")
+            self.api.track("dataset.error", {"message": str(e), "datasetId": dataset_id, "stack": traceback.format_exc()})
 
     def log(self, msg):
         QgsMessageLog.logMessage(msg, MESSAGE_CATEGORY, level=Qgis.Info)

@@ -1,3 +1,4 @@
+import traceback
 from typing import Optional
 
 from qgis.core import (
@@ -22,6 +23,7 @@ class RoutingTask(QgsTask):
         self.settings = settings
         self.data = list[RouteResult]()
         self.exception: Optional[Exception] = None
+        self._exception_tb: Optional[str] = None
 
     def run(self):
         QgsMessageLog.logMessage(f"{self.description()} started!", MESSAGE_CATEGORY, Qgis.Info)
@@ -70,6 +72,7 @@ class RoutingTask(QgsTask):
             return True
         except Exception as e:
             self.exception = e
+            self._exception_tb = traceback.format_exc()
             return False
 
     def finished(self, result):
@@ -85,6 +88,8 @@ class RoutingTask(QgsTask):
                         name=self.description(),
                         exception=self.exception),
                     MESSAGE_CATEGORY, Qgis.Critical)
+                if self.settings.on_error:
+                    self.settings.on_error(str(self.exception), self._exception_tb or "")
                 raise self.exception
 
     def cancel(self):
