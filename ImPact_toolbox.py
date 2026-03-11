@@ -2,13 +2,16 @@ import os.path
 
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import *
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QAction, QDialog
 
 from .settings import MESSAGE_CATEGORY
 # Initialize Qt resources from file resources.py
 # Import the code for the dialog
 from .ImPact_toolbox_dialog import ToolBoxDialog
+from .upload_dataset_dialog import UploadDatasetDialog
 from .auth.DeviceFlowAuth import DeviceFlowAuth
+from .clients.api.ApiClient import ApiClient
+from .clients.api.ApiClientSettings import ApiClientSettings
 from qgis.core import *
 # The import 'from .resources import *' is needed to load the resources (e.g. the icon)
 from .resources import *
@@ -189,12 +192,173 @@ class ToolBox:
             callback=self.open_dialog,
             parent=self.iface.mainWindow())
 
+        # Add "Upload to ANYWAYS..." to the layer tree context menu for all vector layers.
+        # The check for line geometry + count attribute is done in the triggered slot.
+        self._upload_action = QAction("Upload to ANYWAYS...", self.iface.mainWindow())
+        self._upload_action.triggered.connect(self._on_upload_to_anyways)
+        self.iface.addCustomActionForLayerType(self._upload_action, "", QgsMapLayerType.VectorLayer, True)
+
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginMenu('Plugin',
                 action)
             self.iface.removeToolBarIcon(action)
+
+        self.iface.removeCustomActionForLayerType(self._upload_action)
+
+    def _is_uploadable_layer(self, layer):
+        return (layer is not None
+                and isinstance(layer, QgsVectorLayer)
+                and layer.geometryType() == QgsWkbTypes.LineGeometry
+                and layer.fields().indexFromName("count") >= 0)
+
+    def _on_upload_to_anyways(self):
+        layer = self.iface.activeLayer()
+        if not self._is_uploadable_layer(layer):
+            return
+
+        if not self.auth.is_logged_in:
+            self.iface.messageBar().pushMessage(
+                "ANYWAYS", "Please log in first via the ANYWAYS plugin dialog.",
+                level=Qgis.Warning, duration=5)
+            return
+
+        project_id = QgsProject.instance().readEntry("anyways", "selected_project_id")[0]
+        if not project_id:
+            self.iface.messageBar().pushMessage(
+                "ANYWAYS", "Please select a project first via the ANYWAYS plugin dialog.",
+                level=Qgis.Warning, duration=5)
+            return
+
+        # Look up project name from cache, fetch if cache is empty
+        project_name = None
+        cached = self._project_cache.get("projects")
+        if not cached:
+            try:
+                api = ApiClient(ApiClientSettings(), get_token=self.auth.get_access_token)
+                api.get_projects(lambda projects: self._project_cache.update({"projects": projects}))
+                cached = self._project_cache.get("projects")
+            except Exception:
+                pass
+        if cached:
+            for p in cached:
+                if p.get("id") == project_id:
+                    org = p.get("_organization_name", "")
+                    n = p.get("name", "")
+                    project_name = f"{org} / {n}" if org else n
+                    break
+        if not project_name:
+            project_name = project_id
+
+        has_profile_attr = layer.fields().indexFromName("profile") >= 0
+
+        # Validate profiles in layer against known profile keys
+        if has_profile_attr:
+            invalid_profiles = set()
+            for feature in layer.getFeatures():
+                val = str(feature.attribute("profile") or "").strip()
+                if val and val not in self.profile_keys:
+                    invalid_profiles.add(val)
+            if invalid_profiles:
+                self.iface.messageBar().pushMessage(
+                    "ANYWAYS",
+                    f"Layer contains unknown profile(s): {', '.join(sorted(invalid_profiles))}",
+                    level=Qgis.Critical, duration=10)
+                return
+
+        dialog = UploadDatasetDialog(layer.name(), project_name, self.profile_keys,
+                                     show_profile_picker=not has_profile_attr,
+                                     parent=self.iface.mainWindow())
+        if dialog.exec_() != QDialog.Accepted:
+            return
+
+        name = dialog.get_name()
+        description = dialog.get_description()
+        default_profile = dialog.get_profile()
+
+        locations, trips = self._extract_dataset_from_layer(layer, default_profile)
+        if not trips:
+            self.iface.messageBar().pushMessage(
+                "ANYWAYS", "No valid trips found in the layer.",
+                level=Qgis.Warning, duration=5)
+            return
+
+        api = ApiClient(ApiClientSettings(), get_token=self.auth.get_access_token)
+        try:
+            def on_upload_complete():
+                self.iface.messageBar().pushMessage(
+                    "ANYWAYS", f"Dataset '{name}' uploaded successfully with {len(trips)} trips.",
+                    level=Qgis.Success, duration=5)
+
+            api.upload_dataset(project_id, name, description, locations, trips, on_upload_complete)
+        except Exception as e:
+            self.iface.messageBar().pushMessage(
+                "ANYWAYS", f"Upload failed: {e}",
+                level=Qgis.Critical, duration=10)
+
+    def _extract_dataset_from_layer(self, layer, default_profile: str):
+        import uuid
+
+        crs = layer.crs()
+        target_crs = QgsCoordinateReferenceSystem("EPSG:4326")
+        transform = QgsCoordinateTransform(crs, target_crs, QgsProject.instance())
+
+        locations = {}  # (lon, lat) -> {"id": ..., "longitude": ..., "latitude": ...}
+        trips = []
+
+        has_profile = layer.fields().indexFromName("profile") >= 0
+
+        for feature in layer.getFeatures():
+            geom = feature.geometry()
+            if geom.isEmpty():
+                continue
+
+            geom_copy = QgsGeometry(geom)
+            geom_copy.transform(transform)
+
+            vertices = list(geom_copy.vertices())
+            if len(vertices) < 2:
+                continue
+
+            origin_point = vertices[0]
+            dest_point = vertices[-1]
+
+            origin_key = (round(origin_point.x(), 5), round(origin_point.y(), 5))
+            dest_key = (round(dest_point.x(), 5), round(dest_point.y(), 5))
+
+            if origin_key not in locations:
+                locations[origin_key] = {
+                    "id": str(uuid.uuid4()),
+                    "longitude": origin_key[0],
+                    "latitude": origin_key[1]
+                }
+            if dest_key not in locations:
+                locations[dest_key] = {
+                    "id": str(uuid.uuid4()),
+                    "longitude": dest_key[0],
+                    "latitude": dest_key[1]
+                }
+
+            count = feature.attribute("count")
+            try:
+                count = int(count)
+            except (ValueError, TypeError):
+                count = 0
+
+            if has_profile:
+                profile = str(feature.attribute("profile") or "").strip()
+            else:
+                profile = default_profile
+
+            trips.append({
+                "origin": locations[origin_key]["id"],
+                "destination": locations[dest_key]["id"],
+                "count": count,
+                "profile": profile
+            })
+
+        return list(locations.values()), trips
 
     def open_dialog(self):
         """Called when the menu item is clicked"""
